@@ -703,17 +703,12 @@ export const TasksPage: React.FC = () => {
                 !isSelectedLevelLocked && task.userStatus === 'PENDING_VERIFICATION';
               const isRejected = !isSelectedLevelLocked && task.userStatus === 'REJECTED';
 
-              // If balance exists in account to complete the task, do NOT put any unlocking process!
-              // Only awaiting payment if the user actually lacks the required balance.
-              const isAwaitingPayment =
-                !isSelectedLevelLocked && task.userStatus === 'AWAITING_PAYMENT' && !hasSufficientBalance;
               const isAvailable =
                 !isSelectedLevelLocked &&
                 !isApproved &&
                 !isPending &&
                 !isRejected &&
-                !isTaskLocked &&
-                (!task.isPaid || hasSufficientBalance || task.isPaidUnlocked || task.userStatus === 'AVAILABLE' || task.userStatus === 'UNLOCKED');
+                !isTaskLocked;
 
               // ----------------------------------------------------
               // LOCKED TASK ROW (Until client reaches the task)
@@ -858,18 +853,6 @@ export const TasksPage: React.FC = () => {
                       >
                         <XCircle className="w-2.5 h-2.5" /> Rejected
                       </Link>
-                    ) : isAwaitingPayment ? (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPrepaidModalTask(task);
-                        }}
-                        className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-md shadow-sm transition-all hover:scale-105 cursor-pointer flex-shrink-0 leading-none whitespace-nowrap bg-gradient-to-r from-[#1264F5] to-[#168BFF] text-white hover:brightness-110"
-                      >
-                        <ArrowDownLeft className="w-2.5 h-2.5" />
-                        <span>Deposit PKR {remainingDepositNeeded.toLocaleString()}</span>
-                      </button>
                     ) : (
                       <Link
                         to={`/app/tasks/${task.id}`}

@@ -92,6 +92,11 @@ export const TaskDetailPage: React.FC = () => {
     if (e) e.preventDefault();
     if (!taskId) return;
 
+    if (task?.isPaid && !hasSufficientBalance) {
+      navigate(`/app/deposits?amount=${remainingNeeded}`);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -101,9 +106,15 @@ export const TaskDetailPage: React.FC = () => {
         submissionNotes: 'Review My Task',
       });
       setSuccess(res.message);
+      await refreshUser();
       loadTask();
     } catch (err: any) {
       setError(err.message || 'Submission failed');
+      if (err.remainingNeeded || err.redirectToDeposit) {
+        setTimeout(() => {
+          navigate(`/app/deposits?amount=${err.remainingNeeded || remainingNeeded}`);
+        }, 1200);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -127,13 +138,7 @@ export const TaskDetailPage: React.FC = () => {
   const isApproved = task?.userStatus === 'APPROVED';
   const isPending = task?.userStatus === 'PENDING_VERIFICATION';
   const isRejected = task?.userStatus === 'REJECTED';
-  const isAwaitingPayment = task?.userStatus === 'AWAITING_PAYMENT' && !hasSufficientBalance;
-  const isAvailable =
-    !isLocked &&
-    !isApproved &&
-    !isPending &&
-    !isRejected &&
-    (!task?.isPaid || hasSufficientBalance || task?.isPaidUnlocked || task?.userStatus === 'AVAILABLE' || task?.userStatus === 'UNLOCKED');
+  const isAvailable = !isLocked && !isApproved && !isPending && !isRejected;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -254,17 +259,19 @@ export const TaskDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Deposit Requirement Section (Only shown when balance is insufficient) */}
-      {isAwaitingPayment && remainingNeeded > 0 && (
-        <div className="royal-card p-6 sm:p-8 rounded-3xl border border-[#FFD45A]/40 space-y-5">
+      {/* Prepaid Balance Requirement Section (Shown for prepaid tasks) */}
+      {task?.isPaid && isAvailable && (
+        <div className={`royal-card p-6 sm:p-8 rounded-3xl border space-y-5 ${
+          hasSufficientBalance ? 'border-[#10D6A0]/40' : 'border-[#FFD45A]/40'
+        }`}>
           <div className="flex items-start gap-3">
-            <Zap className="w-6 h-6 text-[#FFD45A] flex-shrink-0 mt-1" />
+            <Zap className={`w-6 h-6 flex-shrink-0 mt-1 ${hasSufficientBalance ? 'text-[#10D6A0]' : 'text-[#FFD45A]'}`} />
             <div>
-              <h2 className="text-lg font-bold text-white">Prepaid Task Balance Requirement</h2>
+              <h2 className="text-lg font-bold text-white">Prepaid Task Account Balance Requirement</h2>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                This task requires an account balance of{' '}
-                <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong> to start.
-                {' '}<strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance.
+                You do not need to pay anything to complete this assignment. You only need to have an account balance of{' '}
+                <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong> when submitting for approval.
+                {' '}<strong>Your funds are NOT spent or deducted</strong> — they remain safe in your account.
               </p>
             </div>
           </div>
@@ -281,28 +288,39 @@ export const TaskDetailPage: React.FC = () => {
               <span className="text-lg font-black text-[#10D6A0]">PKR {userBalance.toLocaleString()}</span>
             </div>
             <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-              <span className="text-[10px] text-slate-400 block uppercase font-medium">Needed to Deposit</span>
-              <span className="text-lg font-black text-[#FFD45A]">
-                PKR {remainingNeeded.toLocaleString()}
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">
+                {hasSufficientBalance ? 'Balance Status' : 'Needed to Deposit'}
+              </span>
+              <span className={`text-lg font-black ${hasSufficientBalance ? 'text-[#10D6A0]' : 'text-[#FFD45A]'}`}>
+                {hasSufficientBalance ? 'Ready to Submit' : `PKR ${remainingNeeded.toLocaleString()}`}
               </span>
             </div>
           </div>
 
-          <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl space-y-3">
-            <div className="flex items-center gap-2 text-xs text-[#FFD45A] font-semibold">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {!hasSufficientBalance ? (
+            <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl space-y-3">
+              <div className="flex items-center gap-2 text-xs text-[#FFD45A] font-semibold">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  You have PKR {userBalance.toLocaleString()} in your account. Please deposit PKR {remainingNeeded.toLocaleString()} to complete the required PKR {unlockFee.toLocaleString()} balance before submitting for approval.
+                </span>
+              </div>
+              <Link
+                to={`/app/deposits?amount=${remainingNeeded}`}
+                className="w-full py-3 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+              >
+                <ArrowDownLeft className="w-4 h-4" />
+                <span>Deposit PKR {remainingNeeded.toLocaleString()} to Reach Balance</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="p-3.5 bg-[#10D6A0]/10 border border-[#10D6A0]/30 rounded-2xl flex items-center gap-2.5 text-xs text-[#10D6A0]">
+              <CheckCircle2 className="w-4 h-4 text-[#10D6A0] flex-shrink-0" />
               <span>
-                You have PKR {userBalance.toLocaleString()} in your account. You only need to deposit the remaining PKR {remainingNeeded.toLocaleString()} to start this task!
+                Account balance requirement met (PKR {userBalance.toLocaleString()})! Submitting below will automatically verify and place your task under review at the same time.
               </span>
             </div>
-            <Link
-              to={`/app/deposits?amount=${remainingNeeded}`}
-              className="w-full py-3 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-            >
-              <ArrowDownLeft className="w-4 h-4" />
-              <span>Deposit Remaining PKR {remainingNeeded.toLocaleString()} Now</span>
-            </Link>
-          </div>
+          )}
         </div>
       )}
 
@@ -367,40 +385,64 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* 1-Click "Review My Task" Button (No Answer or Image Upload Required) */}
+          {/* Submission Action Button */}
           {(isAvailable || isRejected) && (
             <div className="space-y-3.5 pt-4 border-t border-[#214B91]/50">
               <div className="p-3.5 bg-[#020B20] border border-[#214B91]/70 rounded-2xl flex items-start gap-3">
                 <CheckCircle2 className="w-4 h-4 text-[#10D6A0] flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  No text answer or screenshot required. Complete your YouTube activity above, then click <strong>"Review My Task"</strong> below to send it directly for admin approval.
+                  {task?.isPaid ? (
+                    hasSufficientBalance ? (
+                      <>
+                        Your account balance is verified! Click <strong>"Submit Approval"</strong> below to automatically process and send your task under admin review.
+                      </>
+                    ) : (
+                      <>
+                        Your account balance is <strong>PKR {userBalance.toLocaleString()}</strong>. Please deposit <strong>PKR {remainingNeeded.toLocaleString()}</strong> to complete the required PKR {unlockFee.toLocaleString()} balance to submit for approval.
+                      </>
+                    )
+                  ) : (
+                    <>
+                      No text answer or screenshot required. Complete your assignment above, then click <strong>"Review My Task"</strong> below to send it directly for admin approval.
+                    </>
+                  )}
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleSubmitProof}
-                disabled={submitting}
-                className={`w-full py-3.5 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${
-                  task?.isPaid
-                    ? 'bg-gradient-to-r from-[#10D6A0] to-emerald-400 hover:from-emerald-400 hover:to-[#10D6A0] text-[#020B20] font-black'
-                    : 'bg-gradient-to-r from-[#1459E8] to-[#2478FF] hover:from-[#2478FF] hover:to-[#1459E8] text-white shadow-[#1459E8]/30'
-                }`}
-              >
-                {submitting ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : task?.isPaid ? (
-                  <>
-                    <Zap className="w-4 h-4 text-[#020B20]" />
-                    <span>Review My Task (+PKR {task?.rewardAmount?.toLocaleString() || 80} Reward)</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span>Review My Task</span>
-                  </>
-                )}
-              </button>
+              {task?.isPaid && !hasSufficientBalance ? (
+                <Link
+                  to={`/app/deposits?amount=${remainingNeeded}`}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <ArrowDownLeft className="w-4 h-4" />
+                  <span>Deposit PKR {remainingNeeded.toLocaleString()} to Submit Approval</span>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmitProof}
+                  disabled={submitting}
+                  className={`w-full py-3.5 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${
+                    task?.isPaid
+                      ? 'bg-gradient-to-r from-[#10D6A0] to-emerald-400 hover:from-emerald-400 hover:to-[#10D6A0] text-[#020B20] font-black'
+                      : 'bg-gradient-to-r from-[#1459E8] to-[#2478FF] hover:from-[#2478FF] hover:to-[#1459E8] text-white shadow-[#1459E8]/30'
+                  }`}
+                >
+                  {submitting ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : task?.isPaid ? (
+                    <>
+                      <Zap className="w-4 h-4 text-[#020B20]" />
+                      <span>Submit Approval (+PKR {task?.rewardAmount?.toLocaleString() || 80} Reward)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Review My Task</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
 
