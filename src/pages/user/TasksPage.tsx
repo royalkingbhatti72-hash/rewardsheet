@@ -45,10 +45,10 @@ const LEVEL_ICONS: Record<number, React.ElementType> = {
   10: Crown,
 };
 
-const cleanTaskTitle = (title: string, taskType?: string) => {
-  if (taskType) return taskType;
+const cleanTaskTitle = (title: string) => {
   if (!title) return '';
-  return title.replace(/\s*(—|-|:)\s*Task\s*#?\d+/gi, '').trim();
+  if (title.startsWith('Prepaid Task')) return title;
+  return title.replace(/\s+Task\s*#?\d+$/i, '').trim();
 };
 
 export const TasksPage: React.FC = () => {
@@ -513,7 +513,7 @@ export const TasksPage: React.FC = () => {
                         </span>
 
                         <h5 className="text-[11px] sm:text-xs font-semibold text-slate-300 truncate">
-                          {cleanTaskTitle(task.title, task.taskType)}
+                          {cleanTaskTitle(task.title)}
                         </h5>
 
                         <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/25 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
@@ -601,7 +601,7 @@ export const TasksPage: React.FC = () => {
                       </span>
 
                       <h5 className="text-[11px] sm:text-xs font-semibold text-white truncate">
-                        {cleanTaskTitle(task.title, task.taskType)}
+                        {cleanTaskTitle(task.title)}
                       </h5>
 
                       <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">

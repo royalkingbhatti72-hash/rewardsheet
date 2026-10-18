@@ -19,10 +19,10 @@ import {
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
-const cleanTaskTitle = (title: string, taskType?: string) => {
-  if (taskType) return taskType;
+const cleanTaskTitle = (title: string) => {
   if (!title) return '';
-  return title.replace(/\s*(—|-|:)\s*Task\s*#?\d+/gi, '').trim();
+  if (title.startsWith('Prepaid Task')) return title;
+  return title.replace(/\s+Task\s*#?\d+$/i, '').trim();
 };
 
 export const TaskDetailPage: React.FC = () => {
@@ -161,7 +161,7 @@ export const TaskDetailPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-black text-white">{cleanTaskTitle(task?.title, task?.taskType)}</h1>
+            <h1 className="text-2xl font-black text-white">{cleanTaskTitle(task?.title)}</h1>
             <p className="text-xs text-slate-300">{task?.description}</p>
           </div>
 
