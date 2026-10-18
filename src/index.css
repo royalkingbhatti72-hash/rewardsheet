@@ -28,6 +28,22 @@
   }
 }
 
+/* Prevent mobile browser auto-zoom on input focus (iOS Safari & Chrome) */
+@media screen and (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+input,
+select,
+textarea,
+button {
+  touch-action: manipulation;
+}
+
 /* User Website Royal Styles */
 .royal-glass {
   background: rgba(4, 19, 47, 0.75);
