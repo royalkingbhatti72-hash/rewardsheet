@@ -668,16 +668,16 @@ export const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-2.5 py-1 rounded-full">
-                    Referral Bonus
+                    Extra Spin Bonus
                   </span>
                 </div>
 
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">
-                    Invite Friends & Earn More
+                    Invite Friends & Get Extra Spins
                   </h3>
                   <p className="text-xs text-[#B7C6E4] leading-relaxed">
-                    Share your link with friends and earn extra rewards when they join and complete tasks.
+                    Invite 3 valid friends and get an extra spin. There is no reward in PKR for the invite.
                   </p>
                 </div>
 

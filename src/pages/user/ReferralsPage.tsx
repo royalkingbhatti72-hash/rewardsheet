@@ -225,11 +225,7 @@ export const ReferralsPage: React.FC = () => {
               Royal Referral Network
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Invite friends and build your financial kingdom. Earn{' '}
-              <strong className="text-[#FFD45A] font-bold">
-                PKR {rewardPerReferral.toLocaleString()} instant cash
-              </strong>{' '}
-              for every qualified partner who joins under your royal banner.
+              Invite 3 valid friends and get an extra spin. There is no reward in PKR for the invite.
             </p>
           </div>
 
@@ -661,9 +657,9 @@ export const ReferralsPage: React.FC = () => {
             <div className="w-8 h-8 rounded-xl bg-[#10D6A0]/20 border border-[#10D6A0]/40 text-[#10D6A0] flex items-center justify-center font-black text-sm">
               3
             </div>
-            <h3 className="text-xs font-bold text-white">Instant Cash Commission</h3>
+            <h3 className="text-xs font-bold text-white">Extra Spin Reward</h3>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Earn PKR {rewardPerReferral.toLocaleString()} bonus directly credited to your cash wallet with 100% withdrawal eligibility!
+              Invite 3 valid friends and get an extra spin on the Royal Wheel! There is no reward in PKR for the invite.
             </p>
           </div>
         </div>
@@ -860,16 +856,16 @@ export const ReferralsPage: React.FC = () => {
         <div className="space-y-2.5">
           {[
             {
-              q: 'When does a referred partner become "Qualified"?',
-              a: 'A partner becomes qualified once they register using your referral link/code and complete initial tasks in Level 1. As soon as they complete the qualification criteria, PKR 250 is instantly credited to your wallet.',
+              q: 'How does the referral bonus work?',
+              a: 'Invite 3 valid friends who register using your referral link/code and complete tasks to unlock an extra spin on the Royal Spin Wheel. There is no cash reward in PKR for the invite.',
             },
             {
               q: 'Is there any limit to how many people I can invite?',
-              a: 'No! There is absolutely no limit. You can invite unlimited partners and continue earning PKR 250 per partner, plus milestone bonuses at 5, 15, and 30 referrals.',
+              a: 'No! There is absolutely no limit. Every 3 valid friends you invite unlocks another extra spin on the Royal Wheel!',
             },
             {
-              q: 'Can I withdraw my referral earnings immediately?',
-              a: 'Yes, all referral commissions are credited directly as real cash balance in your Royal Wallet and can be withdrawn through JazzCash or EasyPaisa according to standard withdrawal limits.',
+              q: 'How do I win prizes from my referral spins?',
+              a: 'Head over to the Royal Spin page after your 3 friends join and complete tasks to spin the wheel and win exciting cash rewards!',
             },
             {
               q: 'What is the policy regarding multiple accounts or self-referrals?',
