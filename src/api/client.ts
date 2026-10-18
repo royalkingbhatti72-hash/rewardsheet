@@ -1,4 +1,9 @@
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5050/api').replace(/\/$/, '');
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const DEFAULT_PROD_URL = 'https://backend-two-lilac-79.vercel.app/api';
+const API_BASE = (rawApiUrl && !rawApiUrl.includes('<') 
+  ? rawApiUrl 
+  : (import.meta.env.PROD ? DEFAULT_PROD_URL : 'http://localhost:5050/api')
+).replace(/\/$/, '');
 
 function getUserToken(): string | null {
   return localStorage.getItem('royal_user_token');
