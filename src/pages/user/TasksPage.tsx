@@ -761,15 +761,13 @@ export const TasksPage: React.FC = () => {
                   id={`task-card-${task.taskNumber}`}
                   key={task.id}
                   onClick={() => {
-                    if (task.isPaid && isAwaitingPayment) {
-                      setPrepaidModalTask(task);
-                    }
+                    navigate(`/app/tasks/${task.id}`);
                   }}
-                  className={`py-1.5 px-2.5 sm:px-3 rounded-lg flex items-center justify-between gap-2 transition-all bg-[#071B3A] border ${
+                  className={`py-1.5 px-2.5 sm:px-3 rounded-lg flex items-center justify-between gap-2 transition-all bg-[#071B3A] border cursor-pointer ${
                     isApproved
                       ? 'border-[#10D6A0]/40 hover:border-[#10D6A0]/70'
-                      : isAwaitingPayment
-                      ? 'border-[#FFD45A]/50 bg-gradient-to-r from-[#071B3A] via-[#0B2248] to-[#071B3A] cursor-pointer hover:border-[#FFD45A]'
+                      : isPending
+                      ? 'border-[#1264F5]/40 hover:border-[#1264F5]/70'
                       : isAvailable
                       ? 'border-[#168BFF]/60 shadow-sm shadow-[#1264F5]/10 hover:border-[#168BFF]'
                       : 'border-[#173C73]'
@@ -783,8 +781,6 @@ export const TasksPage: React.FC = () => {
                           ? 'bg-[#10D6A0]/20 border border-[#10D6A0]/40 text-[#10D6A0]'
                           : isPending
                           ? 'bg-[#1264F5]/20 border border-[#168BFF]/40 text-[#168BFF]'
-                          : isAwaitingPayment
-                          ? 'bg-[#FFD45A]/20 border border-[#FFD45A]/40 text-[#FFD45A]'
                           : 'bg-[#1264F5]/30 border border-[#173C73] text-[#FFD45A]'
                       }`}
                     >
@@ -792,8 +788,6 @@ export const TasksPage: React.FC = () => {
                         <Check className="w-3 h-3 text-[#10D6A0]" />
                       ) : isPending ? (
                         <Clock className="w-3 h-3 text-[#168BFF]" />
-                      ) : isAwaitingPayment ? (
-                        <Unlock className="w-3 h-3 text-[#FFD45A]" />
                       ) : (
                         <span>#{task.taskNumber}</span>
                       )}
@@ -821,9 +815,7 @@ export const TasksPage: React.FC = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isAwaitingPayment) {
-                              setPrepaidModalTask(task);
-                            }
+                            setPrepaidModalTask(task);
                           }}
                           className="text-[9px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 hover:bg-[#FFD45A]/25 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 cursor-pointer flex-shrink-0 whitespace-nowrap transition-all leading-none"
                         >

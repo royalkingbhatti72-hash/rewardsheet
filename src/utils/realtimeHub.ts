@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, supabaseAnonKey } from './supabase';
 import { api } from '../api/client';
 
 export type LiveEventType = 'spin' | 'task' | 'wallet' | 'notification' | 'command' | 'all';
@@ -11,7 +11,7 @@ class RealtimeHub {
 
   public init(userId: string) {
     if (!userId) return;
-    if (this.currentUserId === userId && this.isInitialized && this.activeChannel) {
+    if (this.currentUserId === userId && this.isInitialized && (this.activeChannel || this.heartbeatTimer)) {
       return;
     }
 
@@ -19,10 +19,15 @@ class RealtimeHub {
     this.currentUserId = userId;
     this.isInitialized = true;
 
-    try {
-      const channelName = `royal_live_user_${userId}`;
-      this.activeChannel = supabase
-        .channel(channelName)
+    // Supabase Realtime WebSocket endpoint requires a legacy JWT token (eyJ...)
+    // If only a publishable key (sb_publishable_...) is provided, avoid the failing websocket connection
+    const hasValidRealtimeToken = typeof supabaseAnonKey === 'string' && supabaseAnonKey.startsWith('eyJ');
+
+    if (hasValidRealtimeToken) {
+      try {
+        const channelName = `royal_live_user_${userId}`;
+        this.activeChannel = supabase
+          .channel(channelName)
         // 1. Listen to Notifications (created by admin for approvals of all kinds)
         .on(
           'postgres_changes',
@@ -74,11 +79,12 @@ class RealtimeHub {
             // Connected to Supabase Realtime WebSocket
           }
         });
-    } catch (err) {
-      console.warn('[RealtimeHub] Realtime subscription init notice:', err);
+      } catch (err) {
+        console.warn('[RealtimeHub] Realtime subscription init notice:', err);
+      }
     }
 
-    // High-speed fallback heartbeat sync: checks for new data every 10s if window is active
+    // High-speed fallback heartbeat sync: checks for new data every 6s if window is active
     this.startHeartbeatSync();
   }
 

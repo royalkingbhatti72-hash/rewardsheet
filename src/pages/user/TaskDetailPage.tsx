@@ -240,11 +240,6 @@ export const TaskDetailPage: React.FC = () => {
                 <XCircle className="w-3.5 h-3.5" /> Rejected
               </span>
             )}
-            {isAwaitingPayment && (
-              <span className="bg-[#FFD45A]/15 border border-[#FFD45A]/40 text-[#FFD45A] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5" /> Awaiting Unlock Fee
-              </span>
-            )}
             {isAvailable && (
               <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
                 <Unlock className="w-3.5 h-3.5" /> Ready for Completion
