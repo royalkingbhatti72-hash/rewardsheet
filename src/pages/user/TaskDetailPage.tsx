@@ -70,13 +70,9 @@ export const TaskDetailPage: React.FC = () => {
     }
   };
 
-  const handleSubmitProof = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmitProof = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!taskId) return;
-    if (!submissionNotes.trim()) {
-      setError('Please provide task confirmation details or reference');
-      return;
-    }
 
     setSubmitting(true);
     setError(null);
@@ -84,12 +80,9 @@ export const TaskDetailPage: React.FC = () => {
 
     try {
       const res = await api.submitTask(taskId, {
-        submissionNotes: submissionNotes.trim(),
-        proofEvidence: proofEvidence.trim() || undefined,
+        submissionNotes: 'Review My Task',
       });
       setSuccess(res.message);
-      setSubmissionNotes('');
-      setProofEvidence('');
       loadTask();
     } catch (err: any) {
       setError(err.message || 'Submission failed');
@@ -339,12 +332,13 @@ export const TaskDetailPage: React.FC = () => {
           )}
 
           {/* Submission Guidance */}
+          {/* Submission Guidance */}
           <div className="p-4 bg-[#04132F] border border-[#214B91]/60 rounded-2xl text-xs space-y-2">
             <p className="font-bold text-[#FFD45A] flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4" /> Verification Instructions:
             </p>
             <p className="text-slate-300 leading-relaxed">
-              {task?.submissionInstructions || 'Complete the assignment steps and enter your confirmation reference below.'}
+              Open and complete the YouTube activity above, then simply click <strong>"Review My Task"</strong> below. Your task will immediately go under review. Once approved by an administrator, the task will be completed and the next task will automatically open!
             </p>
           </div>
 
@@ -356,70 +350,29 @@ export const TaskDetailPage: React.FC = () => {
                 <span>Prepaid Task Feature: Instant Auto-Approval</span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Paid tasks do <strong>NOT</strong> need manual admin review! Submitting your confirmation reference will <strong>instantly auto-approve</strong> this task, credit your +{task?.creditPoints || 30} credit points, and immediately unlock the next sequential assignment.
+                Paid tasks do <strong>NOT</strong> need manual review! Clicking <strong>"Review My Task"</strong> will <strong>instantly complete</strong> this task, credit your +{task?.creditPoints || 30} credit points, and immediately unlock the next sequential assignment.
               </p>
             </div>
           )}
 
-          {/* Submission Form (Shown when Available or Rejected) */}
+          {/* 1-Click "Review My Task" Button (No Answer or Image Upload Required) */}
           {(isAvailable || isRejected) && (
-            <form onSubmit={handleSubmitProof} className="space-y-4 pt-4 border-t border-[#214B91]/50">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  {task?.isPaid ? (
-                    <>
-                      <Zap className="w-4 h-4 text-[#FFD45A]" />
-                      <span>Complete & Instantly Approve Prepaid Task</span>
-                    </>
-                  ) : (
-                    <span>Submit Activity for Admin Review</span>
-                  )}
-                </h3>
-                {task?.isPaid && (
-                  <span className="text-[10px] font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/40 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 w-fit">
-                    <CheckCircle2 className="w-3 h-3 text-[#10D6A0]" /> Instant Approval • No Review Waiting
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Completion Notes / Confirmation Reference *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder={
-                    task?.isPaid
-                      ? 'Enter your transaction TID, transaction ID, or account confirmation reference to instantly complete this task...'
-                      : 'Enter your confirmation details, reference code, username, or message sent to verification line...'
-                  }
-                  value={submissionNotes}
-                  onChange={(e) => setSubmissionNotes(e.target.value)}
-                  className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Screenshot / Proof Reference (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Screenshot link or Trx / TID reference"
-                  value={proofEvidence}
-                  onChange={(e) => setProofEvidence(e.target.value)}
-                  className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-                />
+            <div className="space-y-3.5 pt-4 border-t border-[#214B91]/50">
+              <div className="p-3.5 bg-[#020B20] border border-[#214B91]/70 rounded-2xl flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-[#10D6A0] flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  No text answer or screenshot required. Complete your YouTube activity above, then click <strong>"Review My Task"</strong> below to send it directly for admin approval.
+                </p>
               </div>
 
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmitProof}
                 disabled={submitting}
-                className={`w-full py-3 font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${
+                className={`w-full py-3.5 font-bold text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer ${
                   task?.isPaid
                     ? 'bg-gradient-to-r from-[#10D6A0] to-emerald-400 hover:from-emerald-400 hover:to-[#10D6A0] text-[#020B20] font-black'
-                    : 'bg-gradient-to-r from-[#1459E8] to-[#2478FF] hover:from-[#2478FF] hover:to-[#1459E8] text-white'
+                    : 'bg-gradient-to-r from-[#1459E8] to-[#2478FF] hover:from-[#2478FF] hover:to-[#1459E8] text-white shadow-[#1459E8]/30'
                 }`}
               >
                 {submitting ? (
@@ -427,24 +380,28 @@ export const TaskDetailPage: React.FC = () => {
                 ) : task?.isPaid ? (
                   <>
                     <Zap className="w-4 h-4 text-[#020B20]" />
-                    <span>Complete & Instantly Approve Task (+{task?.creditPoints || 30} Points)</span>
+                    <span>Review My Task (+{task?.creditPoints || 30} Points)</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" /> Submit for Review
+                    <Send className="w-4 h-4" />
+                    <span>Review My Task</span>
                   </>
                 )}
               </button>
-            </form>
+            </div>
           )}
 
-          {/* Pending State Notice (Only for standard tasks) */}
+          {/* Pending State Notice */}
           {isPending && (
             <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl flex items-center gap-3">
               <Clock className="w-5 h-5 text-blue-400 flex-shrink-0" />
-              <p className="text-xs text-blue-300">
-                Your submission is currently in the verification queue. An administrator will review your evidence shortly.
-              </p>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-blue-300">Task Under Review ⏳</p>
+                <p className="text-[11px] text-blue-200/80 leading-relaxed">
+                  Your task has been submitted for review! An administrator will evaluate and approve it shortly. Once approved, this task will be marked completed and the next task will automatically open.
+                </p>
+              </div>
             </div>
           )}
 
