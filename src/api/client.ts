@@ -13,11 +13,136 @@ function getAdminToken(): string | null {
   return localStorage.getItem('royal_admin_token');
 }
 
+// ----------------------------------------------------
+// BROWSER CACHE SYSTEM (Memory + SessionStorage + Deduplication)
+// ----------------------------------------------------
+interface CacheEntry {
+  data: any;
+  expiry: number;
+}
+
+const memoryCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<any>>();
+const CACHE_PREFIX = 'royal_c_';
+
+export function getCachedData<T = any>(endpoint: string): T | null {
+  const now = Date.now();
+
+  // 1. Check memory cache first (0ms)
+  const mem = memoryCache.get(endpoint);
+  if (mem) {
+    if (mem.expiry > now) {
+      return mem.data as T;
+    }
+    memoryCache.delete(endpoint);
+  }
+
+  // 2. Check browser sessionStorage
+  try {
+    const raw = sessionStorage.getItem(`${CACHE_PREFIX}${endpoint}`);
+    if (raw) {
+      const parsed: CacheEntry = JSON.parse(raw);
+      if (parsed.expiry > now) {
+        memoryCache.set(endpoint, parsed);
+        return parsed.data as T;
+      }
+      sessionStorage.removeItem(`${CACHE_PREFIX}${endpoint}`);
+    }
+  } catch {
+    // SessionStorage disabled or restricted
+  }
+
+  return null;
+}
+
+export function setCachedData(endpoint: string, data: any, ttlMs: number): void {
+  const expiry = Date.now() + ttlMs;
+  const entry: CacheEntry = { data, expiry };
+
+  // Write memory cache
+  memoryCache.set(endpoint, entry);
+
+  // Write browser sessionStorage
+  try {
+    sessionStorage.setItem(`${CACHE_PREFIX}${endpoint}`, JSON.stringify(entry));
+  } catch {
+    // Quota exceeded or private browsing
+  }
+}
+
+export function invalidateCache(pattern?: string): void {
+  if (!pattern) {
+    memoryCache.clear();
+    try {
+      const keys = Object.keys(sessionStorage);
+      for (const k of keys) {
+        if (k.startsWith(CACHE_PREFIX)) {
+          sessionStorage.removeItem(k);
+        }
+      }
+    } catch {}
+    return;
+  }
+
+  // Selective invalidation
+  for (const k of Array.from(memoryCache.keys())) {
+    if (k.includes(pattern)) {
+      memoryCache.delete(k);
+    }
+  }
+
+  try {
+    const keys = Object.keys(sessionStorage);
+    for (const k of keys) {
+      if (k.startsWith(CACHE_PREFIX) && k.includes(pattern)) {
+        sessionStorage.removeItem(k);
+      }
+    }
+  } catch {}
+}
+
+function getTtlForEndpoint(endpoint: string): number {
+  if (endpoint.startsWith('/settings/public')) return 10 * 60 * 1000; // 10 min
+  if (endpoint.startsWith('/notifications/announcements')) return 10 * 60 * 1000; // 10 min
+  if (endpoint.startsWith('/tasks/levels')) return 3 * 60 * 1000; // 3 min
+  if (endpoint.startsWith('/tasks/')) return 60 * 1000; // 1 min
+  if (endpoint.startsWith('/user/dashboard')) return 45 * 1000; // 45 sec
+  if (endpoint.startsWith('/auth/me')) return 60 * 1000; // 60 sec
+  if (endpoint.startsWith('/wallet')) return 30 * 1000; // 30 sec
+  if (endpoint.startsWith('/deposits')) return 30 * 1000; // 30 sec
+  if (endpoint.startsWith('/withdrawals')) return 30 * 1000; // 30 sec
+  if (endpoint.startsWith('/spin/status')) return 30 * 1000; // 30 sec
+  if (endpoint.startsWith('/referrals')) return 60 * 1000; // 60 sec
+  if (endpoint.startsWith('/notifications')) return 30 * 1000; // 30 sec
+  return 30 * 1000; // Default 30s
+}
+
+export interface RequestOptions extends RequestInit {
+  bypassCache?: boolean;
+  ttl?: number;
+}
+
 async function request<T = any>(
   endpoint: string,
-  options: RequestInit = {},
+  options: RequestOptions = {},
   isAdmin = false
 ): Promise<T> {
+  const method = (options.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
+
+  // Cache lookup for non-admin GET requests
+  if (isGet && !isAdmin && !options.bypassCache) {
+    const cached = getCachedData<T>(endpoint);
+    if (cached !== null) {
+      return cached;
+    }
+
+    // Deduplicate concurrent in-flight requests to the same endpoint
+    if (inFlightRequests.has(endpoint)) {
+      return inFlightRequests.get(endpoint)!;
+    }
+  }
+
   const token = isAdmin ? getAdminToken() : getUserToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -28,69 +153,127 @@ async function request<T = any>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const fetchPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
 
-  const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({}));
 
-  if (!res.ok) {
-    throw new Error(data.error || `Request failed with status ${res.status}`);
+      if (!res.ok) {
+        throw new Error(data.error || `Request failed with status ${res.status}`);
+      }
+
+      // Cache successful user GET responses
+      if (isGet && !isAdmin) {
+        const ttl = options.ttl || getTtlForEndpoint(endpoint);
+        setCachedData(endpoint, data, ttl);
+      } else if (!isGet) {
+        // Automatic cache invalidation upon mutations
+        if (endpoint.includes('/tasks') || endpoint.includes('/submit') || endpoint.includes('/unlock')) {
+          invalidateCache('/tasks');
+          invalidateCache('/user/dashboard');
+          invalidateCache('/wallet');
+          invalidateCache('/auth/me');
+        } else if (endpoint.includes('/deposits')) {
+          invalidateCache('/deposits');
+          invalidateCache('/wallet');
+          invalidateCache('/user/dashboard');
+          invalidateCache('/auth/me');
+        } else if (endpoint.includes('/withdrawals')) {
+          invalidateCache('/withdrawals');
+          invalidateCache('/wallet');
+          invalidateCache('/user/dashboard');
+          invalidateCache('/auth/me');
+        } else if (endpoint.includes('/spin')) {
+          invalidateCache('/spin');
+          invalidateCache('/wallet');
+          invalidateCache('/user/dashboard');
+        } else if (endpoint.includes('/profile')) {
+          invalidateCache('/user/profile');
+          invalidateCache('/auth/me');
+        } else if (endpoint.includes('/notifications')) {
+          invalidateCache('/notifications');
+        } else if (endpoint.includes('/auth/logout') || endpoint.includes('/auth/login') || endpoint.includes('/auth/register')) {
+          invalidateCache();
+        }
+      }
+
+      return data as T;
+    } finally {
+      if (isGet && !isAdmin) {
+        inFlightRequests.delete(endpoint);
+      }
+    }
+  })();
+
+  if (isGet && !isAdmin && !options.bypassCache) {
+    inFlightRequests.set(endpoint, fetchPromise);
   }
 
-  return data as T;
+  return fetchPromise;
 }
 
 export const api = {
+  // Cache utility helpers
+  getCachedData,
+  setCachedData,
+  invalidateCache,
+  request,
+
   // Public & Settings
-  getPublicSettings: () => request('/settings/public'),
-  getAnnouncements: () => request('/notifications/announcements'),
+  getPublicSettings: (opts?: RequestOptions) => request('/settings/public', opts),
+  getAnnouncements: (opts?: RequestOptions) => request('/notifications/announcements', opts),
 
   // User Auth
   register: (payload: any) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
   login: (payload: any) => request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
-  getMe: () => request('/auth/me'),
+  getMe: (opts?: RequestOptions) => request('/auth/me', opts),
   logout: () => {
     localStorage.removeItem('royal_user_token');
+    localStorage.removeItem('royal_cached_user');
+    localStorage.removeItem('royal_cached_wallet');
+    invalidateCache();
     return request('/auth/logout', { method: 'POST' });
   },
 
   // User Dashboard & Profile
-  getDashboard: () => request('/user/dashboard'),
-  getProfile: () => request('/user/profile'),
+  getDashboard: (opts?: RequestOptions) => request('/user/dashboard', opts),
+  getProfile: (opts?: RequestOptions) => request('/user/profile', opts),
   updatePassword: (payload: any) => request('/user/profile/password', { method: 'PUT', body: JSON.stringify(payload) }),
 
   // Tasks & Levels
-  getLevels: () => request('/tasks/levels'),
-  getLevelTasks: (levelNumber: number) => request(`/tasks/levels/${levelNumber}`),
-  getTaskDetails: (taskId: string) => request(`/tasks/${taskId}`),
+  getLevels: (opts?: RequestOptions) => request('/tasks/levels', opts),
+  getLevelTasks: (levelNumber: number, opts?: RequestOptions) => request(`/tasks/levels/${levelNumber}`, opts),
+  getTaskDetails: (taskId: string, opts?: RequestOptions) => request(`/tasks/${taskId}`, opts),
   unlockTask: (taskId: string) => request(`/tasks/${taskId}/unlock`, { method: 'POST' }),
   submitTask: (taskId: string, payload: { submissionNotes: string; proofEvidence?: string }) =>
     request(`/tasks/${taskId}/submit`, { method: 'POST', body: JSON.stringify(payload) }),
 
   // Wallet
-  getWallet: () => request('/wallet'),
-  getTransactions: (page = 1, limit = 20) => request(`/wallet/transactions?page=${page}&limit=${limit}`),
+  getWallet: (opts?: RequestOptions) => request('/wallet', opts),
+  getTransactions: (page = 1, limit = 20, opts?: RequestOptions) => request(`/wallet/transactions?page=${page}&limit=${limit}`, opts),
 
   // Deposits
-  getDepositInstructions: () => request('/deposits/instructions'),
-  getDeposits: () => request('/deposits'),
+  getDepositInstructions: (opts?: RequestOptions) => request('/deposits/instructions', opts),
+  getDeposits: (opts?: RequestOptions) => request('/deposits', opts),
   submitDeposit: (payload: any) => request('/deposits', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Withdrawals
-  getWithdrawals: () => request('/withdrawals'),
+  getWithdrawals: (opts?: RequestOptions) => request('/withdrawals', opts),
   submitWithdrawal: (payload: any) => request('/withdrawals', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Spin Wheel
-  getSpinStatus: () => request('/spin/status'),
+  getSpinStatus: (opts?: RequestOptions) => request('/spin/status', opts),
   playSpin: () => request('/spin/play', { method: 'POST' }),
 
   // Referrals
-  getReferrals: () => request('/referrals'),
+  getReferrals: (opts?: RequestOptions) => request('/referrals', opts),
 
   // Notifications
-  getNotifications: () => request('/notifications'),
+  getNotifications: (opts?: RequestOptions) => request('/notifications', opts),
   markNotificationRead: (id: string) => request(`/notifications/${id}/read`, { method: 'PUT' }),
   markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PUT' }),
 

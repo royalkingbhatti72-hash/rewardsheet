@@ -31,14 +31,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function getInitialUser(): User | null {
+  try {
+    const raw = localStorage.getItem('royal_cached_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getInitialWallet(): Wallet | null {
+  try {
+    const raw = localStorage.getItem('royal_cached_wallet');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('royal_user_token');
+  const initialUser = token ? getInitialUser() : null;
+  const initialWallet = token ? getInitialWallet() : null;
+
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [wallet, setWallet] = useState<Wallet | null>(initialWallet);
+  // If we already have a cached user and token, don't show full-page loading spinner!
+  const [loading, setLoading] = useState<boolean>(!token ? false : !initialUser);
 
   const refreshUser = async () => {
-    const token = localStorage.getItem('royal_user_token');
-    if (!token) {
+    const currentToken = localStorage.getItem('royal_user_token');
+    if (!currentToken) {
       setUser(null);
       setWallet(null);
       setLoading(false);
@@ -49,8 +72,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.getMe();
       setUser(res.user);
       setWallet(res.user.wallet);
+      try {
+        localStorage.setItem('royal_cached_user', JSON.stringify(res.user));
+        if (res.user.wallet) {
+          localStorage.setItem('royal_cached_wallet', JSON.stringify(res.user.wallet));
+        }
+      } catch {}
     } catch (err) {
       localStorage.removeItem('royal_user_token');
+      localStorage.removeItem('royal_cached_user');
+      localStorage.removeItem('royal_cached_wallet');
       setUser(null);
       setWallet(null);
     } finally {
@@ -65,12 +96,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (token: string, userData: User, walletData?: Wallet) => {
     localStorage.setItem('royal_user_token', token);
     setUser(userData);
+    try {
+      localStorage.setItem('royal_cached_user', JSON.stringify(userData));
+      if (walletData) {
+        localStorage.setItem('royal_cached_wallet', JSON.stringify(walletData));
+      }
+    } catch {}
     if (walletData) setWallet(walletData);
   };
 
   const logout = () => {
     api.logout().catch(() => {});
     localStorage.removeItem('royal_user_token');
+    localStorage.removeItem('royal_cached_user');
+    localStorage.removeItem('royal_cached_wallet');
     setUser(null);
     setWallet(null);
   };
@@ -82,10 +121,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};

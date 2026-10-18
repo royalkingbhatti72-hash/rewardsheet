@@ -34,8 +34,9 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedDashboard = api.getCachedData('/user/dashboard');
+  const [data, setData] = useState<any>(cachedDashboard);
+  const [loading, setLoading] = useState(!cachedDashboard);
   const [copiedLink, setCopiedLink] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
 
@@ -55,7 +56,7 @@ export const DashboardPage: React.FC = () => {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-3">
@@ -64,6 +65,10 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!data) {
+    return null;
   }
 
   const {

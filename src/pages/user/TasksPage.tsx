@@ -55,10 +55,26 @@ export const TasksPage: React.FC = () => {
   const { refreshUser, wallet } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [levels, setLevels] = useState<any[]>([]);
-  const [activeLevelNumber, setActiveLevelNumber] = useState<number>(1);
-  const [currentLevelData, setCurrentLevelData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedLevels = api.getCachedData<any>('/tasks/levels');
+  const [levels, setLevels] = useState<any[]>(cachedLevels?.levels || []);
+  const [activeLevelNumber, setActiveLevelNumber] = useState<number>(() => {
+    const paramLevel = parseInt(new URLSearchParams(window.location.search).get('level') || '', 10);
+    if (paramLevel >= 1 && paramLevel <= 10) return paramLevel;
+    if (cachedLevels?.levels) {
+      const userCurrent =
+        cachedLevels.levels.find((l: any) => l.isUnlocked && !l.isCompleted) ||
+        cachedLevels.levels.filter((l: any) => l.isUnlocked).slice(-1)[0] ||
+        cachedLevels.levels[0];
+      return userCurrent ? userCurrent.levelNumber : 1;
+    }
+    return 1;
+  });
+
+  const [currentLevelData, setCurrentLevelData] = useState<any>(() => {
+    const paramLevel = parseInt(new URLSearchParams(window.location.search).get('level') || '', 10) || 1;
+    return api.getCachedData<any>(`/tasks/levels/${paramLevel}`);
+  });
+  const [loading, setLoading] = useState(!cachedLevels);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [unlockingTaskId, setUnlockingTaskId] = useState<string | null>(null);
   const [prepaidModalTask, setPrepaidModalTask] = useState<any | null>(null);
@@ -95,7 +111,9 @@ export const TasksPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setActionError('Failed to load level progression.');
+      if (levels.length === 0) {
+        setActionError('Failed to load level progression.');
+      }
     } finally {
       setLoading(false);
     }
@@ -108,16 +126,26 @@ export const TasksPage: React.FC = () => {
   // Fetch tasks whenever selected level number changes
   useEffect(() => {
     if (!activeLevelNumber) return;
-    setTasksLoading(true);
+    const cached = api.getCachedData<any>(`/tasks/levels/${activeLevelNumber}`);
+    if (cached) {
+      setCurrentLevelData(cached);
+      setTasksLoading(false);
+    } else {
+      setTasksLoading(true);
+    }
     setActionError(null);
     setActionSuccess(null);
 
     api
       .getLevelTasks(activeLevelNumber)
-      .then(setCurrentLevelData)
+      .then((data) => {
+        setCurrentLevelData(data);
+      })
       .catch((err) => {
         console.error(err);
-        setActionError(`Failed to load tasks for Level ${activeLevelNumber}.`);
+        if (!cached) {
+          setActionError(`Failed to load tasks for Level ${activeLevelNumber}.`);
+        }
       })
       .finally(() => setTasksLoading(false));
 
@@ -192,7 +220,7 @@ export const TasksPage: React.FC = () => {
     levels[0];
   const userCurrentLevelNumber = userCurrentLevel?.levelNumber || 1;
 
-  if (loading) {
+  if (loading && levels.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3">
         <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin" />
@@ -463,7 +491,7 @@ export const TasksPage: React.FC = () => {
           ======================================================== */}
       <section ref={tasksSectionRef} className="space-y-4 scroll-mt-20">
 
-        {tasksLoading ? (
+        {tasksLoading && (!tasks || tasks.length === 0) ? (
           <div className="py-16 text-center space-y-2">
             <div className="w-8 h-8 border-3 border-[#1264F5]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
             <p className="text-xs text-[#8194B7]">Evaluating task prerequisites...</p>

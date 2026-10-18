@@ -23,10 +23,13 @@ import { api } from '../../api/client';
 export const UserLayout: React.FC = () => {
   const { user, wallet, logout } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const cachedNotifs = api.getCachedData<any>('/notifications');
+  const cachedAnnounce = api.getCachedData<any>('/notifications/announcements');
+  const [unreadCount, setUnreadCount] = useState<number>(cachedNotifs?.unreadCount || 0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [announcement, setAnnouncement] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState<string | null>(
+    cachedAnnounce?.announcements?.[0]?.content || null
+  );
 
   useEffect(() => {
     // Fetch notifications unread count and announcements

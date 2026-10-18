@@ -17,14 +17,16 @@ import { useAuth } from '../../context/AuthContext';
 
 export const WalletPage: React.FC = () => {
   const { wallet: authWallet } = useAuth();
-  const [wallet, setWallet] = useState<any>(authWallet);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedWallet = api.getCachedData<any>('/wallet')?.wallet || authWallet;
+  const cachedTx = api.getCachedData<any>('/wallet/transactions?page=1&limit=15');
+  const [wallet, setWallet] = useState<any>(cachedWallet);
+  const [transactions, setTransactions] = useState<any[]>(cachedTx?.transactions || []);
+  const [loading, setLoading] = useState(!cachedWallet && !cachedTx);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(cachedTx?.pagination?.totalPages || 1);
 
   const loadData = (p = 1) => {
-    setLoading(true);
+    if (!wallet && transactions.length === 0) setLoading(true);
     Promise.all([api.getWallet(), api.getTransactions(p, 15)])
       .then(([walletRes, txRes]) => {
         setWallet(walletRes.wallet);
@@ -126,7 +128,7 @@ export const WalletPage: React.FC = () => {
           <Receipt className="w-4 h-4 text-[#2478FF]" /> Immutable Financial Ledger
         </h2>
 
-        {loading ? (
+        {loading && transactions.length === 0 ? (
           <div className="py-12 text-center text-xs text-slate-400">Loading ledger records...</div>
         ) : transactions.length > 0 ? (
           <div className="overflow-x-auto">
