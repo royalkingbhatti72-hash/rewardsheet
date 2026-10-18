@@ -251,9 +251,6 @@ export const LandingPage: React.FC = () => {
           <div className="flex items-center gap-6">
             <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/adminpanal" className="text-slate-500 hover:text-[#2563EB] transition-colors">
-              Administration Portal
-            </Link>
           </div>
         </div>
       </footer>

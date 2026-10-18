@@ -110,28 +110,9 @@ export const App: React.FC = () => {
         <Route path="profile" element={<ProfilePage />} />
       </Route>
 
-      {/* Admin Entry / Login */}
-      <Route path="/adminpanal" element={<AdminLoginPage />} />
-
-      {/* Admin Protected Routes */}
-      <Route path="/adminpanal" element={<ProtectedAdminRoute />}>
-        <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="users" element={<AdminUsersPage />} />
-        <Route path="users/:userId" element={<AdminUserDetailPage />} />
-        <Route path="levels" element={<AdminLevelsPage />} />
-        <Route path="tasks" element={<AdminTasksPage />} />
-        <Route path="submissions" element={<AdminSubmissionsPage />} />
-        <Route path="deposits" element={<AdminDepositsPage />} />
-        <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
-        <Route path="wallets" element={<AdminWalletsPage />} />
-        <Route path="spin" element={<AdminSpinPage />} />
-        <Route path="referrals" element={<AdminReferralsPage />} />
-        <Route path="transactions" element={<AdminTransactionsPage />} />
-        <Route path="announcements" element={<AdminAnnouncementsPage />} />
-        <Route path="reports" element={<AdminReportsPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
-        <Route path="activity-logs" element={<AdminActivityLogsPage />} />
-      </Route>
+      {/* Admin Panel has been relocated exclusively to backend deployment */}
+      <Route path="/adminpanal/*" element={<Navigate to="/" replace />} />
+      <Route path="/adminpanal" element={<Navigate to="/" replace />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
