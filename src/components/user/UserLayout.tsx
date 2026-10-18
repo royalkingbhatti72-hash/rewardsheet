@@ -80,7 +80,7 @@ export const UserLayout: React.FC = () => {
                 EARN SHEET
               </span>
               <span className="block text-[8px] sm:text-[9px] text-[#22D3EE] font-bold tracking-wider uppercase leading-none">
-                Official
+                {user?.phone || 'Official'}
               </span>
             </div>
           </Link>
