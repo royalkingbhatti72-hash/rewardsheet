@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-bg-dark: #04132F;
+    --color-bg-deep: #020B20;
+    --color-blue-primary: #1459E8;
+    --color-blue-secondary: #2478FF;
+    --color-gold: #FFD45A;
+    --color-purple: #792BFF;
+    --color-cyan: #22D3EE;
+    --color-border-dark: #214B91;
+
+    --admin-bg: #F5F8FC;
+    --admin-surface: #FFFFFF;
+    --admin-surface-soft: #F7F9FD;
+    --admin-primary: #2563EB;
+    --admin-primary-soft: #EAF2FF;
+    --admin-text-strong: #111827;
+    --admin-text-muted: #6B7280;
+    --admin-border-main: #D9E4F2;
+    --admin-border-subtle: #EDF1F7;
+    --admin-shadow: 0 16px 36px rgba(15, 23, 42, 0.055);
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* User Website Royal Styles */
+.royal-glass {
+  background: rgba(4, 19, 47, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(33, 75, 145, 0.4);
+}
+
+.royal-card {
+  background: linear-gradient(135deg, rgba(14, 34, 75, 0.8) 0%, rgba(4, 19, 47, 0.95) 100%);
+  border: 1px solid rgba(33, 75, 145, 0.6);
+  box-shadow: 0 8px 32px rgba(2, 11, 32, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.royal-card:hover {
+  border-color: rgba(36, 120, 255, 0.8);
+  box-shadow: 0 12px 36px rgba(20, 89, 232, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.royal-glow-gold {
+  box-shadow: 0 0 20px rgba(255, 212, 90, 0.35);
+}
+
+.royal-glow-blue {
+  box-shadow: 0 0 20px rgba(20, 89, 232, 0.4);
+}
+
+.royal-gradient-text {
+  background: linear-gradient(135deg, #FFD45A 0%, #FFF3B0 50%, #FFB703 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.royal-blue-gradient-text {
+  background: linear-gradient(135deg, #60A5FA 0%, #22D3EE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Light Admin Panel Styles */
+.admin-card {
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-border-main);
+  box-shadow: var(--admin-shadow);
+  border-radius: 10px;
+}
+
+.admin-table th {
+  background-color: #F8FAFC;
+  color: #475569;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--admin-border-main);
+}
+
+.admin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--admin-border-subtle);
+  color: var(--admin-text-strong);
+  font-size: 13.5px;
+}
+
+.admin-table tr:hover td {
+  background-color: #F8FAFD;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(2, 11, 32, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(33, 75, 145, 0.6);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 120, 255, 0.8);
+}
