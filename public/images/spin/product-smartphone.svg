@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="phoneBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="50%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="phoneScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+    <linearGradient id="phoneRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+  </defs>
+  <!-- Phone Body Outer Frame -->
+  <rect x="15" y="4" width="34" height="56" rx="7" fill="url(#phoneRim)" stroke="#CBD5E1" stroke-width="1.2" />
+  <rect x="16.5" y="5.5" width="31" height="53" rx="6" fill="url(#phoneBody)" />
+  <!-- Screen with Vibrant Wallpaper -->
+  <rect x="18" y="9" width="28" height="46" rx="3.5" fill="url(#phoneScreen)" />
+  <!-- Screen Glow / Reflections -->
+  <path d="M 18 9 L 46 32 L 46 9 Z" fill="#FFFFFF" opacity="0.18" />
+  <!-- Dynamic Island Notch -->
+  <rect x="27" y="6.5" width="10" height="2.5" rx="1.2" fill="#020617" />
+  <circle cx="34" cy="7.7" r="0.6" fill="#1E293B" />
+  <!-- Home Indicator Bar -->
+  <rect x="26" y="52" width="12" height="1.2" rx="0.6" fill="#FFFFFF" opacity="0.8" />
+</svg>

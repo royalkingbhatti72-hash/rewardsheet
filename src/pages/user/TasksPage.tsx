@@ -127,8 +127,20 @@ export const TasksPage: React.FC = () => {
     triggerFireworks();
   };
 
+  const DEFAULT_FALLBACK_LEVELS = Array.from({ length: 10 }, (_, i) => ({
+    id: `lvl-${i + 1}`,
+    levelNumber: i + 1,
+    title: `Level ${i + 1}`,
+    description: `Tier ${i + 1} Assignment`,
+    isUnlocked: i === 0,
+    isCompleted: false,
+    approvedTaskCount: 0,
+    requiredTaskCount: 10,
+    completionReward: (i + 1) * 200,
+    totalCreditPoints: 100,
+  }));
   const cachedLevels = api.getCachedData<any>('/tasks/levels');
-  const [levels, setLevels] = useState<any[]>(cachedLevels?.levels || []);
+  const [levels, setLevels] = useState<any[]>(cachedLevels?.levels || DEFAULT_FALLBACK_LEVELS);
   const [activeLevelNumber, setActiveLevelNumber] = useState<number>(() => {
     const paramLevel = parseInt(new URLSearchParams(window.location.search).get('level') || '', 10);
     if (paramLevel >= 1 && paramLevel <= 10) return paramLevel;
@@ -223,6 +235,39 @@ export const TasksPage: React.FC = () => {
 
     // Center selected card in carousel
     scrollToSelectedCard(activeLevelNumber);
+  }, [activeLevelNumber]);
+
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  useEffect(() => {
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      if (type === 'task' || type === 'notification' || type === 'wallet' || type === 'command' || type === 'all') {
+        api.invalidateCache('/tasks');
+        fetchLevels(true);
+        if (activeLevelNumber) {
+          api
+            .getLevelTasks(activeLevelNumber)
+            .then((data) => setCurrentLevelData(data))
+            .catch(() => {});
+        }
+      }
+    };
+
+    const handleHeartbeat = () => {
+      if (activeLevelNumber) {
+        api
+          .getLevelTasks(activeLevelNumber)
+          .then((data) => setCurrentLevelData(data))
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', handleHeartbeat);
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', handleHeartbeat);
+    };
   }, [activeLevelNumber]);
 
   const scrollToSelectedCard = (levelNum: number) => {

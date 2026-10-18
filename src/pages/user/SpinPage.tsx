@@ -15,17 +15,57 @@ import {
   Flame,
   ArrowRight,
   ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 
+const DEFAULT_FALLBACK_PRIZES = [
+  { id: 'p1', displayLabel: 'PKR 50', name: 'PKR 50', prizeType: 'CASH', monetaryValue: 50, color: '#1459E8' },
+  { id: 'p2', displayLabel: 'PKR 100', name: 'PKR 100', prizeType: 'CASH', monetaryValue: 100, color: '#792BFF' },
+  { id: 'p3', displayLabel: 'PKR 250', name: 'PKR 250', prizeType: 'CASH', monetaryValue: 250, color: '#059669' },
+  { id: 'p4', displayLabel: 'PKR 500', name: 'PKR 500', prizeType: 'CASH', monetaryValue: 500, color: '#DC2626' },
+  { id: 'p5', displayLabel: 'PKR 1,000', name: 'PKR 1,000', prizeType: 'CASH', monetaryValue: 1000, color: '#0284C7' },
+  { id: 'p6', displayLabel: 'PKR 5,000 Mega', name: 'PKR 5,000', prizeType: 'CASH', monetaryValue: 5000, color: '#D97706' },
+  { id: 'p7', displayLabel: 'Gold Watch', name: 'Royal Gold Watch', prizeType: 'PHYSICAL', monetaryValue: 15000, color: '#4F46E5', icon: 'watch' },
+  { id: 'p8', displayLabel: 'Smartphone Pro', name: 'Smartphone Pro', prizeType: 'PHYSICAL', monetaryValue: 75000, color: '#EAB308', icon: 'smartphone' },
+];
+
+const getPrizeProductImage = (prize: any) => {
+  if (!prize) return null;
+  if (prize.imageUrl) return prize.imageUrl;
+  if (prize.image) return prize.image;
+
+  const type = (prize.prizeType || '').toUpperCase();
+  const name = (prize.name || '').toLowerCase();
+  const label = (prize.displayLabel || '').toLowerCase();
+  const icon = (prize.icon || '').toLowerCase();
+
+  // Smartphone Pro
+  if (name.includes('phone') || label.includes('phone') || icon.includes('phone') || icon.includes('mobile')) {
+    return '/images/spin/product-smartphone.svg';
+  }
+  // Royal Gold Watch
+  if (name.includes('watch') || label.includes('watch') || icon.includes('watch') || icon.includes('clock')) {
+    return '/images/spin/product-watch.svg';
+  }
+  // Physical gift / general physical product
+  if (type === 'PHYSICAL' || name.includes('gift') || label.includes('gift') || icon.includes('gift')) {
+    return '/images/spin/product-gift.svg';
+  }
+  // Cash jackpot
+  if (name.includes('5,000') || label.includes('5,000') || name.includes('mega') || icon === 'trophy') {
+    return '/images/spin/product-cash.svg';
+  }
+  return null;
+};
+
 const getFormattedWheelText = (rawLabel: string) => {
   const label = (rawLabel || '').trim();
   if (!label) return { line1: '', line2: null, fontSize: '2.5' };
 
-  // If label has spaces and is longer than 6 characters, split into 2 lines for a clean, centered fit
   if (label.includes(' ') && label.length > 6) {
     const words = label.split(' ');
     if (words.length === 2) {
@@ -33,7 +73,6 @@ const getFormattedWheelText = (rawLabel: string) => {
       const fs = maxLen > 10 ? '2.1' : maxLen > 7 ? '2.3' : '2.5';
       return { line1: words[0], line2: words[1], fontSize: fs };
     }
-    // For 3+ words, e.g. "PKR 5,000 Mega"
     const mid = Math.ceil(words.length / 2);
     const line1 = words.slice(0, mid).join(' ');
     const line2 = words.slice(mid).join(' ');
@@ -42,7 +81,6 @@ const getFormattedWheelText = (rawLabel: string) => {
     return { line1, line2, fontSize: fs };
   }
 
-  // Single word or short label
   const fs = label.length > 10 ? '2.0' : label.length > 7 ? '2.3' : '2.6';
   return { line1: label, line2: null, fontSize: fs };
 };
@@ -89,15 +127,17 @@ const playFanfare = () => {
 };
 
 export const SpinPage: React.FC = () => {
-  const { refreshUser, user } = useAuth();
-  const [spinData, setSpinData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { refreshUser } = useAuth();
+  const cachedSpin = api.getCachedData<any>('/spin/status');
+  const [spinData, setSpinData] = useState<any>(cachedSpin);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationDegrees, setRotationDegrees] = useState(0);
   const [wonPrize, setWonPrize] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeLedPhase, setActiveLedPhase] = useState(0);
+  const [liveNotice, setLiveNotice] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Blinking casino rim lights
   useEffect(() => {
@@ -107,16 +147,49 @@ export const SpinPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadSpinStatus = () => {
-    setLoading(true);
-    api.getSpinStatus()
-      .then(setSpinData)
-      .catch((err) => setError(err.message || 'Failed to load spin wheel'))
-      .finally(() => setLoading(false));
+  const loadSpinStatus = (silent = false) => {
+    if (!silent) setIsSyncing(true);
+    api
+      .getSpinStatus()
+      .then((res) => {
+        setSpinData(res);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!spinData) setError(err.message || 'Failed to load spin wheel');
+      })
+      .finally(() => {
+        setIsSyncing(false);
+      });
   };
 
   useEffect(() => {
-    loadSpinStatus();
+    loadSpinStatus(!!spinData);
+  }, []);
+
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  // When admin approves a spin or sends a command, update immediately without page refresh
+  useEffect(() => {
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      if (type === 'spin' || type === 'notification' || type === 'command' || type === 'all') {
+        api.invalidateCache('/spin');
+        loadSpinStatus(true);
+        setLiveNotice('⚡ Instant Sync: Spin entitlements updated live!');
+        setTimeout(() => setLiveNotice(null), 4500);
+      }
+    };
+
+    const handleHeartbeat = () => {
+      loadSpinStatus(true);
+    };
+
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', handleHeartbeat);
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', handleHeartbeat);
+    };
   }, []);
 
   const handleSpin = async () => {
@@ -128,19 +201,17 @@ export const SpinPage: React.FC = () => {
 
     try {
       const res = await api.playSpin();
-      const prizes = spinData.prizes || [];
+      const prizes = (spinData?.prizes && spinData.prizes.length > 0) ? spinData.prizes : DEFAULT_FALLBACK_PRIZES;
       const prizeCount = prizes.length;
       const segmentAngle = 360 / prizeCount;
 
-      // Prize index from response
-      const prizeIndex = res.prizeIndex;
-      // Spin at least 6 full rotations (2160 deg) + offset to segment center
+      const prizeIndex = res.prizeIndex >= 0 ? res.prizeIndex : 0;
       const extraRotations = 360 * 6;
       const targetAngle = extraRotations + (360 - (prizeIndex * segmentAngle + segmentAngle / 2));
 
       setRotationDegrees((prev) => prev + targetAngle);
 
-      // Play sound ticks during deceleration
+      // Sound ticks during deceleration
       if (soundEnabled) {
         let tickCount = 0;
         const tickInterval = setInterval(() => {
@@ -150,7 +221,7 @@ export const SpinPage: React.FC = () => {
         }, 120);
       }
 
-      // Wait 4.5 seconds for wheel deceleration
+      // 4.5 seconds for wheel deceleration
       setTimeout(async () => {
         setIsSpinning(false);
         setWonPrize(res.prize);
@@ -159,7 +230,6 @@ export const SpinPage: React.FC = () => {
           playFanfare();
         }
 
-        // Royal confetti explosion
         confetti({
           particleCount: 120,
           spread: 80,
@@ -168,7 +238,7 @@ export const SpinPage: React.FC = () => {
         });
 
         await refreshUser();
-        loadSpinStatus();
+        loadSpinStatus(true);
       }, 4500);
     } catch (err: any) {
       setIsSpinning(false);
@@ -176,25 +246,15 @@ export const SpinPage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <div className="w-14 h-14 border-4 border-[#FFD45A]/30 border-t-[#FFD45A] rounded-full animate-spin" />
-        <p className="text-sm font-semibold text-slate-300">Loading Royal Fortune Wheel...</p>
-      </div>
-    );
-  }
-
   const {
-    isGlobalSpinEnabled,
-    isEligible,
-    remainingSpins,
-    pendingMilestone,
-    wonProducts = [],
-    isLevel10Completed,
-    prizes = [],
+    remainingSpins = 0,
+    isEligible = false,
+    pendingMilestone = false,
+    prizes: backendPrizes = [],
     history = [],
   } = spinData || {};
+
+  const prizes = backendPrizes && backendPrizes.length > 0 ? backendPrizes : DEFAULT_FALLBACK_PRIZES;
   const segmentAngle = 360 / (prizes.length || 1);
 
   // 24 LED casino lights around the bezel
@@ -202,6 +262,14 @@ export const SpinPage: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
+      {/* Realtime Live Update Toast */}
+      {liveNotice && (
+        <div className="p-3 bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-teal-600/30 border border-emerald-400/50 rounded-2xl text-emerald-200 text-xs flex items-center justify-center gap-2.5 max-w-md mx-auto shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-2">
+          <Sparkles className="w-4 h-4 text-[#FFD45A] animate-spin" />
+          <span className="font-bold">{liveNotice}</span>
+        </div>
+      )}
+
       {/* Clean Top Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -228,9 +296,10 @@ export const SpinPage: React.FC = () => {
               </>
             )}
           </button>
-          <div className="px-4 py-1.5 bg-[#FFD45A]/15 border border-[#FFD45A]/40 rounded-xl text-xs font-bold text-[#FFD45A]">
+          <div className="px-4 py-1.5 bg-[#FFD45A]/15 border border-[#FFD45A]/40 rounded-xl text-xs font-bold text-[#FFD45A] flex items-center gap-1.5">
             <span>Available Spins: </span>
-            <strong className="text-base text-white ml-1">{remainingSpins}</strong>
+            <strong className="text-base text-white ml-0.5">{remainingSpins}</strong>
+            {isSyncing && <RefreshCw className="w-3 h-3 text-[#FFD45A] animate-spin ml-1" />}
           </div>
         </div>
       </div>
@@ -248,7 +317,7 @@ export const SpinPage: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-300 leading-relaxed">
-              You completed a milestone assignment (Task 3 or Task 7)! Administration is currently preparing your exclusive prize allocation. You will receive an instant notification once your wheel spin is unlocked.
+              You completed a milestone assignment! Administration is currently preparing your exclusive prize allocation. Once approved, your wheel spin unlocks automatically in real time without reloading!
             </p>
           </div>
         </div>
@@ -261,7 +330,7 @@ export const SpinPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Winner Celebration Modal Banner */}
+      {/* Winner Celebration Modal Banner */}
       {wonPrize && (
         <div className="p-8 rounded-3xl border-2 border-[#FFD45A] bg-gradient-to-br from-[#0B1E48] via-[#04132F] to-[#020B20] text-center space-y-4 animate-in fade-in zoom-in duration-300 max-w-xl mx-auto shadow-2xl shadow-[#FFD45A]/30 relative overflow-hidden">
           <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-[#FFD45A] bg-black">
@@ -281,7 +350,7 @@ export const SpinPage: React.FC = () => {
             <p className="text-xs text-slate-200 mt-1 font-medium">
               {wonPrize.prizeType === 'CASH'
                 ? `PKR ${wonPrize.monetaryValue.toLocaleString()} has been credited straight into your wallet balance!`
-                : 'Exclusive gift reward! Our VIP team will contact your phone number for immediate delivery.'}
+                : 'Exclusive physical product reward! Our VIP team will contact your phone number for immediate delivery.'}
             </p>
           </div>
           <div className="pt-2 flex justify-center gap-3">
@@ -296,7 +365,7 @@ export const SpinPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. The 3D Casino Wheel Main Stage */}
+      {/* The 3D Casino Wheel Main Stage */}
       <div className="relative rounded-3xl p-6 sm:p-12 flex flex-col items-center justify-center bg-gradient-to-b from-[#0B1E48]/80 via-[#04132F] to-[#020B20] border border-[#214B91]/50 shadow-2xl overflow-hidden">
         {/* Glow backdrop aura */}
         <div className="absolute w-96 h-96 bg-[#1459E8]/20 rounded-full blur-3xl pointer-events-none -top-10" />
@@ -369,32 +438,56 @@ export const SpinPage: React.FC = () => {
 
                 // Mid angle for text label and icon placement
                 const midAngle = startAngle + segmentAngle / 2;
-                const tx = 50 + 33 * Math.cos((Math.PI * (midAngle - 90)) / 180);
-                const ty = 50 + 33 * Math.sin((Math.PI * (midAngle - 90)) / 180);
+                const rad = (Math.PI * (midAngle - 90)) / 180;
 
-                // Luxury gradient segment color scheme
+                // Center of text label placed at r=34
+                const tx = 50 + 34 * Math.cos(rad);
+                const ty = 50 + 34 * Math.sin(rad);
+
+                // Small adjusted picture of physical product placed at r=20.5 (ideal gap between center hub and text)
+                const ix = 50 + 20.5 * Math.cos(rad);
+                const iy = 50 + 20.5 * Math.sin(rad);
+                const productImg = getPrizeProductImage(p);
+
+                // Segment color schemes
                 const segmentStyles = [
-                  { fill: '#1459E8', text: '#FFFFFF', isGold: false },
-                  { fill: '#792BFF', text: '#FFFFFF', isGold: false },
-                  { fill: '#059669', text: '#FFFFFF', isGold: false },
-                  { fill: '#DC2626', text: '#FFFFFF', isGold: false },
-                  { fill: '#0284C7', text: '#FFFFFF', isGold: false },
-                  { fill: '#D97706', text: '#020B20', isGold: true },
-                  { fill: '#4F46E5', text: '#FFFFFF', isGold: false },
-                  { fill: '#EAB308', text: '#020B20', isGold: true },
+                  { fill: '#1459E8', text: '#FFFFFF' },
+                  { fill: '#792BFF', text: '#FFFFFF' },
+                  { fill: '#059669', text: '#FFFFFF' },
+                  { fill: '#DC2626', text: '#FFFFFF' },
+                  { fill: '#0284C7', text: '#FFFFFF' },
+                  { fill: '#D97706', text: '#020B20' },
+                  { fill: '#4F46E5', text: '#FFFFFF' },
+                  { fill: '#EAB308', text: '#020B20' },
                 ];
                 const currentStyle = segmentStyles[idx % segmentStyles.length];
-
-                const wheelText = getFormattedWheelText(p.displayLabel);
+                const wheelText = getFormattedWheelText(p.displayLabel || p.name);
 
                 return (
-                  <g key={p.id}>
+                  <g key={p.id || idx}>
                     <path
                       d={pathData}
-                      fill={currentStyle.fill}
+                      fill={p.color || currentStyle.fill}
                       stroke="#FFD45A"
                       strokeWidth="0.75"
                     />
+
+                    {/* Physical product small picture adjusted to slice width */}
+                    {productImg && (
+                      <image
+                        href={productImg}
+                        xlinkHref={productImg}
+                        x={ix - 3.75}
+                        y={iy - 3.75}
+                        width="7.5"
+                        height="7.5"
+                        preserveAspectRatio="xMidYMid meet"
+                        transform={`rotate(${midAngle}, ${ix}, ${iy})`}
+                        style={{ filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.85))' }}
+                      />
+                    )}
+
+                    {/* Prize display text */}
                     <text
                       x={tx}
                       y={ty}
@@ -433,7 +526,7 @@ export const SpinPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 4. Action Spin Button & Status */}
+        {/* Action Spin Button & Status */}
         <div className="text-center space-y-4 mt-8 z-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#020B20]/90 border border-[#214B91] rounded-full text-xs text-slate-300">
             <span>Remaining Daily Spins:</span>
@@ -445,7 +538,7 @@ export const SpinPage: React.FC = () => {
               <button
                 onClick={handleSpin}
                 disabled={isSpinning}
-                className="group relative px-12 py-5 bg-gradient-to-r from-[#FFD45A] via-yellow-400 to-[#FFD45A] hover:from-yellow-400 hover:to-amber-300 active:scale-95 text-[#020B20] font-black text-lg rounded-2xl shadow-[0_0_35px_rgba(255,212,90,0.5)] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-3 mx-auto"
+                className="group relative px-12 py-5 bg-gradient-to-r from-[#FFD45A] via-yellow-400 to-[#FFD45A] hover:from-yellow-400 hover:to-amber-300 active:scale-95 text-[#020B20] font-black text-lg rounded-2xl shadow-[0_0_35px_rgba(255,212,90,0.5)] transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-3 mx-auto cursor-pointer"
               >
                 {isSpinning ? (
                   <>
@@ -459,107 +552,76 @@ export const SpinPage: React.FC = () => {
                   </>
                 )}
               </button>
+            ) : pendingMilestone ? (
+              <div className="px-8 py-4 bg-[#FFD45A]/10 border border-[#FFD45A]/40 text-[#FFD45A] rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2">
+                <Lock className="w-4 h-4 flex-shrink-0" />
+                <span>Milestone spin under review. Unlocks automatically live when approved.</span>
+              </div>
             ) : (
-              <div className="p-4 bg-[#020B20]/80 border border-[#214B91] rounded-2xl text-xs text-slate-300 max-w-md mx-auto flex items-center gap-3 text-left">
-                <Lock className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <div>
-                  <span className="font-bold text-white block">0 Free Spins Available</span>
-                  <span className="text-slate-400">Complete tasks or contact administration to receive additional daily spin tickets!</span>
-                </div>
+              <div className="px-8 py-4 bg-[#0B2248]/80 border border-[#1459E8]/40 text-slate-300 rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2">
+                <Lock className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
+                <span>Complete Task 3, Task 7, or reach Level 10 to receive free spins.</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 5. Won Physical Products (Dispatched after completing Level 10) */}
-      <div className="royal-card p-6 sm:p-8 rounded-3xl space-y-5 border border-[#214B91]/60">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#214B91]/40 pb-4">
-          <div>
-            <h2 className="text-base font-black text-white flex items-center gap-2 flex-wrap">
-              <span>Won Physical Products (Royal Vault)</span>
-              <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/30 px-2 py-0.5 rounded-full">
-                Level 10 Dispatch
-              </span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Luxury physical items won from Royal Spins are reserved in your vault and dispatched after completing all 10 Levels.
-            </p>
+      {/* Rules & Information Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
+          <div className="flex items-center gap-2 text-white font-bold text-sm">
+            <Coins className="w-4 h-4 text-[#FFD45A]" />
+            <span>Instant Cash Rewards</span>
           </div>
-          <div className="text-left sm:text-right">
-            <span className="text-[10px] text-slate-400 block uppercase font-medium">Vault Progress</span>
-            <span className={`text-xs font-bold ${isLevel10Completed ? 'text-emerald-400' : 'text-[#FFD45A]'}`}>
-              {isLevel10Completed ? 'Level 10 Completed (Ready for Dispatch)' : 'Complete Level 10 to Dispatch'}
-            </span>
-          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            All cash amounts won from the wheel are directly credited to your wallet balance in real time.
+          </p>
         </div>
 
-        {wonProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {wonProducts.map((wp: any) => (
-              <div
-                key={wp.id}
-                className="p-4 bg-[#020B20]/80 border border-[#214B91] rounded-2xl space-y-3 relative overflow-hidden group hover:border-[#FFD45A]/60 transition-all"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{wp.prize?.name}</h4>
-                    <span className="text-[10px] text-slate-400 block">
-                      Estimated Value: PKR {wp.prizeValue?.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
+        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
+          <div className="flex items-center gap-2 text-white font-bold text-sm">
+            <Gift className="w-4 h-4 text-[#22D3EE]" />
+            <span>Physical Luxury Products</span>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Win verified physical products like smartphones and luxury watches delivered directly to your address.
+          </p>
+        </div>
 
-                <div className="pt-2 border-t border-[#214B91]/40 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-400">
-                    Won: {new Date(wp.createdAt).toLocaleDateString()}
-                  </span>
-                  <span
-                    className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
-                      isLevel10Completed
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    }`}
-                  >
-                    {isLevel10Completed ? 'Eligible for Dispatch' : 'Ships after Level 10'}
-                  </span>
-                </div>
-              </div>
-            ))}
+        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
+          <div className="flex items-center gap-2 text-white font-bold text-sm">
+            <Trophy className="w-4 h-4 text-[#10D6A0]" />
+            <span>Milestone Allocation</span>
           </div>
-        ) : (
-          <div className="p-6 bg-[#020B20]/40 border border-dashed border-[#214B91]/60 rounded-2xl text-center space-y-2">
-            <Gift className="w-8 h-8 text-slate-500 mx-auto" />
-            <h5 className="text-sm font-bold text-slate-300">No Physical Products in Vault Yet</h5>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              Every time you complete the 3rd and 7th task of any level, you earn a free spin! Win luxury Smartphones, Gold Watches, and high-tier rewards.
-            </p>
-          </div>
-        )}
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Free spins are awarded when reaching Task 3 and Task 7 milestones, reviewed directly by administration.
+          </p>
+        </div>
       </div>
 
-      {/* 6. Past Spin History */}
-      {history.length > 0 && (
-        <div className="royal-card p-6 sm:p-8 rounded-3xl space-y-4">
-          <div className="border-b border-[#214B91]/40 pb-4">
-            <h2 className="text-base font-black text-white">Your Spin Ledger & History</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Past rewards spun on your account</p>
+      {/* Recent Won Prizes History */}
+      {history && history.length > 0 && (
+        <div className="rounded-2xl bg-[#07132B]/70 border border-[#162E5B] p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <History className="w-4 h-4 text-[#FFD45A]" />
+              <span>Your Spin History</span>
+            </h3>
+            <span className="text-xs text-slate-400">{history.length} records</span>
           </div>
-
-          <div className="space-y-2.5">
-            {history.map((h: any) => (
+          <div className="space-y-2">
+            {history.slice(0, 5).map((item: any, i: number) => (
               <div
-                key={h.id}
-                className="p-3.5 bg-[#020B20]/70 border border-[#214B91]/40 rounded-xl flex items-center justify-between text-xs hover:border-[#214B91] transition-colors"
+                key={i}
+                className="flex items-center justify-between p-3 rounded-xl bg-[#0B2248]/50 border border-[#162E5B]/50 text-xs"
               >
-                <div>
-                  <span className="font-bold text-white block">{h.resultLabel}</span>
-                  <span className="text-[10px] text-slate-400 block">
-                    {new Date(h.createdAt).toLocaleString()}
-                  </span>
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span className="font-semibold text-white">{item.prize?.name || 'Spin Prize'}</span>
                 </div>
-                <span className="text-xs font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-full">
-                  +{h.prize?.prizeType === 'CASH' ? `PKR ${h.prizeValue.toLocaleString()}` : h.prize?.name}
+                <span className="text-slate-400">
+                  {new Date(item.spunAt).toLocaleDateString()}
                 </span>
               </div>
             ))}

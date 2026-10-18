@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api/client';
+import { realtimeHub } from '../utils/realtimeHub';
 
 export interface User {
   id: string;
@@ -91,6 +92,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
+  }, []);
+
+  // Connect user to Supabase Realtime Channel
+  useEffect(() => {
+    if (user?.id) {
+      realtimeHub.init(user.id);
+    } else {
+      realtimeHub.cleanup();
+    }
+    return () => {
+      realtimeHub.cleanup();
+    };
+  }, [user?.id]);
+
+  // Listen for realtime events across the app to silently update wallet/user without reloading
+  useEffect(() => {
+    const handleLiveEvent = () => {
+      const currentToken = localStorage.getItem('royal_user_token');
+      if (currentToken) {
+        api
+          .getMe()
+          .then((res) => {
+            if (res?.user) {
+              setUser(res.user);
+              if (res.user.wallet) {
+                setWallet(res.user.wallet);
+                try {
+                  localStorage.setItem('royal_cached_wallet', JSON.stringify(res.user.wallet));
+                } catch {}
+              }
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    return () => window.removeEventListener('royal_live_update', handleLiveEvent);
   }, []);
 
   const login = (token: string, userData: User, walletData?: Wallet) => {

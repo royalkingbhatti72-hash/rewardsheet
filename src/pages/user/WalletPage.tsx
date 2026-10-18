@@ -42,6 +42,28 @@ export const WalletPage: React.FC = () => {
     loadData(1);
   }, []);
 
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  useEffect(() => {
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      if (type === 'wallet' || type === 'task' || type === 'spin' || type === 'notification' || type === 'command' || type === 'all') {
+        api.invalidateCache('/wallet');
+        loadData(page);
+      }
+    };
+
+    const handleHeartbeat = () => {
+      loadData(page);
+    };
+
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', handleHeartbeat);
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', handleHeartbeat);
+    };
+  }, [page]);
+
   return (
     <div className="space-y-6">
       {/* Title */}

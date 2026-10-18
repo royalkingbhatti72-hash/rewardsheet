@@ -34,8 +34,24 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const fallbackDashboard = {
+    wallet: {
+      availableBalance: 0,
+      pendingBalance: 0,
+      totalEarned: 0,
+      creditPoints: 0,
+    },
+    levelProgress: {
+      currentLevelNumber: 1,
+      levelTitle: 'Apprentice Tier',
+      approvedTasksCount: 0,
+    },
+    recentTransactions: [],
+    recentSubmissions: [],
+  };
+
   const cachedDashboard = api.getCachedData('/user/dashboard');
-  const [data, setData] = useState<any>(cachedDashboard);
+  const [data, setData] = useState<any>(cachedDashboard || fallbackDashboard);
   const [loading, setLoading] = useState(!cachedDashboard);
   const [copiedLink, setCopiedLink] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
@@ -48,6 +64,20 @@ export const DashboardPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  useEffect(() => {
+    const handleLiveEvent = () => {
+      api.invalidateCache('/user/dashboard');
+      api.getDashboard().then(setData).catch(() => {});
+    };
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', handleLiveEvent);
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', handleLiveEvent);
+    };
+  }, []);
+
   const handleCopyReferral = () => {
     if (!user?.referralCode) return;
     const link = `${window.location.origin}/register?ref=${user.referralCode}`;
@@ -55,21 +85,6 @@ export const DashboardPage: React.FC = () => {
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
-
-  if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-4 border-[#315BFF]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-[#B7C6E4] font-medium">Loading Royal Dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return null;
-  }
 
   const {
     wallet,

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E" />
+      <stop offset="100%" stop-color="#9F1239" />
+    </linearGradient>
+    <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD45A" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <!-- Box Base -->
+  <rect x="12" y="24" width="40" height="34" rx="4" fill="url(#boxGrad)" stroke="#FFE4E6" stroke-width="0.8" />
+  <!-- Vertical Ribbon -->
+  <rect x="27.5" y="24" width="9" height="34" fill="url(#ribbonGrad)" />
+  <!-- Box Lid -->
+  <rect x="9" y="17" width="46" height="10" rx="3" fill="#BE123C" stroke="#FFE4E6" stroke-width="0.8" />
+  <!-- Lid Ribbon -->
+  <rect x="27.5" y="17" width="9" height="10" fill="url(#ribbonGrad)" />
+  <!-- Ribbon Bows -->
+  <path d="M 32 17 C 22 7, 18 15, 29 17 Z" fill="url(#ribbonGrad)" />
+  <path d="M 32 17 C 42 7, 46 15, 35 17 Z" fill="url(#ribbonGrad)" />
+  <!-- Center Knot -->
+  <circle cx="32" cy="17" r="3.2" fill="#FFD45A" stroke="#B45309" stroke-width="0.6" />
+</svg>
