@@ -118,12 +118,22 @@ export const TaskDetailPage: React.FC = () => {
   }
 
   const { task, level, submissions } = taskData || {};
+  const userBalance = wallet?.availableBalance || 0;
+  const unlockFee = task?.unlockFee || 0;
+  const remainingNeeded = Math.max(0, unlockFee - userBalance);
+  const hasSufficientBalance = userBalance >= unlockFee;
+
   const isLocked = task?.userStatus === 'LOCKED';
-  const isAwaitingPayment = task?.userStatus === 'AWAITING_PAYMENT';
   const isApproved = task?.userStatus === 'APPROVED';
   const isPending = task?.userStatus === 'PENDING_VERIFICATION';
   const isRejected = task?.userStatus === 'REJECTED';
-  const isAvailable = task?.userStatus === 'AVAILABLE' || task?.userStatus === 'UNLOCKED';
+  const isAwaitingPayment = task?.userStatus === 'AWAITING_PAYMENT' && !hasSufficientBalance;
+  const isAvailable =
+    !isLocked &&
+    !isApproved &&
+    !isPending &&
+    !isRejected &&
+    (!task?.isPaid || hasSufficientBalance || task?.isPaidUnlocked || task?.userStatus === 'AVAILABLE' || task?.userStatus === 'UNLOCKED');
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -244,80 +254,57 @@ export const TaskDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Awaiting Payment Section */}
-      {isAwaitingPayment && (() => {
-        const userBalance = wallet?.availableBalance || 0;
-        const unlockFee = task?.unlockFee || 0;
-        const remainingNeeded = Math.max(0, unlockFee - userBalance);
-
-        return (
-          <div className="royal-card p-6 sm:p-8 rounded-3xl border border-[#FFD45A]/40 space-y-5">
-            <div className="flex items-start gap-3">
-              <Zap className="w-6 h-6 text-[#FFD45A] flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="text-lg font-bold text-white">Prepaid Task Balance Verification</h2>
-                <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                  This task requires an account balance of{' '}
-                  <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong> to unlock.
-                  {' '}<strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance.
-                </p>
-              </div>
+      {/* Deposit Requirement Section (Only shown when balance is insufficient) */}
+      {isAwaitingPayment && remainingNeeded > 0 && (
+        <div className="royal-card p-6 sm:p-8 rounded-3xl border border-[#FFD45A]/40 space-y-5">
+          <div className="flex items-start gap-3">
+            <Zap className="w-6 h-6 text-[#FFD45A] flex-shrink-0 mt-1" />
+            <div>
+              <h2 className="text-lg font-bold text-white">Prepaid Task Balance Requirement</h2>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                This task requires an account balance of{' '}
+                <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong> to start.
+                {' '}<strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance.
+              </p>
             </div>
-
-            {/* 3-Column Balance Breakdown Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-              <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Required Balance</span>
-                <span className="text-lg font-black text-white">PKR {unlockFee.toLocaleString()}</span>
-                <span className="text-[10px] text-[#10D6A0] block mt-0.5">No fee deducted</span>
-              </div>
-              <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Your Current Balance</span>
-                <span className="text-lg font-black text-[#10D6A0]">PKR {userBalance.toLocaleString()}</span>
-              </div>
-              <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Needed to Deposit</span>
-                <span className={`text-lg font-black ${remainingNeeded > 0 ? 'text-[#FFD45A]' : 'text-emerald-400'}`}>
-                  {remainingNeeded > 0 ? `PKR ${remainingNeeded.toLocaleString()}` : 'PKR 0 (Sufficient)'}
-                </span>
-              </div>
-            </div>
-
-            {remainingNeeded > 0 ? (
-              <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl space-y-3">
-                <div className="flex items-center gap-2 text-xs text-[#FFD45A] font-semibold">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>
-                    You have PKR {userBalance.toLocaleString()} in your account. You only need to deposit the remaining PKR {remainingNeeded.toLocaleString()} to complete this task!
-                  </span>
-                </div>
-                <Link
-                  to={`/app/deposits?amount=${remainingNeeded}`}
-                  className="w-full py-3 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <ArrowDownLeft className="w-4 h-4" />
-                  <span>Deposit Remaining PKR {remainingNeeded.toLocaleString()} Now</span>
-                </Link>
-              </div>
-            ) : (
-              <button
-                onClick={handleUnlock}
-                disabled={unlocking}
-                className="w-full py-3 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:from-amber-400 hover:to-[#FFD45A] text-[#020B20] font-black text-sm rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {unlocking ? (
-                  <span className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Unlock className="w-4 h-4" />
-                    <span>Verify Balance & Open Task (PKR {unlockFee.toLocaleString()})</span>
-                  </>
-                )}
-              </button>
-            )}
           </div>
-        );
-      })()}
+
+          {/* 3-Column Balance Breakdown Box */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
+            <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">Required Balance</span>
+              <span className="text-lg font-black text-white">PKR {unlockFee.toLocaleString()}</span>
+              <span className="text-[10px] text-[#10D6A0] block mt-0.5">No fee deducted</span>
+            </div>
+            <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">Your Current Balance</span>
+              <span className="text-lg font-black text-[#10D6A0]">PKR {userBalance.toLocaleString()}</span>
+            </div>
+            <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">Needed to Deposit</span>
+              <span className="text-lg font-black text-[#FFD45A]">
+                PKR {remainingNeeded.toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-xs text-[#FFD45A] font-semibold">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>
+                You have PKR {userBalance.toLocaleString()} in your account. You only need to deposit the remaining PKR {remainingNeeded.toLocaleString()} to start this task!
+              </span>
+            </div>
+            <Link
+              to={`/app/deposits?amount=${remainingNeeded}`}
+              className="w-full py-3 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <ArrowDownLeft className="w-4 h-4" />
+              <span>Deposit Remaining PKR {remainingNeeded.toLocaleString()} Now</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Locked Task Message */}
       {isLocked && (

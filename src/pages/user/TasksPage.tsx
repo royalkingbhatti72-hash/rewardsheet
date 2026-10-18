@@ -692,20 +692,28 @@ export const TasksPage: React.FC = () => {
         ) : tasks && tasks.length > 0 ? (
           <div className="space-y-1 sm:space-y-1.5">
             {tasks.map((task: any) => {
+              const userBalance = wallet?.availableBalance || 0;
+              const unlockFee = task.unlockFee || 0;
+              const remainingDepositNeeded = Math.max(0, unlockFee - userBalance);
+              const hasSufficientBalance = userBalance >= unlockFee;
+
               const isTaskLocked = isSelectedLevelLocked || task.userStatus === 'LOCKED';
-              const isAwaitingPayment =
-                !isSelectedLevelLocked && task.userStatus === 'AWAITING_PAYMENT';
               const isApproved = !isSelectedLevelLocked && task.userStatus === 'APPROVED';
               const isPending =
                 !isSelectedLevelLocked && task.userStatus === 'PENDING_VERIFICATION';
               const isRejected = !isSelectedLevelLocked && task.userStatus === 'REJECTED';
+
+              // If balance exists in account to complete the task, do NOT put any unlocking process!
+              // Only awaiting payment if the user actually lacks the required balance.
+              const isAwaitingPayment =
+                !isSelectedLevelLocked && task.userStatus === 'AWAITING_PAYMENT' && !hasSufficientBalance;
               const isAvailable =
                 !isSelectedLevelLocked &&
-                (task.userStatus === 'AVAILABLE' || task.userStatus === 'UNLOCKED');
-
-              const userBalance = wallet?.availableBalance || 0;
-              const unlockFee = task.unlockFee || 0;
-              const remainingDepositNeeded = Math.max(0, unlockFee - userBalance);
+                !isApproved &&
+                !isPending &&
+                !isRejected &&
+                !isTaskLocked &&
+                (!task.isPaid || hasSufficientBalance || task.isPaidUnlocked || task.userStatus === 'AVAILABLE' || task.userStatus === 'UNLOCKED');
 
               // ----------------------------------------------------
               // LOCKED TASK ROW (Until client reaches the task)
@@ -818,7 +826,9 @@ export const TasksPage: React.FC = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPrepaidModalTask(task);
+                            if (isAwaitingPayment) {
+                              setPrepaidModalTask(task);
+                            }
                           }}
                           className="text-[9px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 hover:bg-[#FFD45A]/25 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 cursor-pointer flex-shrink-0 whitespace-nowrap transition-all leading-none"
                         >
@@ -851,34 +861,14 @@ export const TasksPage: React.FC = () => {
                     ) : isAwaitingPayment ? (
                       <button
                         type="button"
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.stopPropagation();
-                          if (remainingDepositNeeded <= 0) {
-                            await handleUnlockTask(task.id);
-                          } else {
-                            setPrepaidModalTask(task);
-                          }
+                          setPrepaidModalTask(task);
                         }}
-                        disabled={unlockingTaskId === task.id}
-                        className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-md shadow-sm transition-all hover:scale-105 cursor-pointer flex-shrink-0 leading-none whitespace-nowrap ${
-                          remainingDepositNeeded > 0
-                            ? 'bg-gradient-to-r from-[#1264F5] to-[#168BFF] text-white hover:brightness-110'
-                            : 'bg-gradient-to-r from-[#FFD45A] to-amber-400 text-[#020B20] hover:brightness-110'
-                        }`}
+                        className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-md shadow-sm transition-all hover:scale-105 cursor-pointer flex-shrink-0 leading-none whitespace-nowrap bg-gradient-to-r from-[#1264F5] to-[#168BFF] text-white hover:brightness-110"
                       >
-                        {unlockingTaskId === task.id ? (
-                          <span className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : remainingDepositNeeded > 0 ? (
-                          <>
-                            <ArrowDownLeft className="w-2.5 h-2.5" />
-                            <span>Deposit PKR {remainingDepositNeeded.toLocaleString()}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Unlock className="w-2.5 h-2.5" />
-                            <span>Open</span>
-                          </>
-                        )}
+                        <ArrowDownLeft className="w-2.5 h-2.5" />
+                        <span>Deposit PKR {remainingDepositNeeded.toLocaleString()}</span>
                       </button>
                     ) : (
                       <Link
