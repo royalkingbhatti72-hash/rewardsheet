@@ -367,15 +367,15 @@ export const TaskDetailPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Prepaid Instant Auto-Approval Guarantee Banner */}
+          {/* Prepaid Task Banner */}
           {task?.isPaid && (
             <div className="p-3.5 bg-gradient-to-r from-[#FFD45A]/15 via-[#020B20] to-[#10D6A0]/15 border border-[#FFD45A]/40 rounded-2xl text-xs space-y-1">
               <div className="flex items-center gap-1.5 font-bold text-[#FFD45A]">
                 <Zap className="w-4 h-4 text-[#FFD45A]" />
-                <span>Prepaid Task Feature: Instant Auto-Approval</span>
+                <span>Prepaid Assignment • Admin Approval & Direct Reward</span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Paid tasks do <strong>NOT</strong> need manual review! Clicking <strong>"Review My Task"</strong> will <strong>instantly complete</strong> this task, credit your +{task?.creditPoints || 30} credit points, and immediately unlock the next sequential assignment.
+                This prepaid task requires a verified account balance of PKR {task?.unlockFee?.toLocaleString() || 0}. Your funds remain safe in your wallet with zero deductions. Upon admin approval, your +PKR {task?.rewardAmount?.toLocaleString() || 80} reward directly increases your account balance, and the next sequential assignment opens.
               </p>
             </div>
           )}
@@ -405,7 +405,7 @@ export const TaskDetailPage: React.FC = () => {
                 ) : task?.isPaid ? (
                   <>
                     <Zap className="w-4 h-4 text-[#020B20]" />
-                    <span>Review My Task (+{task?.creditPoints || 30} Points)</span>
+                    <span>Review My Task (+PKR {task?.rewardAmount?.toLocaleString() || 80} Reward)</span>
                   </>
                 ) : (
                   <>
@@ -438,7 +438,7 @@ export const TaskDetailPage: React.FC = () => {
                 <p className="text-xs text-emerald-300 font-semibold leading-relaxed">
                   {task?.isPaid ? (
                     <>
-                      This prepaid task was verified and <strong>instantly approved</strong>! +{task?.creditPoints || 30} Credit Points have been credited. Next sequential task is now unlocked!
+                      This prepaid task was verified and <strong>approved by administrator</strong>! +PKR {task?.rewardAmount?.toLocaleString() || 80} has been directly credited to your account balance. Next sequential task is now unlocked!
                     </>
                   ) : (
                     <>

@@ -851,17 +851,24 @@ export const TasksPage: React.FC = () => {
                     ) : isAwaitingPayment ? (
                       <button
                         type="button"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          setPrepaidModalTask(task);
+                          if (remainingDepositNeeded <= 0) {
+                            await handleUnlockTask(task.id);
+                          } else {
+                            setPrepaidModalTask(task);
+                          }
                         }}
-                        className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm transition-all hover:scale-105 cursor-pointer flex-shrink-0 leading-none whitespace-nowrap ${
+                        disabled={unlockingTaskId === task.id}
+                        className={`inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-md shadow-sm transition-all hover:scale-105 cursor-pointer flex-shrink-0 leading-none whitespace-nowrap ${
                           remainingDepositNeeded > 0
                             ? 'bg-gradient-to-r from-[#1264F5] to-[#168BFF] text-white hover:brightness-110'
                             : 'bg-gradient-to-r from-[#FFD45A] to-amber-400 text-[#020B20] hover:brightness-110'
                         }`}
                       >
-                        {remainingDepositNeeded > 0 ? (
+                        {unlockingTaskId === task.id ? (
+                          <span className="w-2.5 h-2.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : remainingDepositNeeded > 0 ? (
                           <>
                             <ArrowDownLeft className="w-2.5 h-2.5" />
                             <span>Deposit PKR {remainingDepositNeeded.toLocaleString()}</span>
@@ -869,7 +876,7 @@ export const TasksPage: React.FC = () => {
                         ) : (
                           <>
                             <Unlock className="w-2.5 h-2.5" />
-                            <span>Unlock PKR {task.unlockFee?.toLocaleString()}</span>
+                            <span>Open</span>
                           </>
                         )}
                       </button>
@@ -878,7 +885,7 @@ export const TasksPage: React.FC = () => {
                         to={`/app/tasks/${task.id}`}
                         className="inline-flex items-center gap-1 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white text-[9px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded-md shadow-sm transition-all leading-none whitespace-nowrap"
                       >
-                        <span>Start</span>
+                        <span>Open</span>
                         <ArrowRight className="w-2.5 h-2.5" />
                       </Link>
                     )}
@@ -950,8 +957,10 @@ export const TasksPage: React.FC = () => {
           ======================================================== */}
       {prepaidModalTask && (() => {
         const modalUnlockFee = prepaidModalTask.unlockFee || 0;
+        const modalRewardAmount = prepaidModalTask.rewardAmount || 80;
         const modalUserBalance = wallet?.availableBalance || 0;
         const modalRemainingNeeded = Math.max(0, modalUnlockFee - modalUserBalance);
+        const modalCompletedBalance = (modalUserBalance >= modalUnlockFee ? modalUserBalance : modalUnlockFee) + modalRewardAmount;
         const isSufficient = modalRemainingNeeded === 0;
 
         return (
@@ -981,75 +990,100 @@ export const TasksPage: React.FC = () => {
                     </span>
                   </div>
                   <h3 className="text-base sm:text-lg font-black text-white leading-snug">
-                    {prepaidModalTask.title}
+                    {cleanTaskTitle(prepaidModalTask.title)}
                   </h3>
                 </div>
               </div>
 
-              {/* 3-Box Financial Breakdown Requested by User */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* 1. Account Balance */}
-                <div className="p-3.5 rounded-2xl bg-[#020B20] border border-[#173C73] space-y-1 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-                    <Wallet className="w-3.5 h-3.5 text-[#10D6A0]" />
-                    <span>Account Balance</span>
-                  </div>
-                  <span className="text-base sm:text-lg font-black text-[#10D6A0] block">
-                    PKR {modalUserBalance.toLocaleString()}
-                  </span>
-                  <span className="text-[10px] text-slate-500">Available in wallet</span>
-                </div>
-
-                {/* 2. Required Amount */}
-                <div className="p-3.5 rounded-2xl bg-[#020B20] border border-[#173C73] space-y-1 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-                    <Zap className="w-3.5 h-3.5 text-[#FFD45A]" />
-                    <span>Required Balance</span>
+              {/* 4-Box Financial Breakdown & Exact Calculator */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {/* 1. Task Price / Required Balance */}
+                <div className="p-3 rounded-2xl bg-[#020B20] border border-[#173C73] space-y-1 text-center">
+                  <div className="flex items-center justify-center gap-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <Zap className="w-3 h-3 text-[#FFD45A]" />
+                    <span>Task Price</span>
                   </div>
                   <span className="text-base sm:text-lg font-black text-white block">
                     PKR {modalUnlockFee.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-[#10D6A0]">Account balance requirement (No fee deducted)</span>
+                  <span className="text-[9px] text-[#10D6A0]">Required balance</span>
                 </div>
 
-                {/* 3. Needed Remaining Amount */}
-                <div className={`p-3.5 rounded-2xl bg-[#020B20] border space-y-1 text-center ${
+                {/* 2. Account Balance */}
+                <div className="p-3 rounded-2xl bg-[#020B20] border border-[#173C73] space-y-1 text-center">
+                  <div className="flex items-center justify-center gap-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <Wallet className="w-3 h-3 text-[#10D6A0]" />
+                    <span>Your Balance</span>
+                  </div>
+                  <span className="text-base sm:text-lg font-black text-[#10D6A0] block">
+                    PKR {modalUserBalance.toLocaleString()}
+                  </span>
+                  <span className="text-[9px] text-slate-500">In your wallet</span>
+                </div>
+
+                {/* 3. Needed Deposit */}
+                <div className={`p-3 rounded-2xl bg-[#020B20] border space-y-1 text-center ${
                   modalRemainingNeeded > 0 ? 'border-[#FFD45A]/50 bg-[#FFD45A]/5' : 'border-[#10D6A0]/50 bg-[#10D6A0]/5'
                 }`}>
-                  <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
-                    <ArrowDownLeft className="w-3.5 h-3.5 text-[#FFD45A]" />
-                    <span>Needed Amount</span>
+                  <div className="flex items-center justify-center gap-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <ArrowDownLeft className="w-3 h-3 text-[#FFD45A]" />
+                    <span>Needed Deposit</span>
                   </div>
                   <span className={`text-base sm:text-lg font-black block ${
                     modalRemainingNeeded > 0 ? 'text-[#FFD45A]' : 'text-[#10D6A0]'
                   }`}>
-                    {modalRemainingNeeded > 0 ? `PKR ${modalRemainingNeeded.toLocaleString()}` : 'PKR 0 (Ready)'}
+                    {modalRemainingNeeded > 0 ? `PKR ${modalRemainingNeeded.toLocaleString()}` : 'PKR 0'}
                   </span>
-                  <span className="text-[10px] text-slate-400">
-                    {modalRemainingNeeded > 0 ? 'Remaining to deposit' : 'Balance sufficient'}
+                  <span className="text-[9px] text-slate-400">
+                    {modalRemainingNeeded > 0 ? 'To reach required' : 'Requirement met'}
                   </span>
+                </div>
+
+                {/* 4. Task Reward */}
+                <div className="p-3 rounded-2xl bg-[#020B20] border border-[#10D6A0]/40 bg-[#10D6A0]/5 space-y-1 text-center">
+                  <div className="flex items-center justify-center gap-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                    <Sparkles className="w-3 h-3 text-[#10D6A0]" />
+                    <span>Task Reward</span>
+                  </div>
+                  <span className="text-base sm:text-lg font-black text-[#10D6A0] block">
+                    +PKR {modalRewardAmount.toLocaleString()}
+                  </span>
+                  <span className="text-[9px] text-emerald-400">Added to balance</span>
                 </div>
               </div>
 
-              {/* Balance Hold Notice */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#1459E8]/15 via-[#020B20] to-[#10D6A0]/15 border border-[#1459E8]/40 space-y-1">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#10D6A0]">
-                  <ShieldCheck className="w-4 h-4 text-[#FFD45A]" />
-                  <span>Account Balance Requirement • Zero Deductions</span>
+              {/* Exact Calculator Breakdown Card */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#10D6A0]/15 via-[#071B3A] to-[#FFD45A]/15 border border-[#10D6A0]/40 space-y-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-white">
+                    <CheckCircle2 className="w-4 h-4 text-[#10D6A0]" />
+                    <span>Total Client Account Balance After Approval</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-base sm:text-xl font-black text-[#10D6A0]">
+                      PKR {modalCompletedBalance.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  This task requires an account balance of <strong>PKR {modalUnlockFee.toLocaleString()}</strong> to unlock. <strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance. Once completed, your +{prepaidModalTask.creditPoints || 30} points will be credited and the next task will open automatically.
-                </p>
+
+                <div className="p-2.5 rounded-xl bg-[#020B20]/80 border border-[#173C73] text-[11px] text-slate-300 leading-relaxed space-y-1">
+                  <p className="font-semibold text-[#FFD45A]">
+                    Live Calculator Calculation:
+                  </p>
+                  <p className="text-slate-300">
+                    Task Price is <strong>PKR {modalUnlockFee.toLocaleString()}</strong> and Account Balance is <strong>PKR {modalUserBalance.toLocaleString()}</strong>. Depositing <strong>PKR {modalRemainingNeeded.toLocaleString()}</strong> completes <strong>PKR {modalUnlockFee.toLocaleString()}</strong> in your wallet. Your funds remain in your account with zero deductions, and <strong>+PKR {modalRewardAmount.toLocaleString()}</strong> reward is added upon approval — giving you <strong>PKR {modalCompletedBalance.toLocaleString()}</strong> total balance in your account!
+                  </p>
+                </div>
               </div>
 
-              {/* Status Explanation & Action Buttons */}
+              {/* Status Explanation & 1-Click Action */}
               <div className="space-y-3 pt-1">
                 {modalRemainingNeeded > 0 ? (
                   <>
                     <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                       <p className="text-[11px] leading-relaxed">
-                        You need <strong className="text-[#FFD45A] font-bold">PKR {modalRemainingNeeded.toLocaleString()}</strong> more in your balance to unlock this task. Deposit the remaining funds to proceed.
+                        You need <strong className="text-[#FFD45A] font-bold">PKR {modalRemainingNeeded.toLocaleString()}</strong> more in your balance to complete the requirement of PKR {modalUnlockFee.toLocaleString()}. Deposit the remaining amount to open this task.
                       </p>
                     </div>
 
@@ -1060,7 +1094,7 @@ export const TasksPage: React.FC = () => {
                         className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#1459E8] to-[#2478FF] hover:from-[#2478FF] hover:to-[#1459E8] text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
                       >
                         <ArrowDownLeft className="w-4 h-4" />
-                        <span>Deposit PKR {modalRemainingNeeded.toLocaleString()} Now</span>
+                        <span>Deposit PKR {modalRemainingNeeded.toLocaleString()} to Complete Balance</span>
                       </Link>
 
                       <button
@@ -1077,40 +1111,29 @@ export const TasksPage: React.FC = () => {
                     <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                       <p className="text-[11px] leading-relaxed">
-                        Your account balance is sufficient! You have <strong className="text-white font-bold">PKR {modalUserBalance.toLocaleString()}</strong> available. Your funds will remain in your balance with zero deductions. You can unlock and start this task immediately.
+                        Your account balance is sufficient! You have <strong className="text-white font-bold">PKR {modalUserBalance.toLocaleString()}</strong> available. Opening this task will directly submit it for admin review and approval.
                       </p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-2.5">
-                      {prepaidModalTask.isPaidUnlocked ? (
-                        <Link
-                          to={`/app/tasks/${prepaidModalTask.id}`}
-                          onClick={() => setPrepaidModalTask(null)}
-                          className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
-                        >
-                          <span>Start Assignment</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            await handleUnlockTask(prepaidModalTask.id);
-                            setPrepaidModalTask(null);
-                          }}
-                          disabled={unlockingTaskId === prepaidModalTask.id}
-                          className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#FFD45A] to-amber-400 text-[#020B20] font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {unlockingTaskId === prepaidModalTask.id ? (
-                            <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <>
-                              <Unlock className="w-4 h-4" />
-                              <span>Verify Balance & Unlock (PKR {modalUnlockFee.toLocaleString()})</span>
-                            </>
-                          )}
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await handleUnlockTask(prepaidModalTask.id);
+                          setPrepaidModalTask(null);
+                        }}
+                        disabled={unlockingTaskId === prepaidModalTask.id}
+                        className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#10D6A0] to-emerald-400 hover:brightness-110 text-[#020B20] font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        {unlockingTaskId === prepaidModalTask.id ? (
+                          <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4 text-[#020B20]" />
+                            <span>Open & Submit for Admin Review</span>
+                          </>
+                        )}
+                      </button>
 
                       <button
                         type="button"
