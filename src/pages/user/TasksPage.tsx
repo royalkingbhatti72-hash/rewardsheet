@@ -28,6 +28,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
@@ -45,6 +46,46 @@ const LEVEL_ICONS: Record<number, React.ElementType> = {
   10: Crown,
 };
 
+const triggerFireworks = () => {
+  const duration = 3.5 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 99999 };
+
+  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+  const interval: any = setInterval(() => {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+
+    // Left firework cannon
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      colors: ['#FFD45A', '#1459E8', '#22D3EE', '#10D6A0', '#FF4D6D', '#F59E0B'],
+    });
+    // Right firework cannon
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      colors: ['#FFD45A', '#1459E8', '#22D3EE', '#10D6A0', '#FF4D6D', '#F59E0B'],
+    });
+    // Center rocket
+    confetti({
+      ...defaults,
+      particleCount: particleCount * 0.7,
+      origin: { x: 0.5, y: randomInRange(0.1, 0.4) },
+      colors: ['#FFD45A', '#FFFFFF', '#22D3EE', '#10D6A0'],
+    });
+  }, 250);
+};
+
 const cleanTaskTitle = (title: string) => {
   if (!title) return '';
   if (title.startsWith('Prepaid Task')) return title;
@@ -52,8 +93,39 @@ const cleanTaskTitle = (title: string) => {
 };
 
 export const TasksPage: React.FC = () => {
-  const { refreshUser, wallet } = useAuth();
+  const { user, refreshUser, wallet } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [unlockedLevels, setUnlockedLevels] = useState<{ [lvlNum: number]: boolean }>(() => {
+    const stored: { [key: number]: boolean } = { 1: true };
+    try {
+      for (let i = 2; i <= 10; i++) {
+        if (localStorage.getItem(`royal_unlocked_lvl_${i}`) === 'true') {
+          stored[i] = true;
+        }
+      }
+    } catch {}
+    return stored;
+  });
+
+  const [congratsModalLevel, setCongratsModalLevel] = useState<any | null>(null);
+
+  const isLevelUnlockedByUser = (lvl: any) => {
+    if (!lvl) return false;
+    if (lvl.levelNumber === 1) return true;
+    if ((lvl.approvedTaskCount || 0) > 0) return true;
+    return !!unlockedLevels[lvl.levelNumber];
+  };
+
+  const handleUnlockLevelAction = (lvl: any) => {
+    if (!lvl) return;
+    try {
+      localStorage.setItem(`royal_unlocked_lvl_${lvl.levelNumber}`, 'true');
+    } catch {}
+    setUnlockedLevels((prev) => ({ ...prev, [lvl.levelNumber]: true }));
+    setCongratsModalLevel(lvl);
+    triggerFireworks();
+  };
 
   const cachedLevels = api.getCachedData<any>('/tasks/levels');
   const [levels, setLevels] = useState<any[]>(cachedLevels?.levels || []);
@@ -300,6 +372,7 @@ export const TasksPage: React.FC = () => {
             const isCurrent = lvl.levelNumber === userCurrentLevelNumber;
             const isCompleted = lvl.isCompleted;
             const isLocked = !lvl.isUnlocked;
+            const isReadyToUnlock = lvl.isUnlocked && !isCompleted && !isLevelUnlockedByUser(lvl);
             const approved = lvl.approvedTaskCount || 0;
             const lvlProgressPercent = Math.min(100, Math.round((approved / (lvl.requiredTaskCount || 10)) * 100));
             const LevelIconComponent = LEVEL_ICONS[lvl.levelNumber] || Crown;
@@ -344,6 +417,8 @@ export const TasksPage: React.FC = () => {
                         <Lock
                           className={`w-7 h-7 ${isSelected ? 'text-[#FFD45A]' : 'text-slate-500'}`}
                         />
+                      ) : isReadyToUnlock ? (
+                        <Unlock className="w-7 h-7 text-[#FFD45A] animate-pulse" />
                       ) : (
                         <LevelIconComponent
                           className={`w-7 h-7 ${isSelected ? 'text-[#FFD45A]' : 'text-slate-400'}`}
@@ -357,7 +432,9 @@ export const TasksPage: React.FC = () => {
                 <div className="mb-2 space-y-0.5">
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${
-                      isCurrent
+                      isReadyToUnlock
+                        ? 'bg-gradient-to-r from-[#FFD45A]/25 to-[#10D6A0]/25 text-[#FFD45A] border border-[#FFD45A]/50 animate-pulse'
+                        : isCurrent
                         ? 'bg-[#1264F5]/25 text-[#22D3EE] border border-[#168BFF]/40'
                         : isCompleted
                         ? 'bg-[#10D6A0]/20 text-[#10D6A0] border border-[#10D6A0]/30'
@@ -366,7 +443,15 @@ export const TasksPage: React.FC = () => {
                         : 'bg-[#061633] text-[#B7C6E4] border border-[#173C73]'
                     }`}
                   >
-                    {isCurrent ? 'Current Level' : isCompleted ? 'Completed' : isLocked ? 'Locked' : 'Open'}
+                    {isReadyToUnlock
+                      ? 'Ready to Unlock'
+                      : isCurrent
+                      ? 'Current Level'
+                      : isCompleted
+                      ? 'Completed'
+                      : isLocked
+                      ? 'Locked'
+                      : 'Open'}
                   </span>
                   <h3 className="text-lg sm:text-xl font-black text-white tracking-tight pt-1">
                     Level {lvl.levelNumber}
@@ -395,6 +480,8 @@ export const TasksPage: React.FC = () => {
                       ? 'Level Completed'
                       : isLocked
                       ? 'Locked Level'
+                      : isReadyToUnlock
+                      ? 'Ready to Activate'
                       : `${approved} Tasks Completed`}
                   </span>
                   <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] flex-wrap">
@@ -410,7 +497,19 @@ export const TasksPage: React.FC = () => {
 
                 {/* Action Button inside Card */}
                 <div className="w-full">
-                  {isSelected ? (
+                  {isReadyToUnlock ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectLevel(lvl.levelNumber);
+                        handleUnlockLevelAction(lvl);
+                      }}
+                      className="w-full py-2.5 px-4 rounded-full text-xs font-black shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-105 active:scale-95 bg-gradient-to-r from-[#FFD45A] via-amber-400 to-[#10D6A0] text-[#020B20] shadow-[#FFD45A]/30 animate-pulse cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Unlock Level {lvl.levelNumber}</span>
+                    </button>
+                  ) : isSelected ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -511,6 +610,39 @@ export const TasksPage: React.FC = () => {
               <span>Back to Current Level {userCurrentLevelNumber}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
+          </div>
+        ) : selectedLevelSummary && !isLevelUnlockedByUser(selectedLevelSummary) ? (
+          /* ========================================================
+             LEVEL UNLOCK GATEWAY (Ready to Unlock with Celebration)
+             ======================================================== */
+          <div className="p-8 sm:p-10 text-center rounded-3xl bg-gradient-to-b from-[#091E42] via-[#071B3A] to-[#04132F] border-2 border-[#FFD45A]/50 shadow-2xl shadow-[#FFD45A]/20 space-y-5 relative overflow-hidden">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#1264F5] via-[#FFD45A] to-[#10D6A0] p-1 mx-auto shadow-xl shadow-[#FFD45A]/30">
+              <div className="w-full h-full bg-[#04132F] rounded-[22px] flex items-center justify-center">
+                <Trophy className="w-10 h-10 text-[#FFD45A] animate-bounce" />
+              </div>
+            </div>
+
+            <div className="space-y-2 max-w-md mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFD45A]/15 border border-[#FFD45A]/40 text-[#FFD45A] text-xs font-black uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" /> Level {activeLevelNumber} Ready
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white">
+                Unlock Level {activeLevelNumber}: {selectedLevelSummary?.title}
+              </h3>
+              <p className="text-xs text-[#B7C6E4] leading-relaxed">
+                You have reached Level {activeLevelNumber}! Click the unlock button below to celebrate your progress with fireworks and activate your new tier assignments.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => handleUnlockLevelAction(selectedLevelSummary)}
+                className="py-3.5 px-8 rounded-full bg-gradient-to-r from-[#FFD45A] via-amber-400 to-[#10D6A0] hover:brightness-110 text-[#020B20] font-black text-sm shadow-xl shadow-[#FFD45A]/30 transition-all transform hover:scale-105 active:scale-95 inline-flex items-center gap-2 cursor-pointer"
+              >
+                <Unlock className="w-4 h-4" />
+                <span>Unlock Level {activeLevelNumber} Now 🎉</span>
+              </button>
+            </div>
           </div>
         ) : tasks && tasks.length > 0 ? (
           <div className="space-y-1 sm:space-y-1.5">
@@ -735,11 +867,18 @@ export const TasksPage: React.FC = () => {
 
           {activeLevelNumber < 10 && (
             <button
-              onClick={() => handleSelectLevel(activeLevelNumber + 1)}
-              className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md self-start sm:self-auto flex-shrink-0"
+              onClick={() => {
+                const nextLevelNum = activeLevelNumber + 1;
+                handleSelectLevel(nextLevelNum);
+                const nextLvl = levels.find((l) => l.levelNumber === nextLevelNum);
+                if (nextLvl && !isLevelUnlockedByUser(nextLvl)) {
+                  handleUnlockLevelAction(nextLvl);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:brightness-110 text-[#020B20] text-xs font-black px-4 py-2.5 rounded-xl transition-all shadow-md self-start sm:self-auto flex-shrink-0 cursor-pointer animate-pulse"
             >
-              <span>View Level {activeLevelNumber + 1}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Unlock Level {activeLevelNumber + 1} 🎉</span>
             </button>
           )}
         </section>
@@ -943,6 +1082,95 @@ export const TasksPage: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* ========================================================
+          CONGRATULATIONS MODAL WITH FIREWORKS CELEBRATION
+          ======================================================== */}
+      {congratsModalLevel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020B20]/85 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border-2 border-[#FFD45A]/60 p-6 sm:p-8 text-center shadow-2xl shadow-[#FFD45A]/30 animate-in zoom-in-95 duration-300 overflow-hidden">
+            {/* Background ambient radial glow */}
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FFD45A]/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setCongratsModalLevel(null);
+                scrollToTasksSection();
+              }}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#061633] border border-[#173C73] text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Floating Golden Trophy / Icon */}
+            <div className="relative mb-4 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#FFD45A] via-amber-400 to-[#10D6A0] p-1 shadow-2xl shadow-[#FFD45A]/40 animate-bounce">
+                <div className="w-full h-full bg-[#04132F] rounded-[20px] flex items-center justify-center">
+                  <Trophy className="w-10 h-10 text-[#FFD45A]" />
+                </div>
+              </div>
+            </div>
+
+            {/* Congratulations Banner */}
+            <div className="space-y-1 mb-4">
+              <span className="inline-block text-[11px] font-black tracking-widest text-[#FFD45A] uppercase bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-3 py-0.5 rounded-full">
+                🎉 CONGRATULATIONS! 🎉
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Level {congratsModalLevel.levelNumber} Unlocked!
+              </h2>
+              <p className="text-xs sm:text-sm font-bold text-[#22D3EE]">
+                {congratsModalLevel.title}
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-6 leading-relaxed max-w-xs mx-auto">
+              You have successfully unlocked Level {congratsModalLevel.levelNumber}! Complete your new assignments to earn higher CPs and bigger PKR rewards.
+            </p>
+
+            {/* Metric Badges */}
+            <div className="grid grid-cols-2 gap-2.5 mb-6 text-center">
+              <div className="bg-[#061633]/80 border border-[#173C73] p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-400 block font-semibold uppercase">Completion Bonus</span>
+                <span className="text-sm sm:text-base font-black text-[#10D6A0]">
+                  PKR {congratsModalLevel.completionReward?.toLocaleString() || 0}
+                </span>
+              </div>
+              <div className="bg-[#061633]/80 border border-[#173C73] p-3 rounded-2xl">
+                <span className="text-[10px] text-slate-400 block font-semibold uppercase">Credit Points</span>
+                <span className="text-sm sm:text-base font-black text-[#22D3EE]">
+                  +{congratsModalLevel.totalCreditPoints || 100} CPs
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setCongratsModalLevel(null);
+                  scrollToTasksSection();
+                }}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#FFD45A] via-amber-400 to-[#10D6A0] hover:brightness-110 text-[#020B20] font-black text-sm shadow-xl shadow-[#FFD45A]/30 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Start Level {congratsModalLevel.levelNumber} Tasks</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerFireworks();
+                }}
+                className="w-full py-2 text-xs font-bold text-[#FFD45A] hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>More Fireworks! 🎆</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
