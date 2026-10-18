@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Crown,
@@ -30,6 +30,36 @@ export const UserLayout: React.FC = () => {
   const [announcement, setAnnouncement] = useState<string | null>(
     cachedAnnounce?.announcements?.[0]?.content || null
   );
+  const [refreshingPath, setRefreshingPath] = useState<string | null>(null);
+  const lastClickRef = useRef<{ [key: string]: number }>({});
+
+  const handleRefresh = (path: string) => {
+    setRefreshingPath(path);
+    api.invalidateCache();
+    if (location.pathname === path) {
+      window.location.reload();
+    } else {
+      window.location.href = path;
+    }
+  };
+
+  const handleBottomNavClick = (path: string, e: React.MouseEvent) => {
+    const now = Date.now();
+    const lastTime = lastClickRef.current[path] || 0;
+    if (now - lastTime < 450) {
+      e.preventDefault();
+      lastClickRef.current[path] = 0;
+      handleRefresh(path);
+      return;
+    }
+    lastClickRef.current[path] = now;
+  };
+
+  const handleBottomNavDoubleClick = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    lastClickRef.current[path] = 0;
+    handleRefresh(path);
+  };
 
   useEffect(() => {
     // Fetch notifications unread count and announcements
@@ -253,22 +283,31 @@ export const UserLayout: React.FC = () => {
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#020B20]/95 backdrop-blur-lg border-t border-[#214B91]/60 px-2 py-2 flex items-center justify-around shadow-2xl">
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#020B20]/95 backdrop-blur-lg border-t border-[#214B91]/60 px-2 py-2 flex items-center justify-around shadow-2xl select-none"
+        style={{ touchAction: 'manipulation' }}
+      >
         {bottomNavItems.map((item) => {
           const isActive = location.pathname === item.path || (item.path !== '/app' && location.pathname.startsWith(item.path));
+          const isRefreshing = refreshingPath === item.path;
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative ${
+              onClick={(e) => handleBottomNavClick(item.path, e)}
+              onDoubleClick={(e) => handleBottomNavDoubleClick(item.path, e)}
+              title="Tap to open • Double tap to reload & update data"
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all relative active:scale-95 cursor-pointer ${
                 isActive ? 'text-[#FFD45A]' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               {isActive && (
                 <span className="absolute -top-1 w-8 h-1 bg-[#FFD45A] rounded-full shadow-sm shadow-[#FFD45A]" />
               )}
-              <item.icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
-              <span className="text-[10px] font-medium mt-1">{item.label}</span>
+              <item.icon className={`w-5 h-5 transition-transform ${isRefreshing ? 'animate-spin text-[#22D3EE]' : isActive ? 'scale-110' : ''}`} />
+              <span className="text-[10px] font-medium mt-1">
+                {isRefreshing ? 'Updating...' : item.label}
+              </span>
             </Link>
           );
         })}
