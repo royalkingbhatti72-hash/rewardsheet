@@ -39,17 +39,35 @@ export const TaskDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const loadTask = () => {
+  const loadTask = (silent = false) => {
     if (!taskId) return;
-    setLoading(true);
+    if (!silent && !taskData) setLoading(true);
     api.getTaskDetails(taskId)
       .then(setTaskData)
-      .catch((err) => setError(err.message || 'Failed to load task details'))
+      .catch((err) => {
+        if (!taskData) setError(err.message || 'Failed to load task details');
+      })
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     loadTask();
+  }, [taskId]);
+
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  useEffect(() => {
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      if (type === 'task' || type === 'notification' || type === 'command' || type === 'all') {
+        loadTask(true);
+      }
+    };
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', () => loadTask(true));
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', () => loadTask(true));
+    };
   }, [taskId]);
 
   const handleUnlock = async () => {
@@ -237,11 +255,11 @@ export const TaskDetailPage: React.FC = () => {
             <div className="flex items-start gap-3">
               <Zap className="w-6 h-6 text-[#FFD45A] flex-shrink-0 mt-1" />
               <div>
-                <h2 className="text-lg font-bold text-white">Prepaid Task Unlocking & Balance Check</h2>
+                <h2 className="text-lg font-bold text-white">Prepaid Task Balance Verification</h2>
                 <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                  This is a prepaid assignment requiring an unlock fee of{' '}
-                  <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong>.
-                  Deposit the remaining balance if needed to unlock protected step-by-step instructions and the external link.
+                  This task requires an account balance of{' '}
+                  <strong className="text-[#FFD45A] font-bold">PKR {unlockFee.toLocaleString()}</strong> to unlock.
+                  {' '}<strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance.
                 </p>
               </div>
             </div>
@@ -249,15 +267,16 @@ export const TaskDetailPage: React.FC = () => {
             {/* 3-Column Balance Breakdown Box */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Task Prepaid Cost</span>
+                <span className="text-[10px] text-slate-400 block uppercase font-medium">Required Balance</span>
                 <span className="text-lg font-black text-white">PKR {unlockFee.toLocaleString()}</span>
+                <span className="text-[10px] text-[#10D6A0] block mt-0.5">No fee deducted</span>
               </div>
               <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
                 <span className="text-[10px] text-slate-400 block uppercase font-medium">Your Current Balance</span>
                 <span className="text-lg font-black text-[#10D6A0]">PKR {userBalance.toLocaleString()}</span>
               </div>
               <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Remaining Needed</span>
+                <span className="text-[10px] text-slate-400 block uppercase font-medium">Needed to Deposit</span>
                 <span className={`text-lg font-black ${remainingNeeded > 0 ? 'text-[#FFD45A]' : 'text-emerald-400'}`}>
                   {remainingNeeded > 0 ? `PKR ${remainingNeeded.toLocaleString()}` : 'PKR 0 (Sufficient)'}
                 </span>
@@ -284,14 +303,14 @@ export const TaskDetailPage: React.FC = () => {
               <button
                 onClick={handleUnlock}
                 disabled={unlocking}
-                className="w-full py-3 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:from-amber-400 hover:to-[#FFD45A] text-[#020B20] font-black text-sm rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:from-amber-400 hover:to-[#FFD45A] text-[#020B20] font-black text-sm rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {unlocking ? (
                   <span className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <Unlock className="w-4 h-4" />
-                    <span>Balance Ready: Pay PKR {unlockFee.toLocaleString()} & Start Task</span>
+                    <span>Verify Balance & Open Task (PKR {unlockFee.toLocaleString()})</span>
                   </>
                 )}
               </button>
@@ -413,19 +432,31 @@ export const TaskDetailPage: React.FC = () => {
 
           {/* Approved State Notice */}
           {isApproved && (
-            <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-              <p className="text-xs text-emerald-300 font-semibold">
-                {task?.isPaid ? (
-                  <>
-                    This prepaid task was verified and <strong>instantly approved</strong>! +{task?.creditPoints || 30} Credit Points have been credited. Complete all {level?.requiredTaskCount || 10} tasks in Level {level?.levelNumber} to receive the PKR {level?.completionReward?.toLocaleString()} level completion bonus!
-                  </>
-                ) : (
-                  <>
-                    This task has been verified and approved! +{task?.creditPoints || 5} Credit Points have been credited. Complete all {level?.requiredTaskCount || 10} tasks in Level {level?.levelNumber} to receive the PKR {level?.completionReward?.toLocaleString()} level completion bonus!
-                  </>
-                )}
-              </p>
+            <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl space-y-3">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <p className="text-xs text-emerald-300 font-semibold leading-relaxed">
+                  {task?.isPaid ? (
+                    <>
+                      This prepaid task was verified and <strong>instantly approved</strong>! +{task?.creditPoints || 30} Credit Points have been credited. Next sequential task is now unlocked!
+                    </>
+                  ) : (
+                    <>
+                      This task has been verified and approved! +{task?.creditPoints || 5} Credit Points have been credited. Next sequential task is now unlocked!
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="pt-1">
+                <Link
+                  to={`/app/tasks?level=${level?.levelNumber}`}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs px-5 py-2.5 rounded-xl shadow-lg hover:scale-105 transition-all cursor-pointer"
+                >
+                  <span>Proceed to Next Task (Task {(task?.taskNumber || 0) + 1})</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           )}
         </div>

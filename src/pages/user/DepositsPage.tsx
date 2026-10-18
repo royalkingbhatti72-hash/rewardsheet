@@ -18,9 +18,11 @@ export const DepositsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const queryAmount = searchParams.get('amount');
 
-  const [instructions, setInstructions] = useState<any>(null);
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedInst = api.getCachedData<any>('/deposits/instructions');
+  const cachedDeps = api.getCachedData<any>('/deposits');
+  const [instructions, setInstructions] = useState<any>(cachedInst);
+  const [deposits, setDeposits] = useState<any[]>(cachedDeps?.deposits || []);
+  const [loading, setLoading] = useState(!cachedInst && !cachedDeps);
 
   const [method, setMethod] = useState<'EASYPAISA' | 'JAZZCASH' | 'BANK_TRANSFER'>('EASYPAISA');
   const [amount, setAmount] = useState<string>(queryAmount || '1000');
@@ -31,8 +33,8 @@ export const DepositsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const loadData = () => {
-    setLoading(true);
+  const loadData = (silent = false) => {
+    if (!silent && !instructions && deposits.length === 0) setLoading(true);
     Promise.all([api.getDepositInstructions(), api.getDeposits()])
       .then(([instRes, depRes]) => {
         setInstructions(instRes);
@@ -43,7 +45,25 @@ export const DepositsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadData();
+    loadData(!!instructions);
+  }, []);
+
+  // Realtime Live Update Listener (Zero Reload Strategy)
+  useEffect(() => {
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      if (type === 'wallet' || type === 'notification' || type === 'command' || type === 'all') {
+        api.invalidateCache('/deposits');
+        loadData(true);
+        refreshUser();
+      }
+    };
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    window.addEventListener('royal_live_heartbeat', () => loadData(true));
+    return () => {
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      window.removeEventListener('royal_live_heartbeat', () => loadData(true));
+    };
   }, []);
 
   const handleCopy = (text: string, key: string) => {
@@ -88,7 +108,7 @@ export const DepositsPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !instructions && deposits.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin" />

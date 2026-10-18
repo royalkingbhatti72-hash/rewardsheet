@@ -1004,12 +1004,12 @@ export const TasksPage: React.FC = () => {
                 <div className="p-3.5 rounded-2xl bg-[#020B20] border border-[#173C73] space-y-1 text-center">
                   <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
                     <Zap className="w-3.5 h-3.5 text-[#FFD45A]" />
-                    <span>Required Amount</span>
+                    <span>Required Balance</span>
                   </div>
                   <span className="text-base sm:text-lg font-black text-white block">
                     PKR {modalUnlockFee.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-slate-500">Task prepaid cost</span>
+                  <span className="text-[10px] text-[#10D6A0]">Account balance requirement (No fee deducted)</span>
                 </div>
 
                 {/* 3. Needed Remaining Amount */}
@@ -1031,14 +1031,14 @@ export const TasksPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Instant Auto-Approval Guarantee Notice */}
+              {/* Balance Hold Notice */}
               <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#1459E8]/15 via-[#020B20] to-[#10D6A0]/15 border border-[#1459E8]/40 space-y-1">
                 <div className="flex items-center gap-2 text-xs font-bold text-[#10D6A0]">
-                  <Sparkles className="w-4 h-4 text-[#FFD45A]" />
-                  <span>Instant Approval • No Admin Review Needed</span>
+                  <ShieldCheck className="w-4 h-4 text-[#FFD45A]" />
+                  <span>Account Balance Requirement • Zero Deductions</span>
                 </div>
                 <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Paid tasks do <strong>NOT</strong> need admin review! Once you complete this assignment and submit proof, your +{prepaidModalTask.creditPoints || 30} points will be credited immediately, and the next task will unlock automatically without waiting.
+                  This task requires an account balance of <strong>PKR {modalUnlockFee.toLocaleString()}</strong> to unlock. <strong>Your funds are NOT deducted or spent</strong> — they remain in your wallet balance. Once completed, your +{prepaidModalTask.creditPoints || 30} points will be credited and the next task will open automatically.
                 </p>
               </div>
 
@@ -1049,7 +1049,7 @@ export const TasksPage: React.FC = () => {
                     <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                       <p className="text-[11px] leading-relaxed">
-                        You need <strong className="text-[#FFD45A] font-bold">PKR {modalRemainingNeeded.toLocaleString()}</strong> more in your balance to complete this task. Deposit the remaining funds to proceed.
+                        You need <strong className="text-[#FFD45A] font-bold">PKR {modalRemainingNeeded.toLocaleString()}</strong> more in your balance to unlock this task. Deposit the remaining funds to proceed.
                       </p>
                     </div>
 
@@ -1077,7 +1077,7 @@ export const TasksPage: React.FC = () => {
                     <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                       <p className="text-[11px] leading-relaxed">
-                        Your account balance is sufficient! You have <strong className="text-white font-bold">PKR {modalUserBalance.toLocaleString()}</strong> available. You can unlock and start this task immediately.
+                        Your account balance is sufficient! You have <strong className="text-white font-bold">PKR {modalUserBalance.toLocaleString()}</strong> available. Your funds will remain in your balance with zero deductions. You can unlock and start this task immediately.
                       </p>
                     </div>
 
@@ -1088,7 +1088,7 @@ export const TasksPage: React.FC = () => {
                           onClick={() => setPrepaidModalTask(null)}
                           className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
-                          <span>Start Assignment (Instant Approval)</span>
+                          <span>Start Assignment</span>
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       ) : (
@@ -1106,7 +1106,7 @@ export const TasksPage: React.FC = () => {
                           ) : (
                             <>
                               <Unlock className="w-4 h-4" />
-                              <span>Unlock Now (PKR {modalUnlockFee.toLocaleString()})</span>
+                              <span>Verify Balance & Unlock (PKR {modalUnlockFee.toLocaleString()})</span>
                             </>
                           )}
                         </button>
