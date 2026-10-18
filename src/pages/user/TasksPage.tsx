@@ -45,9 +45,9 @@ const LEVEL_ICONS: Record<number, React.ElementType> = {
   10: Crown,
 };
 
-const cleanTaskTitle = (title: string, isPaid?: boolean) => {
+const cleanTaskTitle = (title: string, taskType?: string) => {
+  if (taskType) return taskType;
   if (!title) return '';
-  if (isPaid && title.toLowerCase().includes('prepaid')) return 'Prepaid Mission';
   return title.replace(/\s*(—|-|:)\s*Task\s*#?\d+/gi, '').trim();
 };
 
@@ -513,11 +513,15 @@ export const TasksPage: React.FC = () => {
                         </span>
 
                         <h5 className="text-[11px] sm:text-xs font-semibold text-slate-300 truncate">
-                          {cleanTaskTitle(task.title, task.isPaid)}
+                          {cleanTaskTitle(task.title, task.taskType)}
                         </h5>
 
                         <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/25 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
                           +{task.creditPoints || 5} Pts
+                        </span>
+
+                        <span className="text-[9px] font-bold text-[#10D6A0] bg-[#10D6A0]/10 border border-[#10D6A0]/25 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
+                          PKR {task.rewardAmount?.toLocaleString()}
                         </span>
 
                         {task.isPaid && (
@@ -597,11 +601,15 @@ export const TasksPage: React.FC = () => {
                       </span>
 
                       <h5 className="text-[11px] sm:text-xs font-semibold text-white truncate">
-                        {cleanTaskTitle(task.title, task.isPaid)}
+                        {cleanTaskTitle(task.title, task.taskType)}
                       </h5>
 
                       <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
                         +{task.creditPoints || 5} Pts
+                      </span>
+
+                      <span className="text-[9px] font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
+                        PKR {task.rewardAmount?.toLocaleString()}
                       </span>
 
                       {task.isPaid && (

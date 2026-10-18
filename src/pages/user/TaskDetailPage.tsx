@@ -19,9 +19,9 @@ import {
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
-const cleanTaskTitle = (title: string, isPaid?: boolean) => {
+const cleanTaskTitle = (title: string, taskType?: string) => {
+  if (taskType) return taskType;
   if (!title) return '';
-  if (isPaid && title.toLowerCase().includes('prepaid')) return 'Prepaid Mission';
   return title.replace(/\s*(—|-|:)\s*Task\s*#?\d+/gi, '').trim();
 };
 
@@ -161,13 +161,19 @@ export const TaskDetailPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-black text-white">{cleanTaskTitle(task?.title, task?.isPaid)}</h1>
+            <h1 className="text-2xl font-black text-white">{cleanTaskTitle(task?.title, task?.taskType)}</h1>
             <p className="text-xs text-slate-300">{task?.description}</p>
           </div>
 
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
             <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
-              <span className="text-[10px] text-slate-400 block uppercase font-medium">Task Reward</span>
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">Commission</span>
+              <span className="text-lg font-black text-[#10D6A0]">
+                PKR {task?.rewardAmount?.toLocaleString()}
+              </span>
+            </div>
+            <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
+              <span className="text-[10px] text-slate-400 block uppercase font-medium">Credit Points</span>
               <span className="text-lg font-black text-[#22D3EE]">
                 +{task?.creditPoints || 5} Points
               </span>
