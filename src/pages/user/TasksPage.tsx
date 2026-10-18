@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Crown,
   Lock,
@@ -93,6 +93,7 @@ const cleanTaskTitle = (title: string) => {
 };
 
 export const TasksPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user, refreshUser, wallet } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
