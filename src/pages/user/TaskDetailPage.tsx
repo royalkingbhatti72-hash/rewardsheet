@@ -146,7 +146,7 @@ export const TaskDetailPage: React.FC = () => {
                 {task?.taskType}
               </span>
               <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2 py-0.5 rounded-md">
-                +{task?.creditPoints || 5} Points
+                +{task?.creditPoints || 5} CPs
               </span>
               {task?.isPaid && (
                 <span className="text-[10px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -154,8 +154,14 @@ export const TaskDetailPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl font-black text-white">{cleanTaskTitle(task?.title)}</h1>
-            <p className="text-xs text-slate-300">{task?.description}</p>
+            <h1 className="text-2xl font-black text-white">
+              {isLocked ? 'Locked Task' : cleanTaskTitle(task?.title)}
+            </h1>
+            <p className="text-xs text-slate-300">
+              {isLocked
+                ? 'Complete and get approval for the previous sequential task to unlock this task.'
+                : task?.description}
+            </p>
           </div>
 
           <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
