@@ -335,10 +335,6 @@ export const DashboardPage: React.FC = () => {
                 <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   {creditPoints.toLocaleString()} <span className="text-base font-bold text-[#22D3EE]">Pts</span>
                 </h3>
-                <p className="text-[11px] text-[#B7C6E4] flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE]" />
-                  <span>+10 pts per task • 100 pts per completed level</span>
-                </p>
               </div>
 
               <div className="pt-3 mt-3 border-t border-[#173C73]/40 flex items-center justify-between text-xs">

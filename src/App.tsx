@@ -110,12 +110,40 @@ export const App: React.FC = () => {
         <Route path="profile" element={<ProfilePage />} />
       </Route>
 
-      {/* Admin Panel has been relocated exclusively to backend deployment */}
-      <Route path="/adminpanal/*" element={<Navigate to="/" replace />} />
-      <Route path="/adminpanal" element={<Navigate to="/" replace />} />
+      {/* Admin Panel relocation handler */}
+      <Route
+        path="/adminpanal/*"
+        element={
+          <AdminRedirect />
+        }
+      />
+      <Route
+        path="/adminpanal"
+        element={
+          <AdminRedirect />
+        }
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+  );
+};
+
+const AdminRedirect: React.FC = () => {
+  React.useEffect(() => {
+    if (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
+      window.location.href = `${window.location.protocol}//${window.location.hostname}:5050/adminpanal`;
+    } else {
+      window.location.href = 'https://backend-two-lilac-79.vercel.app/';
+    }
+  }, []);
+  return (
+    <div className="min-h-screen bg-[#020712] flex items-center justify-center text-slate-200">
+      <div className="text-center space-y-3">
+        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-slate-300 font-semibold tracking-wide">Connecting to Royal Admin Control Panel...</p>
+      </div>
+    </div>
   );
 };

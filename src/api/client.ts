@@ -1,9 +1,20 @@
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const DEFAULT_PROD_URL = 'https://backend-two-lilac-79.vercel.app/api';
-const API_BASE = (rawApiUrl && !rawApiUrl.includes('<') 
-  ? rawApiUrl 
-  : (import.meta.env.PROD ? DEFAULT_PROD_URL : 'http://localhost:5050/api')
-).replace(/\/$/, '');
+
+function resolveApiBase(): string {
+  if (rawApiUrl && !rawApiUrl.includes('<')) {
+    return rawApiUrl.replace(/\/$/, '');
+  }
+  if (import.meta.env.PROD) {
+    return DEFAULT_PROD_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
+    return `${window.location.protocol}//${window.location.hostname}:5050/api`;
+  }
+  return 'http://localhost:5050/api';
+}
+
+const API_BASE = resolveApiBase();
 
 function getUserToken(): string | null {
   return localStorage.getItem('royal_user_token');
