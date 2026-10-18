@@ -248,8 +248,7 @@ export const DepositsPage: React.FC = () => {
           )}
 
           <p className="text-xs text-slate-300 leading-relaxed pt-1">
-            {selectedMethodInfo.instructions} Minimum deposit is{' '}
-            <strong className="text-white font-bold">PKR {instructions?.minDeposit?.toLocaleString()}</strong>.
+            {selectedMethodInfo.instructions} You can deposit any amount in PKR.
           </p>
         </div>
       )}
@@ -266,8 +265,9 @@ export const DepositsPage: React.FC = () => {
             <input
               type="number"
               required
-              min={instructions?.minDeposit || 500}
-              step="50"
+              min="1"
+              step="any"
+              placeholder="Enter deposit amount in PKR"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
