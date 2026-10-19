@@ -75,7 +75,7 @@ export const ReferralsPage: React.FC = () => {
   };
 
   // Social sharing handlers
-  const shareMessage = `👑 Join Earn Sheet with my exclusive invite code ${referralCode} and start earning instant cash commissions on daily tasks! Register here: ${referralLink}`;
+  const shareMessage = `👑 Join Earn Sheet with my exclusive invite code ${referralCode}! Register here to complete daily tasks and unlock exclusive rewards: ${referralLink}`;
 
   const shareViaWhatsApp = () => {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`, '_blank');
@@ -84,7 +84,7 @@ export const ReferralsPage: React.FC = () => {
   const shareViaTelegram = () => {
     window.open(
       `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(
-        `Join Earn Sheet with code ${referralCode} and earn daily cash!`
+        `Join Earn Sheet with code ${referralCode} and unlock rewards!`
       )}`,
       '_blank'
     );
@@ -102,7 +102,7 @@ export const ReferralsPage: React.FC = () => {
       try {
         await navigator.share({
           title: 'Earn Sheet VIP Invitation',
-          text: `Join Earn Sheet using my code ${referralCode} and earn cash!`,
+          text: `Join Earn Sheet using my code ${referralCode}!`,
           url: referralLink,
         });
       } catch (err) {
@@ -113,7 +113,7 @@ export const ReferralsPage: React.FC = () => {
     }
   };
 
-  // Ambassador Tier Calculation
+  // Ambassador Tier Calculation (Spins only - No monetary referral profit)
   const tiers = [
     {
       id: 'BRONZE',
@@ -124,8 +124,8 @@ export const ReferralsPage: React.FC = () => {
       color: 'from-amber-700 to-amber-900',
       border: 'border-amber-600/40',
       text: 'text-amber-300',
-      bonus: `PKR ${rewardPerReferral.toLocaleString()} / referral`,
-      perk: 'Standard referral commission on all partners',
+      bonus: '1 Free Spin per 3 Qualified Friends',
+      perk: 'Invite 3 valid friends who complete tasks to unlock 1 Free Spin',
     },
     {
       id: 'SILVER',
@@ -137,7 +137,7 @@ export const ReferralsPage: React.FC = () => {
       border: 'border-slate-300/40',
       text: 'text-slate-200',
       bonus: '+ Free Royal Milestone Spin',
-      perk: '1 Free Milestone Spin on reaching 10 qualified partners',
+      perk: '1 Free Milestone Spin on reaching qualified partner targets',
     },
     {
       id: 'GOLD',
@@ -148,8 +148,8 @@ export const ReferralsPage: React.FC = () => {
       color: 'from-yellow-500 to-amber-600',
       border: 'border-[#FFD45A]/50',
       text: 'text-[#FFD45A]',
-      bonus: 'PKR 5,000 Milestone Bonus + VIP Fast Payouts',
-      perk: 'Priority withdrawal approval & high-tier ambassador perks',
+      bonus: '+3 Free Jackpot Royal Spins',
+      perk: 'High-roller VIP status and extra royal wheel spins',
     },
   ];
 
@@ -193,9 +193,8 @@ export const ReferralsPage: React.FC = () => {
     });
   }, [rawReferrals, activeFilter, searchQuery]);
 
-  // Earnings calculation for calculator widget
-  const estimatedEarnings = calculatorCount * rewardPerReferral;
-  const estimatedSpins = Math.floor(calculatorCount / 5);
+  // Spins calculation for calculator widget (1 spin per 3 qualified friends, 0 cash reward)
+  const estimatedSpins = Math.floor(calculatorCount / 3);
 
   if (loading) {
     return (
@@ -321,13 +320,16 @@ export const ReferralsPage: React.FC = () => {
               <div className="bg-[#020B20] border border-[#173C73] rounded-2xl p-3.5 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-semibold block">
-                    Per Qualified Partner
+                    Qualified Partner Reward
                   </span>
-                  <span className="text-base font-black text-[#10D6A0]">
-                    +PKR {rewardPerReferral.toLocaleString()}
+                  <span className="text-base font-black text-[#FFD45A]">
+                    Free Lucky Spin
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    1 Spin per 3 Friends (No Cash Reward)
                   </span>
                 </div>
-                <div className="w-8 h-8 rounded-xl bg-[#10D6A0]/15 flex items-center justify-center text-[#10D6A0]">
+                <div className="w-8 h-8 rounded-xl bg-[#FFD45A]/15 flex items-center justify-center text-[#FFD45A]">
                   <Gift className="w-4 h-4" />
                 </div>
               </div>
@@ -541,14 +543,14 @@ export const ReferralsPage: React.FC = () => {
         <div className="royal-card p-4 sm:p-5 rounded-2xl border border-[#173C73] space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
-              Total Commissions
+              Bonus Spins Earned
             </span>
-            <Crown className="w-4 h-4 text-[#FFD45A]" />
+            <Gift className="w-4 h-4 text-[#FFD45A]" />
           </div>
           <span className="text-2xl sm:text-3xl font-black text-[#FFD45A] block">
-            PKR {totalEarned.toLocaleString()}
+            {data?.spinsEarned ?? Math.floor(qualifiedReferrals / 3)} Spins
           </span>
-          <span className="text-[10px] text-slate-400 block">Credited to cash balance</span>
+          <span className="text-[10px] text-slate-400 block">1 Spin per 3 Qualified Friends</span>
         </div>
 
         <div className="royal-card p-4 sm:p-5 rounded-2xl border border-[#173C73] space-y-1">
@@ -572,16 +574,16 @@ export const ReferralsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <Flame className="w-5 h-5 text-[#FFD45A]" /> Royal Earnings Projection Calculator
+              <Flame className="w-5 h-5 text-[#FFD45A]" /> Free Spin Projection Calculator
             </h2>
             <p className="text-xs text-slate-300">
-              Drag the slider to see how much cash and perks you can earn by sharing Earn Sheet.
+              Drag the slider to calculate how many Free Lucky Spins you can unlock by inviting active friends.
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs text-slate-400 block">Potential Cash Payout</span>
-            <span className="text-xl sm:text-2xl font-black text-[#10D6A0]">
-              PKR {estimatedEarnings.toLocaleString()}
+            <span className="text-xs text-slate-400 block">Projected Free Spins</span>
+            <span className="text-xl sm:text-2xl font-black text-[#FFD45A]">
+              +{estimatedSpins} Free Spins
             </span>
           </div>
         </div>
@@ -606,13 +608,13 @@ export const ReferralsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <div className="bg-[#020B20]/80 p-3.5 rounded-2xl border border-[#173C73] text-left">
             <span className="text-[10px] uppercase font-semibold text-slate-400 block">Direct Referral Cash</span>
-            <span className="text-sm font-black text-[#FFD45A]">PKR {estimatedEarnings.toLocaleString()}</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Credited immediately</span>
+            <span className="text-sm font-black text-slate-400">0 PKR (Spins Only)</span>
+            <span className="text-[10px] text-slate-500 block mt-0.5">No monetary cash reward</span>
           </div>
           <div className="bg-[#020B20]/80 p-3.5 rounded-2xl border border-[#173C73] text-left">
-            <span className="text-[10px] uppercase font-semibold text-slate-400 block">Milestone Spin Tickets</span>
-            <span className="text-sm font-black text-[#22D3EE]">+{estimatedSpins} Free Spins</span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Win up to PKR 50,000</span>
+            <span className="text-[10px] uppercase font-semibold text-slate-400 block">Unlocked Royal Spins</span>
+            <span className="text-sm font-black text-[#FFD45A]">+{estimatedSpins} Free Spins</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">1 spin per 3 active friends</span>
           </div>
           <div className="bg-[#020B20]/80 p-3.5 rounded-2xl border border-[#173C73] text-left">
             <span className="text-[10px] uppercase font-semibold text-slate-400 block">Projected Ambassador Rank</span>
@@ -748,7 +750,7 @@ export const ReferralsPage: React.FC = () => {
                   <th className="py-3 px-4">Phone</th>
                   <th className="py-3 px-4">Joined Date</th>
                   <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Commission</th>
+                  <th className="py-3 px-4 text-right">Reward</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#173C73]/40 bg-[#071B3A]/40">
@@ -805,9 +807,11 @@ export const ReferralsPage: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 text-right font-black whitespace-nowrap">
                         {isQualified ? (
-                          <span className="text-[#10D6A0]">+PKR {r.rewardAmount.toLocaleString()}</span>
+                          <span className="text-[#10D6A0] inline-flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-[#FFD45A]" /> 1 Free Spin Progress
+                          </span>
                         ) : (
-                          <span className="text-slate-500 text-[11px]">Awaiting Tasks</span>
+                          <span className="text-slate-500 text-[11px]">No Reward (Unqualified)</span>
                         )}
                       </td>
                     </tr>
@@ -830,7 +834,7 @@ export const ReferralsPage: React.FC = () => {
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {searchQuery || activeFilter !== 'ALL'
                   ? 'Try adjusting your search keywords or filter to find what you are looking for.'
-                  : `Start inviting friends and earn PKR ${rewardPerReferral.toLocaleString()} bonus on every qualified partner!`}
+                  : 'Start inviting friends! Every 3 friends who complete tasks unlock 1 Free Lucky Spin!'}
               </p>
             </div>
             <button

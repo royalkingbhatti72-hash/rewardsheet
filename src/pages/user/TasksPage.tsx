@@ -717,6 +717,12 @@ export const TasksPage: React.FC = () => {
                 !isRejected &&
                 !isTaskLocked;
 
+              // Helper to compute correct credit points: standard = 5 CPs, prepaid = 30 CPs
+              const getTaskCPs = (t: any) => {
+                const isPrepaid = Boolean(t.isPaid || (t.unlockFee && t.unlockFee > 0) || t.taskNumber === 5 || t.taskNumber === 10 || t.taskType?.toLowerCase().includes('prepaid'));
+                return isPrepaid ? (t.creditPoints && t.creditPoints > 5 ? t.creditPoints : 30) : (t.creditPoints && t.creditPoints > 0 ? t.creditPoints : 5);
+              };
+
               // ----------------------------------------------------
               // LOCKED TASK ROW
               // Show ONLY task number on left, corner CPs on right
@@ -742,7 +748,7 @@ export const TasksPage: React.FC = () => {
                     {/* Right: Corner Credit Points & Locked Status */}
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/25 px-2.5 py-1 rounded-full whitespace-nowrap">
-                        +{task.creditPoints || 5} CPs
+                        +{getTaskCPs(task)} CPs
                       </span>
                       <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-slate-500 bg-[#061633] px-2.5 py-1 rounded-lg border border-[#173C73]">
                         <Lock className="w-3 h-3" /> Locked
@@ -801,7 +807,7 @@ export const TasksPage: React.FC = () => {
                   {/* Right: Corner Credit Points & Action Button */}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2.5 py-1 rounded-full whitespace-nowrap">
-                      +{task.creditPoints || 5} CPs
+                      +{getTaskCPs(task)} CPs
                     </span>
 
                     {isApproved ? (

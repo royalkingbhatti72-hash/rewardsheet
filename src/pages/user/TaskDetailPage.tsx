@@ -181,7 +181,7 @@ export const TaskDetailPage: React.FC = () => {
                     {task?.taskType}
                   </span>
                   <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2 py-0.5 rounded-md">
-                    +{task?.creditPoints || 5} CPs
+                    +{Boolean(task?.isPaid || (task?.unlockFee && task.unlockFee > 0) || task?.taskNumber === 5 || task?.taskNumber === 10 || task?.taskType?.toLowerCase().includes('prepaid')) ? 30 : (task?.creditPoints || 5)} CPs
                   </span>
                   {task?.isPaid && (
                     <span className="text-[10px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -212,7 +212,7 @@ export const TaskDetailPage: React.FC = () => {
               <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
                 <span className="text-[10px] text-slate-400 block uppercase font-medium">Credit Points</span>
                 <span className="text-lg font-black text-[#22D3EE]">
-                  +{task?.creditPoints || 5} Points
+                  +{Boolean(task?.isPaid || (task?.unlockFee && task.unlockFee > 0) || task?.taskNumber === 5 || task?.taskNumber === 10 || task?.taskType?.toLowerCase().includes('prepaid')) ? 30 : (task?.creditPoints || 5)} Points
                 </span>
               </div>
               {level?.completionReward > 0 && (
@@ -481,11 +481,11 @@ export const TaskDetailPage: React.FC = () => {
                 <p className="text-xs text-emerald-300 font-semibold leading-relaxed">
                   {task?.isPaid ? (
                     <>
-                      This prepaid task was verified and <strong>approved by administrator</strong>! +PKR {task?.rewardAmount?.toLocaleString() || 80} has been directly credited to your account balance. Next sequential task is now unlocked!
+                      This prepaid task was verified and <strong>approved by administrator</strong>! +PKR {task?.rewardAmount?.toLocaleString() || 80} has been directly credited to your account balance, along with +30 Credit Points! Next sequential task is now unlocked!
                     </>
                   ) : (
                     <>
-                      This task has been verified and approved! +{task?.creditPoints || 5} Credit Points have been credited. Next sequential task is now unlocked!
+                      This task has been verified and approved! +5 Credit Points have been credited. Next sequential task is now unlocked!
                     </>
                   )}
                 </p>
