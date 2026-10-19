@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Crown,
@@ -272,30 +272,54 @@ export const TasksPage: React.FC = () => {
     };
   }, [activeLevelNumber]);
 
-  const scrollToSelectedCard = (levelNum: number) => {
-    setTimeout(() => {
+  // Compute User's ACTUAL CURRENT ELIGIBLE / UNDER PROCESS Level (unlocked and in-progress)
+  const userCurrentLevel = useMemo(() => {
+    return (
+      levels.find((l: any) => l.isUnlocked && !l.isCompleted) ||
+      levels.filter((l: any) => l.isUnlocked).slice(-1)[0] ||
+      levels[0]
+    );
+  }, [levels]);
+  const userCurrentLevelNumber = userCurrentLevel?.levelNumber || 1;
+
+  // Center selected card into the exact horizontal center of the carousel & screen
+  const scrollToSelectedCard = (levelNum: number, behavior: ScrollBehavior = 'smooth') => {
+    const doScroll = () => {
       const card = document.getElementById(`carousel-card-${levelNum}`);
-      if (card && carouselRef.current) {
-        const container = carouselRef.current;
-        const cardLeft = card.offsetLeft;
-        const cardWidth = card.offsetWidth;
-        const containerWidth = container.offsetWidth;
-        const scrollTarget = cardLeft - containerWidth / 2 + cardWidth / 2;
-        container.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+      const container = carouselRef.current;
+      if (card && container) {
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const currentScrollLeft = container.scrollLeft;
+        // Exact center alignment calculation
+        const targetScrollLeft =
+          currentScrollLeft +
+          (cardRect.left - containerRect.left) -
+          containerRect.width / 2 +
+          cardRect.width / 2;
+        container.scrollTo({ left: targetScrollLeft, behavior });
       }
-    }, 80);
+    };
+
+    doScroll();
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 320);
   };
 
   // Synchronized level selection through Carousel
   const handleSelectLevel = (levelNumber: number) => {
     if (levelNumber < 1 || levelNumber > 10) return;
+    setActiveLevelNumber(levelNumber);
+    setSearchParams({ level: String(levelNumber) });
+    scrollToSelectedCard(levelNumber, 'smooth');
+
     const targetLvl = levels.find((l) => l.levelNumber === levelNumber);
     if (targetLvl && !targetLvl.isUnlocked) {
       setActionError(`🔒 Level ${levelNumber} is locked. Complete all tasks in Level ${levelNumber - 1} first.`);
-      return;
+    } else {
+      setActionError(null);
     }
-    setActiveLevelNumber(levelNumber);
-    setSearchParams({ level: String(levelNumber) });
   };
 
   const handlePrevLevel = () => {
@@ -307,6 +331,96 @@ export const TasksPage: React.FC = () => {
   const handleNextLevel = () => {
     if (activeLevelNumber < 10) {
       handleSelectLevel(activeLevelNumber + 1);
+    }
+  };
+
+  // Maintain center alignment on window resize and level change
+  useEffect(() => {
+    if (activeLevelNumber) {
+      scrollToSelectedCard(activeLevelNumber, 'auto');
+    }
+    const handleResize = () => {
+      if (activeLevelNumber) {
+        scrollToSelectedCard(activeLevelNumber, 'auto');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeLevelNumber, levels.length]);
+
+  // 5-second automatic return timer: if viewing another card, auto-push back to unlocked in-progress level
+  const autoReturnTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (autoReturnTimerRef.current) {
+      clearTimeout(autoReturnTimerRef.current);
+      autoReturnTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    // Only activate timer if user is browsing away from their unlocked under-process level
+    if (userCurrentLevelNumber && activeLevelNumber !== userCurrentLevelNumber) {
+      setReturnCountdown(5);
+      let remaining = 5;
+      countdownIntervalRef.current = setInterval(() => {
+        remaining -= 1;
+        if (remaining > 0) {
+          setReturnCountdown(remaining);
+        } else {
+          setReturnCountdown(null);
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+        }
+      }, 1000);
+
+      autoReturnTimerRef.current = setTimeout(() => {
+        handleSelectLevel(userCurrentLevelNumber);
+        scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
+        setReturnCountdown(null);
+      }, 5000);
+    } else {
+      setReturnCountdown(null);
+    }
+
+    return () => {
+      if (autoReturnTimerRef.current) clearTimeout(autoReturnTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, [activeLevelNumber, userCurrentLevelNumber]);
+
+  // If user scrolls the carousel track manually, restart 5-second return timer
+  const handleCarouselScroll = () => {
+    if (activeLevelNumber !== userCurrentLevelNumber) {
+      if (autoReturnTimerRef.current) clearTimeout(autoReturnTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      setReturnCountdown(5);
+
+      let remaining = 5;
+      countdownIntervalRef.current = setInterval(() => {
+        remaining -= 1;
+        if (remaining > 0) {
+          setReturnCountdown(remaining);
+        } else {
+          setReturnCountdown(null);
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+        }
+      }, 1000);
+
+      autoReturnTimerRef.current = setTimeout(() => {
+        handleSelectLevel(userCurrentLevelNumber);
+        scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
+        setReturnCountdown(null);
+      }, 5000);
     }
   };
 
@@ -336,13 +450,6 @@ export const TasksPage: React.FC = () => {
       setUnlockingTaskId(null);
     }
   };
-
-  // Compute User's ACTUAL CURRENT ELIGIBLE Level
-  const userCurrentLevel =
-    levels.find((l) => l.isUnlocked && !l.isCompleted) ||
-    levels.filter((l) => l.isUnlocked).slice(-1)[0] ||
-    levels[0];
-  const userCurrentLevelNumber = userCurrentLevel?.levelNumber || 1;
 
   if (loading && levels.length === 0) {
     return (
@@ -393,6 +500,25 @@ export const TasksPage: React.FC = () => {
           and arrow controls for all 10 standard levels
           ======================================================== */}
       <section className="relative px-2 sm:px-8 select-none">
+        {/* Auto Return Countdown Pill */}
+        {returnCountdown !== null && activeLevelNumber !== userCurrentLevelNumber && (
+          <div className="mb-3 flex items-center justify-between gap-3 bg-[#0B2248]/95 border border-[#168BFF]/60 px-4 py-2 rounded-2xl text-xs text-white shadow-xl max-w-md mx-auto animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-[#FFD45A] animate-pulse flex-shrink-0" />
+              <span className="text-slate-200">
+                Viewing Level {activeLevelNumber}. Returning to in-progress Level {userCurrentLevelNumber} in{' '}
+                <strong className="text-[#FFD45A] font-black">{returnCountdown}s</strong>
+              </span>
+            </div>
+            <button
+              onClick={() => handleSelectLevel(userCurrentLevelNumber)}
+              className="text-[11px] font-bold text-[#22D3EE] hover:text-white underline whitespace-nowrap cursor-pointer flex-shrink-0"
+            >
+              Return Now
+            </button>
+          </div>
+        )}
+
         {/* Floating Left Navigation Button */}
         <button
           onClick={handlePrevLevel}
@@ -416,8 +542,12 @@ export const TasksPage: React.FC = () => {
         {/* Horizontal Carousel Track */}
         <div
           ref={carouselRef}
-          className="flex items-center gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 px-8 sm:px-14 scrollbar-none justify-start"
-          style={{ scrollPadding: '2.5rem' }}
+          onScroll={handleCarouselScroll}
+          className="flex items-center gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-none justify-start"
+          style={{
+            paddingLeft: 'max(1.5rem, calc(50% - 155px))',
+            paddingRight: 'max(1.5rem, calc(50% - 155px))',
+          }}
         >
           {levels.map((lvl) => {
             const isSelected = lvl.levelNumber === activeLevelNumber;
