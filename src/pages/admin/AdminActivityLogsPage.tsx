@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { History, Shield, Clock } from 'lucide-react';
+import { History as HistoryIcon, Shield, Clock } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AdminActivityLogsPage: React.FC = () => {

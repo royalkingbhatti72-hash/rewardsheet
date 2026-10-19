@@ -15,7 +15,7 @@ import {
   Megaphone,
   BarChart3,
   Settings,
-  History,
+  History as HistoryIcon,
   LogOut,
   Menu,
   X,
@@ -45,7 +45,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Announcements', path: '/adminpanal/announcements', icon: Megaphone },
     { label: 'Reports', path: '/adminpanal/reports', icon: BarChart3 },
     { label: 'Website Settings', path: '/adminpanal/settings', icon: Settings },
-    { label: 'Audit Logs', path: '/adminpanal/activity-logs', icon: History },
+    { label: 'Audit Logs', path: '/adminpanal/activity-logs', icon: HistoryIcon },
   ];
 
   const handleLogout = () => {
