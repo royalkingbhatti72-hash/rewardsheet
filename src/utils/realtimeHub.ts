@@ -6,12 +6,11 @@ export type LiveEventType = 'spin' | 'task' | 'wallet' | 'notification' | 'comma
 class RealtimeHub {
   private activeChannel: any = null;
   private currentUserId: string | null = null;
-  private heartbeatTimer: any = null;
   private isInitialized = false;
 
   public init(userId: string) {
     if (!userId) return;
-    if (this.currentUserId === userId && this.isInitialized && (this.activeChannel || this.heartbeatTimer)) {
+    if (this.currentUserId === userId && this.isInitialized && this.activeChannel) {
       return;
     }
 
@@ -84,36 +83,7 @@ class RealtimeHub {
       }
     }
 
-    // High-speed fallback heartbeat sync: checks for new data every 6s if window is active
-    this.startHeartbeatSync();
-  }
-
-  private startHeartbeatSync() {
-    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-    // Gentle 60s background sync to avoid network congestion and loading spinners
-    this.heartbeatTimer = setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && this.currentUserId) {
-        window.dispatchEvent(
-          new CustomEvent('royal_live_heartbeat', {
-            detail: { userId: this.currentUserId, timestamp: Date.now() },
-          })
-        );
-      }
-    }, 60000);
-
-    // Instant sync only when user switches back to this browser tab
-    if (typeof document !== 'undefined') {
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible' && this.currentUserId) {
-          window.dispatchEvent(
-            new CustomEvent('royal_live_heartbeat', {
-              detail: { userId: this.currentUserId, timestamp: Date.now() },
-            })
-          );
-        }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-    }
+    // Deprecated interval polling removed: Pure Supabase Realtime WebSocket events are used.
   }
 
   public broadcast(type: LiveEventType, payload?: any) {
@@ -136,10 +106,6 @@ class RealtimeHub {
         supabase.removeChannel(this.activeChannel);
       } catch (_) {}
       this.activeChannel = null;
-    }
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-      this.heartbeatTimer = null;
     }
     this.currentUserId = null;
     this.isInitialized = false;
