@@ -107,6 +107,20 @@ export const AdminSettingsPage: React.FC = () => {
             </div>
 
             <div>
+              <label className="block font-semibold text-[#374151] mb-1">Official Telegram Support Link</label>
+              <input
+                type="text"
+                placeholder="https://t.me/earnsheet_official"
+                value={formData.support_telegram || ''}
+                onChange={(e) => handleChange('support_telegram', e.target.value)}
+                className="w-full border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 text-xs text-[#111827] focus:outline-none font-mono"
+              />
+              <span className="text-[10px] text-[#6B7280] mt-1 block">
+                Clients are automatically redirected here from the deposit section and when accounts are unavailable.
+              </span>
+            </div>
+
+            <div>
               <label className="block font-semibold text-[#374151] mb-1">Official Support Email</label>
               <input
                 type="email"
@@ -133,6 +147,16 @@ export const AdminSettingsPage: React.FC = () => {
           <h2 className="text-sm font-bold text-[#111827] border-b border-[#D9E4F2] pb-2">
             2. Receiving Payment Accounts & Limits
           </h2>
+
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 space-y-1">
+            <span className="font-bold block text-amber-900">
+              ⚠️ Deposit Accounts Availability Rule:
+            </span>
+            <p className="text-[11px] leading-relaxed text-amber-900">
+              To make Easypaisa, JazzCash, or Bank Transfer available, enter the receiving title and account number below.
+              <strong> If an account number is left empty, the deposit screen will display "Account Unavailable" and automatically guide the client to the Telegram application.</strong>
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
