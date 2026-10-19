@@ -24,7 +24,7 @@ export const AdminSubmissionsPage: React.FC = () => {
   const [reviewingSub, setReviewingSub] = useState<any | null>(null);
   const [action, setAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
-  const [rejectionReason, setRejectionReason] = useState('Evidence or reference details unconfirmed');
+  const [rejectionReason, setRejectionReason] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -53,7 +53,7 @@ export const AdminSubmissionsPage: React.FC = () => {
     setReviewingSub(sub);
     setAction(defaultAction);
     setReviewNotes('');
-    setRejectionReason('Evidence or reference details unconfirmed');
+    setRejectionReason('');
   };
 
   const handleExecuteReview = async (e: React.FormEvent) => {

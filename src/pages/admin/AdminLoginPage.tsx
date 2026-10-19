@@ -8,8 +8,8 @@ export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { adminLogin } = useAdminAuth();
 
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('Admin@Royal2026!');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

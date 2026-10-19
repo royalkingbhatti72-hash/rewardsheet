@@ -24,14 +24,14 @@ export const AdminUsersPage: React.FC = () => {
 
   // Modals state
   const [resetModalUser, setResetModalUser] = useState<any | null>(null);
-  const [tempPassword, setTempPassword] = useState('TempPass2026!');
-  const [resetReason, setResetReason] = useState('Customer support verified identity request');
+  const [tempPassword, setTempPassword] = useState('');
+  const [resetReason, setResetReason] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
 
   const [balanceModalUser, setBalanceModalUser] = useState<any | null>(null);
-  const [adjustAmount, setAdjustAmount] = useState<string>('500');
+  const [adjustAmount, setAdjustAmount] = useState<string>('');
   const [adjustType, setAdjustType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
-  const [adjustReason, setAdjustReason] = useState('Promotional bonus reward');
+  const [adjustReason, setAdjustReason] = useState('');
   const [adjustLoading, setAdjustLoading] = useState(false);
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -234,14 +234,22 @@ export const AdminUsersPage: React.FC = () => {
                           <Eye className="w-4 h-4" />
                         </Link>
                         <button
-                          onClick={() => setBalanceModalUser(u)}
+                          onClick={() => {
+                            setAdjustAmount('');
+                            setAdjustReason('');
+                            setBalanceModalUser(u);
+                          }}
                           className="p-1.5 rounded-md hover:bg-emerald-50 text-[#4B5563] hover:text-emerald-700"
                           title="Adjust Balance"
                         >
                           <Wallet className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => setResetModalUser(u)}
+                          onClick={() => {
+                            setTempPassword('');
+                            setResetReason('');
+                            setResetModalUser(u);
+                          }}
                           className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
                           title="Reset Password"
                         >
@@ -314,6 +322,7 @@ export const AdminUsersPage: React.FC = () => {
                 <input
                   type="text"
                   required
+                  placeholder="Enter temporary password"
                   value={tempPassword}
                   onChange={(e) => setTempPassword(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-mono text-[#111827] focus:outline-none"
@@ -327,6 +336,7 @@ export const AdminUsersPage: React.FC = () => {
                 <textarea
                   rows={2}
                   required
+                  placeholder="Enter reason for password reset"
                   value={resetReason}
                   onChange={(e) => setResetReason(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"
@@ -413,6 +423,7 @@ export const AdminUsersPage: React.FC = () => {
                   type="number"
                   required
                   min="1"
+                  placeholder="Enter amount in PKR (e.g. 500)"
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-bold text-sm text-[#111827] focus:outline-none"
@@ -426,6 +437,7 @@ export const AdminUsersPage: React.FC = () => {
                 <textarea
                   rows={2}
                   required
+                  placeholder="Enter reason for balance adjustment"
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"

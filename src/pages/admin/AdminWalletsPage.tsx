@@ -9,9 +9,9 @@ export const AdminWalletsPage: React.FC = () => {
 
   // Balance Modal
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
-  const [amount, setAmount] = useState('500');
+  const [amount, setAmount] = useState('');
   const [actionType, setActionType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
-  const [reason, setReason] = useState('Audited administrative correction');
+  const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [executing, setExecuting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -140,7 +140,9 @@ export const AdminWalletsPage: React.FC = () => {
                       <button
                         onClick={() => {
                           setSelectedUser(u);
-                          setAmount('500');
+                          setAmount('');
+                          setReason('');
+                          setNotes('');
                           setActionType('CREDIT');
                         }}
                         className="px-3 py-1 bg-[#2563EB] text-white font-semibold text-xs rounded-lg hover:bg-[#1D4ED8]"
@@ -211,6 +213,7 @@ export const AdminWalletsPage: React.FC = () => {
                   type="number"
                   required
                   min="1"
+                  placeholder="Enter amount in PKR (e.g. 500)"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   className="w-full border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-bold text-sm text-[#111827] focus:outline-none"
@@ -222,6 +225,7 @@ export const AdminWalletsPage: React.FC = () => {
                 <textarea
                   rows={2}
                   required
+                  placeholder="Enter reason for balance adjustment"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"
