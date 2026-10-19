@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Mail,
   Shield,
+  Lock,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
