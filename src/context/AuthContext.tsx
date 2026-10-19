@@ -28,7 +28,6 @@ interface AuthContextType {
   login: (token: string, userData: User, walletData?: Wallet) => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
-  updateWallet: (newWallet: Partial<Wallet> | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -133,17 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('royal_live_update', handleLiveEvent);
   }, []);
 
-  const updateWallet = (newWallet: Partial<Wallet> | null) => {
-    if (!newWallet) return;
-    setWallet((prev) => {
-      const merged = prev ? { ...prev, ...newWallet } : (newWallet as Wallet);
-      try {
-        localStorage.setItem('royal_cached_wallet', JSON.stringify(merged));
-      } catch {}
-      return merged;
-    });
-  };
-
   const login = (token: string, userData: User, walletData?: Wallet) => {
     localStorage.setItem('royal_user_token', token);
     setUser(userData);
@@ -166,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, wallet, loading, login, logout, refreshUser, updateWallet }}>
+    <AuthContext.Provider value={{ user, wallet, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

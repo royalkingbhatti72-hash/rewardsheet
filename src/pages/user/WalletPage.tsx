@@ -16,7 +16,7 @@ import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
 export const WalletPage: React.FC = () => {
-  const { wallet: authWallet, updateWallet } = useAuth();
+  const { wallet: authWallet } = useAuth();
   const cachedWallet = api.getCachedData<any>('/wallet')?.wallet || authWallet;
   const cachedTx = api.getCachedData<any>('/wallet/transactions?page=1&limit=15');
   const [wallet, setWallet] = useState<any>(cachedWallet);
@@ -30,9 +30,6 @@ export const WalletPage: React.FC = () => {
     Promise.all([api.getWallet(), api.getTransactions(p, 15)])
       .then(([walletRes, txRes]) => {
         setWallet(walletRes.wallet);
-        if (walletRes?.wallet) {
-          updateWallet(walletRes.wallet);
-        }
         setTransactions(txRes.transactions || []);
         setTotalPages(txRes.pagination?.totalPages || 1);
         setPage(p);

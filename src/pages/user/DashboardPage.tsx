@@ -31,11 +31,11 @@ import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
 export const DashboardPage: React.FC = () => {
-  const { user, wallet: authWallet, updateWallet } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const fallbackDashboard = {
-    wallet: authWallet || {
+    wallet: {
       availableBalance: 0,
       pendingBalance: 0,
       totalEarned: 0,
@@ -50,29 +50,16 @@ export const DashboardPage: React.FC = () => {
     recentSubmissions: [],
   };
 
-  const cachedDashboard = api.getCachedData<any>('/user/dashboard');
-  const [data, setData] = useState<any>(() => {
-    if (cachedDashboard) {
-      return {
-        ...cachedDashboard,
-        wallet: authWallet || cachedDashboard.wallet || fallbackDashboard.wallet,
-      };
-    }
-    return fallbackDashboard;
-  });
-  const [loading, setLoading] = useState(!cachedDashboard && !authWallet);
+  const cachedDashboard = api.getCachedData('/user/dashboard');
+  const [data, setData] = useState<any>(cachedDashboard || fallbackDashboard);
+  const [loading, setLoading] = useState(!cachedDashboard);
   const [copiedLink, setCopiedLink] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
 
   useEffect(() => {
     api
       .getDashboard()
-      .then((res: any) => {
-        setData(res);
-        if (res?.wallet) {
-          updateWallet(res.wallet);
-        }
-      })
+      .then(setData)
       .catch((err) => console.error('Dashboard load failed:', err))
       .finally(() => setLoading(false));
   }, []);
@@ -81,15 +68,7 @@ export const DashboardPage: React.FC = () => {
   useEffect(() => {
     const handleLiveEvent = () => {
       api.invalidateCache('/user/dashboard');
-      api
-        .getDashboard()
-        .then((res: any) => {
-          setData(res);
-          if (res?.wallet) {
-            updateWallet(res.wallet);
-          }
-        })
-        .catch(() => {});
+      api.getDashboard().then(setData).catch(() => {});
     };
     window.addEventListener('royal_live_update', handleLiveEvent);
     window.addEventListener('royal_live_heartbeat', handleLiveEvent);
@@ -108,6 +87,7 @@ export const DashboardPage: React.FC = () => {
   };
 
   const {
+    wallet,
     levelProgress,
     recentTransactions = [],
     recentSubmissions = [],
@@ -120,10 +100,9 @@ export const DashboardPage: React.FC = () => {
   const remainingTasksInLevel = Math.max(0, 10 - approvedTasksCount);
   const progressPercent = Math.min(100, Math.round((approvedTasksCount / 10) * 100));
 
-  // Available balance & Credit points - single source of truth across TopNav and Dashboard
-  const currentWallet = data?.wallet || authWallet;
-  const availableBalance = currentWallet?.availableBalance ?? (authWallet?.availableBalance || 0);
-  const creditPoints = currentWallet?.creditPoints ?? (authWallet?.creditPoints || 0);
+  // Available balance & Credit points
+  const availableBalance = wallet?.availableBalance || 0;
+  const creditPoints = wallet?.creditPoints ?? (data?.taskStats?.totalCreditPoints || 0);
 
   // Withdrawal Eligibility & Level Quota (10% per completed level, 100% on Level 10)
   const completedLevelsCount =

@@ -6,7 +6,7 @@ import {
   Gift,
   Coins,
   Trophy,
-  History as HistoryIcon,
+  History,
   AlertCircle,
   CheckCircle2,
   Lock,
@@ -623,7 +623,7 @@ export const SpinPage: React.FC = () => {
         <div className="rounded-2xl bg-[#07132B]/70 border border-[#162E5B] p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <HistoryIcon className="w-4 h-4 text-[#FFD45A]" />
+              <History className="w-4 h-4 text-[#FFD45A]" />
               <span>Your Spin History</span>
             </h3>
             <span className="text-xs text-slate-400">{history.length} records</span>

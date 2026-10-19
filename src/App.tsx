@@ -1,28 +1,35 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { UserLayout } from './components/user/UserLayout';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
 
-// Public pages
-import { LandingPage } from './pages/public/LandingPage';
-import { RegisterPage } from './pages/public/RegisterPage';
-import { LoginPage } from './pages/public/LoginPage';
-import { ForgotPasswordPage } from './pages/public/ForgotPasswordPage';
-import { TermsPage } from './pages/public/TermsPage';
-import { PrivacyPage } from './pages/public/PrivacyPage';
+// Public pages (lazy-loaded on demand)
+const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => ({ default: m.LandingPage })));
+const RegisterPage = lazy(() => import('./pages/public/RegisterPage').then((m) => ({ default: m.RegisterPage })));
+const LoginPage = lazy(() => import('./pages/public/LoginPage').then((m) => ({ default: m.LoginPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/public/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const TermsPage = lazy(() => import('./pages/public/TermsPage').then((m) => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import('./pages/public/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 
-// User pages
-import { DashboardPage } from './pages/user/DashboardPage';
-import { TasksPage } from './pages/user/TasksPage';
-import { TaskDetailPage } from './pages/user/TaskDetailPage';
-import { SpinPage } from './pages/user/SpinPage';
-import { WalletPage } from './pages/user/WalletPage';
-import { DepositsPage } from './pages/user/DepositsPage';
-import { WithdrawalsPage } from './pages/user/WithdrawalsPage';
-import { ReferralsPage } from './pages/user/ReferralsPage';
-import { NotificationsPage } from './pages/user/NotificationsPage';
-import { ProfilePage } from './pages/user/ProfilePage';
+// User pages (lazy-loaded on demand)
+const DashboardPage = lazy(() => import('./pages/user/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const TasksPage = lazy(() => import('./pages/user/TasksPage').then((m) => ({ default: m.TasksPage })));
+const TaskDetailPage = lazy(() => import('./pages/user/TaskDetailPage').then((m) => ({ default: m.TaskDetailPage })));
+const SpinPage = lazy(() => import('./pages/user/SpinPage').then((m) => ({ default: m.SpinPage })));
+const WalletPage = lazy(() => import('./pages/user/WalletPage').then((m) => ({ default: m.WalletPage })));
+const DepositsPage = lazy(() => import('./pages/user/DepositsPage').then((m) => ({ default: m.DepositsPage })));
+const WithdrawalsPage = lazy(() => import('./pages/user/WithdrawalsPage').then((m) => ({ default: m.WithdrawalsPage })));
+const ReferralsPage = lazy(() => import('./pages/user/ReferralsPage').then((m) => ({ default: m.ReferralsPage })));
+const NotificationsPage = lazy(() => import('./pages/user/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const ProfilePage = lazy(() => import('./pages/user/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+
+// Minimal smooth fallback placeholder
+const RouteFallback: React.FC = () => (
+  <div className="w-full min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+    <div className="w-8 h-8 border-3 border-[#168BFF]/20 border-t-[#FFD45A] rounded-full animate-spin" />
+    <span className="text-[11px] font-semibold text-slate-400">Loading...</span>
+  </div>
+);
 
 // User Protected Route Guard
 const ProtectedUserRoute: React.FC = () => {
@@ -44,27 +51,9 @@ const ProtectedUserRoute: React.FC = () => {
   return <UserLayout />;
 };
 
-const AdminRedirect: React.FC = () => {
-  React.useEffect(() => {
-    if (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
-      window.location.href = `${window.location.protocol}//${window.location.hostname}:5050/adminpanal`;
-    } else {
-      window.location.href = 'https://backend-two-lilac-79.vercel.app/';
-    }
-  }, []);
-  return (
-    <div className="min-h-screen bg-[#020712] flex items-center justify-center text-slate-200">
-      <div className="text-center space-y-3">
-        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-300 font-semibold tracking-wide">Connecting to Royal Admin Control Panel...</p>
-      </div>
-    </div>
-  );
-};
-
 export const App: React.FC = () => {
   return (
-    <ErrorBoundary>
+    <Suspense fallback={<RouteFallback />}>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -96,6 +85,24 @@ export const App: React.FC = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </ErrorBoundary>
+    </Suspense>
+  );
+};
+
+const AdminRedirect: React.FC = () => {
+  React.useEffect(() => {
+    if (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
+      window.location.href = `${window.location.protocol}//${window.location.hostname}:5050/adminpanal`;
+    } else {
+      window.location.href = 'https://backend-two-lilac-79.vercel.app/';
+    }
+  }, []);
+  return (
+    <div className="min-h-screen bg-[#020712] flex items-center justify-center text-slate-200">
+      <div className="text-center space-y-3">
+        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-slate-300 font-semibold tracking-wide">Connecting to Royal Admin Control Panel...</p>
+      </div>
+    </div>
   );
 };

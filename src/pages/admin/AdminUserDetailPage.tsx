@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Disc,
   Layers,
+  History,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
