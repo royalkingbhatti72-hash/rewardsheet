@@ -350,6 +350,9 @@ export const DashboardPage: React.FC = () => {
                 <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   {creditPoints.toLocaleString()} <span className="text-base font-bold text-[#22D3EE]">Pts</span>
                 </h3>
+                <p className="text-xs font-semibold text-[#10D6A0]">
+                  100 pts per complete level
+                </p>
               </div>
 
               <div className="pt-3 mt-3 border-t border-[#173C73]/40 flex items-center justify-between text-xs">
@@ -682,17 +685,17 @@ export const DashboardPage: React.FC = () => {
                       <Gift className="w-5 h-5" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-2.5 py-1 rounded-full">
-                    Extra Spin Bonus
+                  <span className="text-[10px] font-bold text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-[#FFD45A]" /> 24h Spin Rule
                   </span>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <h3 className="text-base sm:text-lg font-black text-white">
-                    Invite Friends & Get Extra Spins
+                    Level Completion & Referral Spin
                   </h3>
                   <p className="text-xs text-[#B7C6E4] leading-relaxed">
-                    Invite 3 valid friends and get an extra spin. There is no reward in PKR for the invite.
+                    Har level complete karne par spin milega. Aur azafi spin hasil karne ke liye 24 hours mein ek dafa aapko 3 friends invite karne honge jis se client ko azafi ek spin milega 24 hours mein. Iske ilawa invite friend lock rahega.
                   </p>
                 </div>
 
@@ -719,7 +722,7 @@ export const DashboardPage: React.FC = () => {
                   className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#FFD45A] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#FFD45A] text-[#020B20] text-xs font-black shadow-lg shadow-[#FFD45A]/20 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01]"
                 >
                   <Users className="w-4 h-4" />
-                  <span>Invite Now</span>
+                  <span>Invite 3 Friends (Extra Spin)</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

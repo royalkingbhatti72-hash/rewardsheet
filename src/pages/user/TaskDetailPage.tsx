@@ -175,16 +175,20 @@ export const TaskDetailPage: React.FC = () => {
               <span className="text-[10px] text-[#22D3EE] bg-[#22D3EE]/10 px-2 py-0.5 rounded-md font-semibold">
                 Task #{task?.taskNumber}
               </span>
-              <span className="text-[10px] font-semibold text-slate-300 bg-[#061633] border border-[#173C73] px-2 py-0.5 rounded-md">
-                {task?.taskType}
-              </span>
-              <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2 py-0.5 rounded-md">
-                +{task?.creditPoints || 5} CPs
-              </span>
-              {task?.isPaid && (
-                <span className="text-[10px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <Zap className="w-2.5 h-2.5" /> Prepaid: PKR {task?.unlockFee?.toLocaleString()}
-                </span>
+              {!isLocked && (
+                <>
+                  <span className="text-[10px] font-semibold text-slate-300 bg-[#061633] border border-[#173C73] px-2 py-0.5 rounded-md">
+                    {task?.taskType}
+                  </span>
+                  <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2 py-0.5 rounded-md">
+                    +{task?.creditPoints || 5} CPs
+                  </span>
+                  {task?.isPaid && (
+                    <span className="text-[10px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <Zap className="w-2.5 h-2.5" /> Prepaid: PKR {task?.unlockFee?.toLocaleString()}
+                    </span>
+                  )}
+                </>
               )}
             </div>
             <h1 className="text-2xl font-black text-white">
@@ -192,33 +196,35 @@ export const TaskDetailPage: React.FC = () => {
             </h1>
             <p className="text-xs text-slate-300">
               {isLocked
-                ? 'Complete and get approval for the previous sequential task to unlock this task.'
+                ? (task?.lockMessage || `Complete and get approval for Task #${(task?.taskNumber || 1) - 1} to unlock this assignment.`)
                 : task?.description}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-            <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
-              <span className="text-[10px] text-slate-400 block uppercase font-medium">Commission</span>
-              <span className="text-lg font-black text-[#10D6A0]">
-                PKR {task?.rewardAmount?.toLocaleString()}
-              </span>
-            </div>
-            <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
-              <span className="text-[10px] text-slate-400 block uppercase font-medium">Credit Points</span>
-              <span className="text-lg font-black text-[#22D3EE]">
-                +{task?.creditPoints || 5} Points
-              </span>
-            </div>
-            {level?.completionReward > 0 && (
+          {!isLocked && (
+            <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
               <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
-                <span className="text-[10px] text-slate-400 block uppercase font-medium">Level Reward</span>
-                <span className="text-lg font-black text-[#FFD45A]">
-                  PKR {level?.completionReward?.toLocaleString()}
+                <span className="text-[10px] text-slate-400 block uppercase font-medium">Commission</span>
+                <span className="text-lg font-black text-[#10D6A0]">
+                  PKR {task?.rewardAmount?.toLocaleString()}
                 </span>
               </div>
-            )}
-          </div>
+              <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
+                <span className="text-[10px] text-slate-400 block uppercase font-medium">Credit Points</span>
+                <span className="text-lg font-black text-[#22D3EE]">
+                  +{task?.creditPoints || 5} Points
+                </span>
+              </div>
+              {level?.completionReward > 0 && (
+                <div className="bg-[#020B20]/80 border border-[#214B91] p-3 rounded-2xl text-right self-start sm:self-center">
+                  <span className="text-[10px] text-slate-400 block uppercase font-medium">Level Reward</span>
+                  <span className="text-lg font-black text-[#FFD45A]">
+                    PKR {level?.levelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Current State Status Bar */}
@@ -321,12 +327,25 @@ export const TaskDetailPage: React.FC = () => {
 
       {/* Locked Task Message */}
       {isLocked && (
-        <div className="royal-card p-6 rounded-3xl text-center space-y-3">
-          <Lock className="w-10 h-10 text-slate-500 mx-auto" />
-          <h2 className="text-lg font-bold text-white">This Task is Locked</h2>
-          <p className="text-xs text-slate-300 max-w-md mx-auto">
-            {task?.lockMessage || 'Complete and receive approval for the previous sequential task to unlock this assignment.'}
-          </p>
+        <div className="royal-card p-8 rounded-3xl text-center space-y-4 border border-[#F59E0B]/40 bg-[#071B3A]/90 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-[#061633] border border-[#173C73] flex items-center justify-center mx-auto text-[#FFD45A]">
+            <Lock className="w-8 h-8 text-[#FFD45A]" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h2 className="text-xl font-black text-white">This Task is Locked</h2>
+            <p className="text-xs sm:text-sm text-[#B7C6E4] leading-relaxed">
+              {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. You must complete and get approval for the previous task first before viewing instructions or details.`}
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/app/tasks"
+              className="inline-flex items-center gap-2 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg transition-all"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Current Active Task</span>
+            </Link>
+          </div>
         </div>
       )}
 

@@ -137,7 +137,7 @@ export const TasksPage: React.FC = () => {
     isCompleted: false,
     approvedTaskCount: 0,
     requiredTaskCount: 10,
-    completionReward: (i + 1) * 200,
+    completionReward: i === 0 ? 500 : (i + 1) * 200,
     totalCreditPoints: 100,
   }));
   const cachedLevels = api.getCachedData<any>('/tasks/levels');
@@ -184,9 +184,10 @@ export const TasksPage: React.FC = () => {
       const currentEligibleNumber = userCurrent ? userCurrent.levelNumber : 1;
 
       if (!keepCurrentSelection) {
-        // Check URL search param, but ONLY if explicitly provided and valid
+        // Check URL search param, but ONLY if explicitly provided, valid AND UNLOCKED
         const paramLevel = parseInt(searchParams.get('level') || '', 10);
-        if (paramLevel >= 1 && paramLevel <= 10) {
+        const targetParamLvl = loadedLevels.find((l: any) => l.levelNumber === paramLevel);
+        if (paramLevel >= 1 && paramLevel <= 10 && targetParamLvl && targetParamLvl.isUnlocked) {
           setActiveLevelNumber(paramLevel);
         } else {
           // Default to the user's actual CURRENT ELIGIBLE LEVEL (e.g. Level 1)
@@ -288,6 +289,11 @@ export const TasksPage: React.FC = () => {
   // Synchronized level selection through Carousel
   const handleSelectLevel = (levelNumber: number) => {
     if (levelNumber < 1 || levelNumber > 10) return;
+    const targetLvl = levels.find((l) => l.levelNumber === levelNumber);
+    if (targetLvl && !targetLvl.isUnlocked) {
+      setActionError(`🔒 Level ${levelNumber} is locked. Complete all tasks in Level ${levelNumber - 1} first.`);
+      return;
+    }
     setActiveLevelNumber(levelNumber);
     setSearchParams({ level: String(levelNumber) });
   };
@@ -712,42 +718,34 @@ export const TasksPage: React.FC = () => {
                 !isTaskLocked;
 
               // ----------------------------------------------------
-              // LOCKED TASK ROW (Until client reaches the task)
-              // Task name and quantity are hidden.
-              // Visible things: CPs and PKR reward.
+              // LOCKED TASK ROW
+              // Show ONLY task number on left, corner CPs on right
+              // Details hidden until unlocked and opened
               // ----------------------------------------------------
               if (isTaskLocked) {
                 return (
                   <div
                     id={`task-card-${task.taskNumber}`}
                     key={task.id}
-                    className="py-1.5 px-2.5 sm:px-3 rounded-lg bg-[#061633]/60 border border-[#173C73]/40 flex items-center justify-between gap-2 opacity-80 select-none transition-all hover:bg-[#071B3A]/60"
+                    className="py-2 px-3 sm:px-4 rounded-xl bg-[#061633]/60 border border-[#173C73]/40 flex items-center justify-between gap-3 opacity-75 select-none transition-all hover:bg-[#071B3A]/60"
                   >
-                    {/* Left: Lock Icon & Hidden Task Name with CPs and PKR Reward visible */}
-                    <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                      <div className="w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-md bg-[#071B3A] border border-[#173C73] flex items-center justify-center flex-shrink-0 text-slate-500 font-bold text-[10px]">
-                        <Lock className="w-3 h-3 text-slate-500" />
+                    {/* Left: Just Task Number */}
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#071B3A] border border-[#173C73] flex items-center justify-center flex-shrink-0 text-slate-500 font-bold text-xs">
+                        <Lock className="w-3.5 h-3.5 text-slate-500" />
                       </div>
-
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
-                        <span className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate">
-                          Locked Task
-                        </span>
-
-                        <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/25 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
-                          +{task.creditPoints || 5} CPs
-                        </span>
-
-                        <span className="text-[9px] font-bold text-[#10D6A0] bg-[#10D6A0]/10 border border-[#10D6A0]/25 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
-                          PKR {task.rewardAmount?.toLocaleString()}
-                        </span>
-                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-slate-400">
+                        Task {task.taskNumber}
+                      </span>
                     </div>
 
-                    {/* Right: Locked Action strictly in 1 line */}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-medium text-slate-500 bg-[#061633] px-2 py-0.5 rounded-md border border-[#173C73] whitespace-nowrap leading-none">
-                        <Lock className="w-2.5 h-2.5" /> Locked
+                    {/* Right: Corner Credit Points & Locked Status */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/25 px-2.5 py-1 rounded-full whitespace-nowrap">
+                        +{task.creditPoints || 5} CPs
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs font-medium text-slate-500 bg-[#061633] px-2.5 py-1 rounded-lg border border-[#173C73]">
+                        <Lock className="w-3 h-3" /> Locked
                       </span>
                     </div>
                   </div>
@@ -755,7 +753,9 @@ export const TasksPage: React.FC = () => {
               }
 
               // ----------------------------------------------------
-              // UNLOCKED TASK ROW (Ultra-Compact Single Line)
+              // UNLOCKED TASK ROW
+              // Show ONLY task number on left, corner CPs on right
+              // All other details hidden until task is clicked/opened
               // ----------------------------------------------------
               return (
                 <div
@@ -764,7 +764,7 @@ export const TasksPage: React.FC = () => {
                   onClick={() => {
                     navigate(`/app/tasks/${task.id}`);
                   }}
-                  className={`py-1.5 px-2.5 sm:px-3 rounded-lg flex items-center justify-between gap-2 transition-all bg-[#071B3A] border cursor-pointer ${
+                  className={`py-2 px-3 sm:px-4 rounded-xl flex items-center justify-between gap-3 transition-all bg-[#071B3A] border cursor-pointer ${
                     isApproved
                       ? 'border-[#10D6A0]/40 hover:border-[#10D6A0]/70'
                       : isPending
@@ -774,10 +774,10 @@ export const TasksPage: React.FC = () => {
                       : 'border-[#173C73]'
                   }`}
                 >
-                  {/* Left: Number & Title & Badges strictly in 1 line */}
-                  <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                  {/* Left: Just Task Number with Status Icon */}
+                  <div className="flex items-center gap-2.5">
                     <div
-                      className={`w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-md flex items-center justify-center flex-shrink-0 font-bold text-[10px] ${
+                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-xs ${
                         isApproved
                           ? 'bg-[#10D6A0]/20 border border-[#10D6A0]/40 text-[#10D6A0]'
                           : isPending
@@ -786,73 +786,49 @@ export const TasksPage: React.FC = () => {
                       }`}
                     >
                       {isApproved ? (
-                        <Check className="w-3 h-3 text-[#10D6A0]" />
+                        <Check className="w-3.5 h-3.5 text-[#10D6A0]" />
                       ) : isPending ? (
-                        <Clock className="w-3 h-3 text-[#168BFF]" />
+                        <Clock className="w-3.5 h-3.5 text-[#168BFF]" />
                       ) : (
                         <span>#{task.taskNumber}</span>
                       )}
                     </div>
-
-                    <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
-                      <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
-                        #{task.taskNumber}
-                      </span>
-
-                      <h5 className="text-[11px] sm:text-xs font-semibold text-white truncate">
-                        {cleanTaskTitle(task.title)}
-                      </h5>
-
-                      <span className="text-[9px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
-                        +{task.creditPoints || 5} CPs
-                      </span>
-
-                      <span className="text-[9px] font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 whitespace-nowrap">
-                        PKR {task.rewardAmount?.toLocaleString()}
-                      </span>
-
-                      {task.isPaid && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPrepaidModalTask(task);
-                          }}
-                          className="text-[9px] font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 hover:bg-[#FFD45A]/25 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 cursor-pointer flex-shrink-0 whitespace-nowrap transition-all leading-none"
-                        >
-                          <Zap className="w-2.5 h-2.5" /> PKR {task.unlockFee?.toLocaleString()}
-                        </button>
-                      )}
-                    </div>
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      Task {task.taskNumber}
+                    </span>
                   </div>
 
-                  {/* Right: Compact Status / Action Button strictly in 1 line */}
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {/* Right: Corner Credit Points & Action Button */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2.5 py-1 rounded-full whitespace-nowrap">
+                      +{task.creditPoints || 5} CPs
+                    </span>
+
                     {isApproved ? (
-                      <span className="inline-flex items-center gap-1 bg-[#10D6A0]/15 border border-[#10D6A0]/40 text-[#10D6A0] text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md leading-none whitespace-nowrap">
-                        <CheckCircle2 className="w-2.5 h-2.5" /> Approved
+                      <span className="inline-flex items-center gap-1 bg-[#10D6A0]/15 border border-[#10D6A0]/40 text-[#10D6A0] text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg">
+                        <CheckCircle2 className="w-3 h-3" /> Approved
                       </span>
                     ) : isPending ? (
                       <Link
                         to={`/app/tasks/${task.id}`}
-                        className="inline-flex items-center gap-1 bg-[#1264F5]/20 border border-[#1264F5]/40 text-[#168BFF] text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md hover:bg-[#1264F5]/30 transition-colors leading-none whitespace-nowrap"
+                        className="inline-flex items-center gap-1 bg-[#1264F5]/20 border border-[#1264F5]/40 text-[#168BFF] text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-[#1264F5]/30 transition-colors"
                       >
-                        <Clock className="w-2.5 h-2.5" /> In Review
+                        <Clock className="w-3 h-3" /> In Review
                       </Link>
                     ) : isRejected ? (
                       <Link
                         to={`/app/tasks/${task.id}`}
-                        className="inline-flex items-center gap-1 bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-md hover:bg-[#EF4444]/30 transition-colors leading-none whitespace-nowrap"
+                        className="inline-flex items-center gap-1 bg-[#EF4444]/20 border border-[#EF4444]/40 text-[#EF4444] text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-[#EF4444]/30 transition-colors"
                       >
-                        <XCircle className="w-2.5 h-2.5" /> Rejected
+                        <XCircle className="w-3 h-3" /> Rejected
                       </Link>
                     ) : (
                       <Link
                         to={`/app/tasks/${task.id}`}
-                        className="inline-flex items-center gap-1 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white text-[9px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded-md shadow-sm transition-all leading-none whitespace-nowrap"
+                        className="inline-flex items-center gap-1 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-lg shadow-sm transition-all"
                       >
                         <span>Open</span>
-                        <ArrowRight className="w-2.5 h-2.5" />
+                        <ArrowRight className="w-3 h-3" />
                       </Link>
                     )}
                   </div>
@@ -868,8 +844,7 @@ export const TasksPage: React.FC = () => {
       </section>
 
       {/* ========================================================
-          F. LEVEL COMPLETION INFORMATION
-          Bottom milestone banner for bonus or completion status
+          F. LEVEL COMPLETION INFORMATION & MOTIVATIONAL NOTIFICATION
           ======================================================== */}
       {isSelectedLevelCompleted ? (
         <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#10D6A0]/15 via-[#071B3A] to-[#10D6A0]/15 border border-[#10D6A0]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -879,7 +854,7 @@ export const TasksPage: React.FC = () => {
             </h4>
             <p className="text-xs text-[#B7C6E4]">
               All tasks approved. Completion reward of PKR{' '}
-              {level?.completionReward?.toLocaleString() || 0} earned.
+              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} earned.
             </p>
           </div>
 
@@ -908,15 +883,32 @@ export const TasksPage: React.FC = () => {
             </h4>
             <p className="text-[11px] text-[#B7C6E4]">
               Complete all tasks in this tier to claim PKR{' '}
-              {level?.completionReward?.toLocaleString() || 0} bonus!
+              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} bonus!
             </p>
           </div>
 
           <span className="text-xs font-bold text-[#FFD45A] bg-[#061633] border border-[#173C73] px-3 py-1.5 rounded-xl hidden sm:inline">
-            +PKR {level?.completionReward?.toLocaleString() || 0}
+            +PKR {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)}
           </span>
         </section>
       )}
+
+      {/* Motivational Milestone Notification */}
+      <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1264F5]/15 via-[#071B3A] to-[#FFD45A]/15 border border-[#FFD45A]/40 shadow-xl space-y-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-[#FFD45A]" />
+          <h4 className="text-xs sm:text-sm font-black text-white">
+            Level {activeLevelNumber} Milestone Notice
+          </h4>
+        </div>
+        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+          {activeLevelNumber === 1
+            ? 'Level 1 complete ho gya h baki 9 level rah gay h jald wo complete kry 1000 credit points collect kry or YouTube ki ek video ki earning hasil kry 7 to 8 lakh tak!'
+            : activeLevelNumber === 2
+            ? 'Level 2 complete ho gya h jald baki 8 level complete kry 1000 points collect kry or big withdraw same video earning hasil kry!'
+            : `Level ${activeLevelNumber} complete karein! Jald baqi ${Math.max(0, 10 - activeLevelNumber)} levels complete karein, 1000 credit points collect karein aur big withdraw / YouTube video earning hasil karein!`}
+        </p>
+      </section>
 
       {/* ========================================================
           TEMPORARY POPUP: PREPAID TASK BALANCE & REQUIREMENT MODAL

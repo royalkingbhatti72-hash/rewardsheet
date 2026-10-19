@@ -25,12 +25,12 @@ import { Link } from 'react-router-dom';
 const DEFAULT_FALLBACK_PRIZES = [
   { id: 'p1', displayLabel: 'PKR 50', name: 'PKR 50', prizeType: 'CASH', monetaryValue: 50, color: '#1459E8' },
   { id: 'p2', displayLabel: 'PKR 100', name: 'PKR 100', prizeType: 'CASH', monetaryValue: 100, color: '#792BFF' },
-  { id: 'p3', displayLabel: 'PKR 250', name: 'PKR 250', prizeType: 'CASH', monetaryValue: 250, color: '#059669' },
+  { id: 'p3', displayLabel: 'Alto Car', name: 'Suzuki Alto Car', prizeType: 'PHYSICAL', monetaryValue: 2500000, color: '#059669', icon: 'car' },
   { id: 'p4', displayLabel: 'PKR 500', name: 'PKR 500', prizeType: 'CASH', monetaryValue: 500, color: '#DC2626' },
   { id: 'p5', displayLabel: 'PKR 1,000', name: 'PKR 1,000', prizeType: 'CASH', monetaryValue: 1000, color: '#0284C7' },
   { id: 'p6', displayLabel: 'PKR 5,000 Mega', name: 'PKR 5,000', prizeType: 'CASH', monetaryValue: 5000, color: '#D97706' },
-  { id: 'p7', displayLabel: 'Gold Watch', name: 'Royal Gold Watch', prizeType: 'PHYSICAL', monetaryValue: 15000, color: '#4F46E5', icon: 'watch' },
-  { id: 'p8', displayLabel: 'Smartphone Pro', name: 'Smartphone Pro', prizeType: 'PHYSICAL', monetaryValue: 75000, color: '#EAB308', icon: 'smartphone' },
+  { id: 'p7', displayLabel: 'Expensive Watch', name: 'Expensive Watch', prizeType: 'PHYSICAL', monetaryValue: 45000, color: '#4F46E5', icon: 'watch' },
+  { id: 'p8', displayLabel: 'iPhone 15 Pro', name: 'iPhone 15 Pro', prizeType: 'PHYSICAL', monetaryValue: 350000, color: '#EAB308', icon: 'smartphone' },
 ];
 
 const getPrizeProductImage = (prize: any) => {
@@ -43,21 +43,25 @@ const getPrizeProductImage = (prize: any) => {
   const label = (prize.displayLabel || '').toLowerCase();
   const icon = (prize.icon || '').toLowerCase();
 
-  // Smartphone Pro
-  if (name.includes('phone') || label.includes('phone') || icon.includes('phone') || icon.includes('mobile')) {
+  // Suzuki Alto Car (replaces 250)
+  if (name.includes('alto') || label.includes('alto') || name.includes('car') || label.includes('car') || icon.includes('car') || label.includes('250')) {
+    return '/images/spin/product-car.svg';
+  }
+  // iPhone 15 Pro / Smartphone
+  if (name.includes('iphone') || label.includes('iphone') || name.includes('phone') || label.includes('phone') || icon.includes('phone') || icon.includes('mobile')) {
     return '/images/spin/product-smartphone.svg';
   }
-  // Royal Gold Watch
+  // Expensive Watch
   if (name.includes('watch') || label.includes('watch') || icon.includes('watch') || icon.includes('clock')) {
     return '/images/spin/product-watch.svg';
+  }
+  // Cash jackpot
+  if (type === 'CASH' || name.includes('pkr') || label.includes('pkr') || icon === 'coins') {
+    return '/images/spin/product-cash.svg';
   }
   // Physical gift / general physical product
   if (type === 'PHYSICAL' || name.includes('gift') || label.includes('gift') || icon.includes('gift')) {
     return '/images/spin/product-gift.svg';
-  }
-  // Cash jackpot
-  if (name.includes('5,000') || label.includes('5,000') || name.includes('mega') || icon === 'trophy') {
-    return '/images/spin/product-cash.svg';
   }
   return null;
 };
@@ -254,7 +258,21 @@ export const SpinPage: React.FC = () => {
     history = [],
   } = spinData || {};
 
-  const prizes = backendPrizes && backendPrizes.length > 0 ? backendPrizes : DEFAULT_FALLBACK_PRIZES;
+  const rawPrizes = backendPrizes && backendPrizes.length > 0 ? backendPrizes : DEFAULT_FALLBACK_PRIZES;
+  const prizes = rawPrizes.map((p: any) => {
+    const nameLower = (p.name || '').toLowerCase();
+    const labelLower = (p.displayLabel || '').toLowerCase();
+    if (nameLower.includes('250') || labelLower.includes('250') || nameLower.includes('alto') || labelLower.includes('alto')) {
+      return { ...p, displayLabel: 'Alto Car', name: 'Suzuki Alto Car', prizeType: 'PHYSICAL', monetaryValue: 2500000, color: '#059669', icon: 'car' };
+    }
+    if (nameLower.includes('watch') || labelLower.includes('watch')) {
+      return { ...p, displayLabel: 'Expensive Watch', name: 'Expensive Watch', prizeType: 'PHYSICAL', monetaryValue: 45000, color: '#4F46E5', icon: 'watch' };
+    }
+    if (nameLower.includes('phone') || labelLower.includes('phone') || nameLower.includes('iphone') || labelLower.includes('iphone')) {
+      return { ...p, displayLabel: 'iPhone 15 Pro', name: 'iPhone 15 Pro', prizeType: 'PHYSICAL', monetaryValue: 350000, color: '#EAB308', icon: 'smartphone' };
+    }
+    return p;
+  });
   const segmentAngle = 360 / (prizes.length || 1);
 
   // 24 LED casino lights around the bezel
@@ -558,9 +576,9 @@ export const SpinPage: React.FC = () => {
                 <span>Milestone spin under review. Unlocks automatically live when approved.</span>
               </div>
             ) : (
-              <div className="px-8 py-4 bg-[#0B2248]/80 border border-[#1459E8]/40 text-slate-300 rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2">
+              <div className="px-8 py-4 bg-[#0B2248]/80 border border-[#1459E8]/40 text-slate-300 rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2 text-center">
                 <Lock className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
-                <span>Complete Task 3, Task 7, or reach Level 10 to receive free spins.</span>
+                <span>Har level complete karne par 1 Free Spin milta hai. Azafi spin hasil karne ke liye 24 hours mein ek dafa 3 friends invite karein.</span>
               </div>
             )}
           </div>
@@ -582,20 +600,20 @@ export const SpinPage: React.FC = () => {
         <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
           <div className="flex items-center gap-2 text-white font-bold text-sm">
             <Gift className="w-4 h-4 text-[#22D3EE]" />
-            <span>Physical Luxury Products</span>
+            <span>Luxury Bumper Prizes</span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Win verified physical products like smartphones and luxury watches delivered directly to your address.
+            Win high-value luxury rewards including Suzuki Alto Car, iPhone 15 Pro, and Expensive Watches delivered to you.
           </p>
         </div>
 
         <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
           <div className="flex items-center gap-2 text-white font-bold text-sm">
             <Trophy className="w-4 h-4 text-[#10D6A0]" />
-            <span>Milestone Allocation</span>
+            <span>Level & Referral Spins</span>
           </div>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Free spins are awarded when reaching Task 3 and Task 7 milestones, reviewed directly by administration.
+            Har level complete karne par spin milta hai. Azafi spin hasil karne ke liye 24 ghante mein 3 friends invite karein.
           </p>
         </div>
       </div>
