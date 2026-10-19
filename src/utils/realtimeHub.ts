@@ -90,16 +90,30 @@ class RealtimeHub {
 
   private startHeartbeatSync() {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    // Gentle 60s background sync to avoid network congestion and loading spinners
     this.heartbeatTimer = setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible' && this.currentUserId) {
-        // Broadcast silent heartbeat for active pages to fetch fresh Supabase data
         window.dispatchEvent(
           new CustomEvent('royal_live_heartbeat', {
             detail: { userId: this.currentUserId, timestamp: Date.now() },
           })
         );
       }
-    }, 10000);
+    }, 60000);
+
+    // Instant sync only when user switches back to this browser tab
+    if (typeof document !== 'undefined') {
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && this.currentUserId) {
+          window.dispatchEvent(
+            new CustomEvent('royal_live_heartbeat', {
+              detail: { userId: this.currentUserId, timestamp: Date.now() },
+            })
+          );
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
   }
 
   public broadcast(type: LiveEventType, payload?: any) {

@@ -1,58 +1,45 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { useAdminAuth } from './context/AdminAuthContext';
 import { UserLayout } from './components/user/UserLayout';
-import { AdminLayout } from './components/admin/AdminLayout';
 
-// Public pages
-import { LandingPage } from './pages/public/LandingPage';
-import { RegisterPage } from './pages/public/RegisterPage';
-import { LoginPage } from './pages/public/LoginPage';
-import { ForgotPasswordPage } from './pages/public/ForgotPasswordPage';
-import { TermsPage } from './pages/public/TermsPage';
-import { PrivacyPage } from './pages/public/PrivacyPage';
+// Public pages (lazy-loaded on demand)
+const LandingPage = lazy(() => import('./pages/public/LandingPage').then((m) => ({ default: m.LandingPage })));
+const RegisterPage = lazy(() => import('./pages/public/RegisterPage').then((m) => ({ default: m.RegisterPage })));
+const LoginPage = lazy(() => import('./pages/public/LoginPage').then((m) => ({ default: m.LoginPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/public/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const TermsPage = lazy(() => import('./pages/public/TermsPage').then((m) => ({ default: m.TermsPage })));
+const PrivacyPage = lazy(() => import('./pages/public/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 
-// User pages
-import { DashboardPage } from './pages/user/DashboardPage';
-import { TasksPage } from './pages/user/TasksPage';
-import { TaskDetailPage } from './pages/user/TaskDetailPage';
-import { SpinPage } from './pages/user/SpinPage';
-import { WalletPage } from './pages/user/WalletPage';
-import { DepositsPage } from './pages/user/DepositsPage';
-import { WithdrawalsPage } from './pages/user/WithdrawalsPage';
-import { ReferralsPage } from './pages/user/ReferralsPage';
-import { NotificationsPage } from './pages/user/NotificationsPage';
-import { ProfilePage } from './pages/user/ProfilePage';
+// User pages (lazy-loaded on demand)
+const DashboardPage = lazy(() => import('./pages/user/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const TasksPage = lazy(() => import('./pages/user/TasksPage').then((m) => ({ default: m.TasksPage })));
+const TaskDetailPage = lazy(() => import('./pages/user/TaskDetailPage').then((m) => ({ default: m.TaskDetailPage })));
+const SpinPage = lazy(() => import('./pages/user/SpinPage').then((m) => ({ default: m.SpinPage })));
+const WalletPage = lazy(() => import('./pages/user/WalletPage').then((m) => ({ default: m.WalletPage })));
+const DepositsPage = lazy(() => import('./pages/user/DepositsPage').then((m) => ({ default: m.DepositsPage })));
+const WithdrawalsPage = lazy(() => import('./pages/user/WithdrawalsPage').then((m) => ({ default: m.WithdrawalsPage })));
+const ReferralsPage = lazy(() => import('./pages/user/ReferralsPage').then((m) => ({ default: m.ReferralsPage })));
+const NotificationsPage = lazy(() => import('./pages/user/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const ProfilePage = lazy(() => import('./pages/user/ProfilePage').then((m) => ({ default: m.ProfilePage })));
 
-// Admin pages
-import { AdminLoginPage } from './pages/admin/AdminLoginPage';
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { AdminUsersPage } from './pages/admin/AdminUsersPage';
-import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage';
-import { AdminLevelsPage } from './pages/admin/AdminLevelsPage';
-import { AdminTasksPage } from './pages/admin/AdminTasksPage';
-import { AdminSubmissionsPage } from './pages/admin/AdminSubmissionsPage';
-import { AdminDepositsPage } from './pages/admin/AdminDepositsPage';
-import { AdminWithdrawalsPage } from './pages/admin/AdminWithdrawalsPage';
-import { AdminWalletsPage } from './pages/admin/AdminWalletsPage';
-import { AdminSpinPage } from './pages/admin/AdminSpinPage';
-import { AdminReferralsPage } from './pages/admin/AdminReferralsPage';
-import { AdminTransactionsPage } from './pages/admin/AdminTransactionsPage';
-import { AdminAnnouncementsPage } from './pages/admin/AdminAnnouncementsPage';
-import { AdminReportsPage } from './pages/admin/AdminReportsPage';
-import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
-import { AdminActivityLogsPage } from './pages/admin/AdminActivityLogsPage';
+// Minimal smooth fallback placeholder
+const RouteFallback: React.FC = () => (
+  <div className="w-full min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+    <div className="w-8 h-8 border-3 border-[#168BFF]/20 border-t-[#FFD45A] rounded-full animate-spin" />
+    <span className="text-[11px] font-semibold text-slate-400">Loading...</span>
+  </div>
+);
 
 // User Protected Route Guard
 const ProtectedUserRoute: React.FC = () => {
   const { user, loading } = useAuth();
 
-  if (loading) {
+  if (loading && !user) {
     return (
       <div className="min-h-screen bg-[#04132F] flex flex-col items-center justify-center text-slate-300">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Authenticating Earn Sheet Session...</p>
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-semibold text-slate-400">Loading Session...</p>
       </div>
     );
   }
@@ -64,69 +51,41 @@ const ProtectedUserRoute: React.FC = () => {
   return <UserLayout />;
 };
 
-// Admin Protected Route Guard
-const ProtectedAdminRoute: React.FC = () => {
-  const { admin, loading } = useAdminAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F5F8FC] flex flex-col items-center justify-center text-slate-600">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Verifying Administrative Privileges...</p>
-      </div>
-    );
-  }
-
-  if (!admin) {
-    return <Navigate to="/adminpanal" replace />;
-  }
-
-  return <AdminLayout />;
-};
-
 export const App: React.FC = () => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
 
-      {/* User Protected Routes */}
-      <Route path="/app" element={<ProtectedUserRoute />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-        <Route path="spin" element={<SpinPage />} />
-        <Route path="wallet" element={<WalletPage />} />
-        <Route path="deposits" element={<DepositsPage />} />
-        <Route path="withdrawals" element={<WithdrawalsPage />} />
-        <Route path="referrals" element={<ReferralsPage />} />
-        <Route path="activity" element={<Navigate to="/app/wallet" replace />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="profile" element={<ProfilePage />} />
-      </Route>
+        {/* User Protected Routes */}
+        <Route path="/app" element={<ProtectedUserRoute />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+          <Route path="spin" element={<SpinPage />} />
+          <Route path="wallet" element={<WalletPage />} />
+          <Route path="deposits" element={<DepositsPage />} />
+          <Route path="withdrawals" element={<WithdrawalsPage />} />
+          <Route path="referrals" element={<ReferralsPage />} />
+          <Route path="activity" element={<Navigate to="/app/wallet" replace />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
 
-      {/* Admin Panel relocation handler */}
-      <Route
-        path="/adminpanal/*"
-        element={
-          <AdminRedirect />
-        }
-      />
-      <Route
-        path="/adminpanal"
-        element={
-          <AdminRedirect />
-        }
-      />
+        {/* Admin Panel relocation handler */}
+        <Route path="/adminpanal/*" element={<AdminRedirect />} />
+        <Route path="/adminpanal" element={<AdminRedirect />} />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 };
 
