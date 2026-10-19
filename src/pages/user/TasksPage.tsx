@@ -169,9 +169,10 @@ export const TasksPage: React.FC = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const tasksSectionRef = useRef<HTMLDivElement>(null);
 
-  // Fetch all 10 levels with user progression
-  const fetchLevels = async (keepCurrentSelection = false) => {
+  // Fetch all 10 levels with user progression & evaluated tasks as a single unified entity
+  const fetchLevels = async (keepCurrentSelection = false, isSilent = false) => {
     try {
+      if (!isSilent && levels.length === 0) setLoading(true);
       const res = await api.getLevels();
       const loadedLevels = res.levels || [];
       setLevels(loadedLevels);
@@ -183,17 +184,29 @@ export const TasksPage: React.FC = () => {
         loadedLevels[0];
       const currentEligibleNumber = userCurrent ? userCurrent.levelNumber : 1;
 
+      let targetLevelNumber = activeLevelNumber;
       if (!keepCurrentSelection) {
         // Check URL search param, but ONLY if explicitly provided, valid AND UNLOCKED
         const paramLevel = parseInt(searchParams.get('level') || '', 10);
         const targetParamLvl = loadedLevels.find((l: any) => l.levelNumber === paramLevel);
         if (paramLevel >= 1 && paramLevel <= 10 && targetParamLvl && targetParamLvl.isUnlocked) {
-          setActiveLevelNumber(paramLevel);
+          targetLevelNumber = paramLevel;
         } else {
           // Default to the user's actual CURRENT ELIGIBLE LEVEL (e.g. Level 1)
-          setActiveLevelNumber(currentEligibleNumber);
+          targetLevelNumber = currentEligibleNumber;
           setSearchParams({ level: String(currentEligibleNumber) }, { replace: true });
         }
+        setActiveLevelNumber(targetLevelNumber);
+      }
+
+      // Sync active level data immediately as a unified entity (Zero reload & 0ms delay)
+      const activeLvl = loadedLevels.find((l: any) => l.levelNumber === targetLevelNumber) || loadedLevels[0];
+      if (activeLvl) {
+        setCurrentLevelData({
+          level: activeLvl,
+          tasks: activeLvl.tasks || [],
+          isLevelUnlocked: activeLvl.isUnlocked,
+        });
       }
     } catch (err: any) {
       console.error(err);
@@ -202,6 +215,7 @@ export const TasksPage: React.FC = () => {
       }
     } finally {
       setLoading(false);
+      setTasksLoading(false);
     }
   };
 
@@ -209,59 +223,34 @@ export const TasksPage: React.FC = () => {
     fetchLevels();
   }, []);
 
-  // Fetch tasks whenever selected level number changes
+  // Sync current level data whenever active level or levels list updates
   useEffect(() => {
-    if (!activeLevelNumber) return;
-    const cached = api.getCachedData<any>(`/tasks/levels/${activeLevelNumber}`);
-    if (cached) {
-      setCurrentLevelData(cached);
+    if (!activeLevelNumber || levels.length === 0) return;
+    const activeLvl = levels.find((l: any) => l.levelNumber === activeLevelNumber);
+    if (activeLvl && activeLvl.tasks) {
+      setCurrentLevelData({
+        level: activeLvl,
+        tasks: activeLvl.tasks,
+        isLevelUnlocked: activeLvl.isUnlocked,
+      });
       setTasksLoading(false);
-    } else {
-      setTasksLoading(true);
     }
-    setActionError(null);
-    setActionSuccess(null);
-
-    api
-      .getLevelTasks(activeLevelNumber)
-      .then((data) => {
-        setCurrentLevelData(data);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (!cached) {
-          setActionError(`Failed to load tasks for Level ${activeLevelNumber}.`);
-        }
-      })
-      .finally(() => setTasksLoading(false));
-
-    // Center selected card in carousel
     scrollToSelectedCard(activeLevelNumber);
-  }, [activeLevelNumber]);
+  }, [activeLevelNumber, levels]);
 
-  // Realtime Live Update Listener (Zero Reload Strategy)
+  // Realtime Live Update Listener (Zero Reload Strategy - updates live from database on approval)
   useEffect(() => {
     const handleLiveEvent = (e: any) => {
       const type = e.detail?.type;
-      if (type === 'task' || type === 'notification' || type === 'wallet' || type === 'command' || type === 'all') {
+      if (type === 'task' || type === 'notification' || type === 'wallet' || type === 'command' || type === 'refresh' || type === 'all') {
         api.invalidateCache('/tasks');
-        fetchLevels(true);
-        if (activeLevelNumber) {
-          api
-            .getLevelTasks(activeLevelNumber)
-            .then((data) => setCurrentLevelData(data))
-            .catch(() => {});
-        }
+        // Silent background update: updates database changes live without spinner flicker
+        fetchLevels(true, true);
       }
     };
 
     const handleHeartbeat = () => {
-      if (activeLevelNumber) {
-        api
-          .getLevelTasks(activeLevelNumber)
-          .then((data) => setCurrentLevelData(data))
-          .catch(() => {});
-      }
+      fetchLevels(true, true);
     };
 
     window.addEventListener('royal_live_update', handleLiveEvent);
@@ -307,7 +296,7 @@ export const TasksPage: React.FC = () => {
     setTimeout(doScroll, 320);
   };
 
-  // Synchronized level selection through Carousel
+  // Synchronized level selection through Carousel (0ms instant transition, zero flash)
   const handleSelectLevel = (levelNumber: number) => {
     if (levelNumber < 1 || levelNumber > 10) return;
     setActiveLevelNumber(levelNumber);
@@ -315,10 +304,18 @@ export const TasksPage: React.FC = () => {
     scrollToSelectedCard(levelNumber, 'smooth');
 
     const targetLvl = levels.find((l) => l.levelNumber === levelNumber);
-    if (targetLvl && !targetLvl.isUnlocked) {
-      setActionError(`🔒 Level ${levelNumber} is locked. Complete all tasks in Level ${levelNumber - 1} first.`);
-    } else {
-      setActionError(null);
+    if (targetLvl) {
+      setCurrentLevelData({
+        level: targetLvl,
+        tasks: targetLvl.tasks || [],
+        isLevelUnlocked: targetLvl.isUnlocked,
+      });
+      setTasksLoading(false);
+      if (!targetLvl.isUnlocked) {
+        setActionError(`🔒 Level ${levelNumber} is locked. Complete all tasks in Level ${levelNumber - 1} first.`);
+      } else {
+        setActionError(null);
+      }
     }
   };
 
@@ -348,82 +345,6 @@ export const TasksPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [activeLevelNumber, levels.length]);
 
-  // 5-second automatic return timer: if viewing another card, auto-push back to unlocked in-progress level
-  const autoReturnTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (autoReturnTimerRef.current) {
-      clearTimeout(autoReturnTimerRef.current);
-      autoReturnTimerRef.current = null;
-    }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-
-    // Only activate timer if user is browsing away from their unlocked under-process level
-    if (userCurrentLevelNumber && activeLevelNumber !== userCurrentLevelNumber) {
-      setReturnCountdown(5);
-      let remaining = 5;
-      countdownIntervalRef.current = setInterval(() => {
-        remaining -= 1;
-        if (remaining > 0) {
-          setReturnCountdown(remaining);
-        } else {
-          setReturnCountdown(null);
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-          }
-        }
-      }, 1000);
-
-      autoReturnTimerRef.current = setTimeout(() => {
-        handleSelectLevel(userCurrentLevelNumber);
-        scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
-        setReturnCountdown(null);
-      }, 5000);
-    } else {
-      setReturnCountdown(null);
-    }
-
-    return () => {
-      if (autoReturnTimerRef.current) clearTimeout(autoReturnTimerRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-    };
-  }, [activeLevelNumber, userCurrentLevelNumber]);
-
-  // If user scrolls the carousel track manually, restart 5-second return timer
-  const handleCarouselScroll = () => {
-    if (activeLevelNumber !== userCurrentLevelNumber) {
-      if (autoReturnTimerRef.current) clearTimeout(autoReturnTimerRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-      setReturnCountdown(5);
-
-      let remaining = 5;
-      countdownIntervalRef.current = setInterval(() => {
-        remaining -= 1;
-        if (remaining > 0) {
-          setReturnCountdown(remaining);
-        } else {
-          setReturnCountdown(null);
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-          }
-        }
-      }, 1000);
-
-      autoReturnTimerRef.current = setTimeout(() => {
-        handleSelectLevel(userCurrentLevelNumber);
-        scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
-        setReturnCountdown(null);
-      }, 5000);
-    }
-  };
-
   const scrollToTasksSection = () => {
     if (tasksSectionRef.current) {
       tasksSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -440,10 +361,7 @@ export const TasksPage: React.FC = () => {
       const res = await api.unlockTask(taskId);
       setActionSuccess(res.message);
       await refreshUser();
-      const updated = await api.getLevelTasks(activeLevelNumber);
-      setCurrentLevelData(updated);
-      const resLevels = await api.getLevels();
-      setLevels(resLevels.levels || []);
+      await fetchLevels(true, true);
     } catch (err: any) {
       setActionError(err.message || 'Failed to unlock task');
     } finally {
@@ -500,25 +418,6 @@ export const TasksPage: React.FC = () => {
           and arrow controls for all 10 standard levels
           ======================================================== */}
       <section className="relative px-2 sm:px-8 select-none">
-        {/* Auto Return Countdown Pill */}
-        {returnCountdown !== null && activeLevelNumber !== userCurrentLevelNumber && (
-          <div className="mb-3 flex items-center justify-between gap-3 bg-[#0B2248]/95 border border-[#168BFF]/60 px-4 py-2 rounded-2xl text-xs text-white shadow-xl max-w-md mx-auto animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#FFD45A] animate-pulse flex-shrink-0" />
-              <span className="text-slate-200">
-                Viewing Level {activeLevelNumber}. Returning to in-progress Level {userCurrentLevelNumber} in{' '}
-                <strong className="text-[#FFD45A] font-black">{returnCountdown}s</strong>
-              </span>
-            </div>
-            <button
-              onClick={() => handleSelectLevel(userCurrentLevelNumber)}
-              className="text-[11px] font-bold text-[#22D3EE] hover:text-white underline whitespace-nowrap cursor-pointer flex-shrink-0"
-            >
-              Return Now
-            </button>
-          </div>
-        )}
-
         {/* Floating Left Navigation Button */}
         <button
           onClick={handlePrevLevel}
@@ -542,7 +441,6 @@ export const TasksPage: React.FC = () => {
         {/* Horizontal Carousel Track */}
         <div
           ref={carouselRef}
-          onScroll={handleCarouselScroll}
           className="flex items-center gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-none justify-start"
           style={{
             paddingLeft: 'max(1.5rem, calc(50% - 155px))',
