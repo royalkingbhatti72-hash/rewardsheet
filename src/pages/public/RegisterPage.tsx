@@ -36,6 +36,11 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
+    if (!formData.referralCode.trim()) {
+      setError('Referral code is required. Registration is strictly invite-only.');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -43,7 +48,10 @@ export const RegisterPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await api.register(formData);
+      const res = await api.register({
+        ...formData,
+        referralCode: formData.referralCode.trim().toUpperCase(),
+      });
       login(res.token, res.user);
       navigate('/app');
     } catch (err: any) {
@@ -157,20 +165,29 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Referral Code (Optional)
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">
+                  Referral Code *
+                </label>
+                <span className="text-[10px] font-bold text-[#FFD45A] bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                  Invite Required
+                </span>
+              </div>
               <div className="relative">
                 <Share2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                 <input
                   type="text"
                   name="referralCode"
-                  placeholder="e.g. ROYAL777"
+                  required
+                  placeholder="Enter inviter's referral code (Required)"
                   value={formData.referralCode}
                   onChange={handleChange}
                   className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#FFD45A] font-semibold uppercase placeholder-slate-500 focus:outline-none transition-colors"
                 />
               </div>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                Earn Sheet is strictly invite-only. You must provide a valid referral code from an existing member to create an account.
+              </p>
             </div>
 
             <button
