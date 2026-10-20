@@ -696,6 +696,7 @@ export const TasksPage: React.FC = () => {
               (typeof window !== 'undefined' && localStorage.getItem(`royal_completed_lvl_${lvl.levelNumber}`) === 'true');
             const isLocked = !lvl.isUnlocked && !isCompleted;
             const isReadyToUnlock = lvl.isUnlocked && !isCompleted && !isLevelUnlockedByUser(lvl);
+            const isCurrent = lvl.levelNumber === userCurrentLevelNumber;
             const approved = isCompleted ? 10 : Math.max(lvl.approvedTaskCount || 0, isSelected ? approvedTaskCount : 0);
             const lvlProgressPercent = Math.min(100, Math.round((approved / (lvl.requiredTaskCount || 10)) * 100));
             const LevelIconComponent = LEVEL_ICONS[lvl.levelNumber] || Crown;
