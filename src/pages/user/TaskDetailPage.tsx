@@ -154,13 +154,16 @@ export const TaskDetailPage: React.FC = () => {
   const isRejected = task?.userStatus === 'REJECTED';
   const isAvailable = !isLocked && !isApproved && !isPending && !isRejected;
 
-  const taskCreditPoints = Boolean(
+  const isPrepaid = Boolean(
     task?.isPaid ||
     (task?.unlockFee && task.unlockFee > 0) ||
     task?.taskNumber === 5 ||
     task?.taskNumber === 10 ||
     task?.taskType?.toLowerCase().includes('prepaid')
-  ) ? 30 : (task?.creditPoints || 5);
+  );
+  const taskCreditPoints = isPrepaid
+    ? (task?.creditPoints && task.creditPoints > 5 ? task.creditPoints : 30)
+    : (task?.creditPoints && task.creditPoints > 0 ? task.creditPoints : 5);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
