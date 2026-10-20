@@ -15,6 +15,7 @@ import {
   X,
   CheckCircle2,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -413,6 +414,414 @@ export const AdminUserDetailPage: React.FC = () => {
           ) : (
             <p className="text-xs text-[#6B7280]">No transactions recorded.</p>
           )}
+        </div>
+      )}
+
+      {/* Deposits Tab */}
+      {activeTab === 'deposits' && (
+        <div className="space-y-4">
+          {/* Quick Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Total Approved Deposits</span>
+              <span className="text-lg font-black text-emerald-700">
+                PKR{' '}
+                {(userData.depositRequests || [])
+                  .filter((d: any) => d.status === 'APPROVED')
+                  .reduce((sum: number, d: any) => sum + (d.amount || 0), 0)
+                  .toLocaleString()}
+              </span>
+            </div>
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Total Deposit Requests</span>
+              <span className="text-lg font-black text-[#111827]">
+                {(userData.depositRequests || []).length} requests
+              </span>
+            </div>
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Pending Verification</span>
+              <span className="text-lg font-black text-amber-600">
+                {(userData.depositRequests || []).filter((d: any) => d.status === 'PENDING').length} pending
+              </span>
+            </div>
+          </div>
+
+          <div className="admin-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+                <span>Deposit Request History</span>
+              </h2>
+              <span className="text-xs text-[#6B7280]">
+                {(userData.depositRequests || []).length} records
+              </span>
+            </div>
+
+            {userData.depositRequests?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs admin-table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Amount</th>
+                      <th>Method</th>
+                      <th>Transaction ID / Reference</th>
+                      <th>Proof Evidence</th>
+                      <th>Status</th>
+                      <th>Reviewer / Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userData.depositRequests.map((d: any) => (
+                      <tr key={d.id}>
+                        <td className="text-[#6B7280] whitespace-nowrap">
+                          {new Date(d.createdAt).toLocaleString()}
+                        </td>
+                        <td className="font-bold text-emerald-700 whitespace-nowrap">
+                          PKR {Number(d.amount || 0).toLocaleString()}
+                        </td>
+                        <td>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md font-semibold text-[10px] bg-slate-100 text-[#374151]">
+                            {d.paymentMethod}
+                          </span>
+                        </td>
+                        <td className="font-mono text-[11px] text-[#111827]">
+                          {d.transactionReference || '—'}
+                        </td>
+                        <td>
+                          {d.proofEvidence ? (
+                            <a
+                              href={d.proofEvidence}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-[#2563EB] hover:underline font-semibold"
+                            >
+                              <span>View Slip</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-[#9CA3AF] text-[11px]">No proof file</span>
+                          )}
+                        </td>
+                        <td>
+                          <span
+                            className={`font-semibold text-[10px] px-2.5 py-0.5 rounded-full inline-block ${
+                              d.status === 'APPROVED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : d.status === 'REJECTED'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="text-[11px] text-[#4B5563]">
+                          {d.reviewerName ? (
+                            <span>
+                              <strong>{d.reviewerName}</strong>
+                              {d.reviewNotes ? `: ${d.reviewNotes}` : ''}
+                            </span>
+                          ) : (
+                            <span className="text-[#9CA3AF]">Awaiting review</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-[#6B7280] space-y-1">
+                <ArrowDownLeft className="w-8 h-8 text-[#9CA3AF] mx-auto opacity-50" />
+                <p className="font-semibold text-[#374151]">No deposit requests found</p>
+                <p>This user has not submitted any deposit slips yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawals Tab */}
+      {activeTab === 'withdrawals' && (
+        <div className="space-y-4">
+          {/* Quick Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Total Paid Withdrawals</span>
+              <span className="text-lg font-black text-blue-700">
+                PKR{' '}
+                {(userData.withdrawalRequests || [])
+                  .filter((w: any) => w.approvalStatus === 'APPROVED' || w.paymentStatus === 'PAID')
+                  .reduce((sum: number, w: any) => sum + (w.amount || 0), 0)
+                  .toLocaleString()}
+              </span>
+            </div>
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Total Requests</span>
+              <span className="text-lg font-black text-[#111827]">
+                {(userData.withdrawalRequests || []).length} requests
+              </span>
+            </div>
+            <div className="admin-card p-4">
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Pending Approval</span>
+              <span className="text-lg font-black text-amber-600">
+                {(userData.withdrawalRequests || []).filter((w: any) => w.approvalStatus === 'PENDING').length} pending
+              </span>
+            </div>
+          </div>
+
+          <div className="admin-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <ArrowUpRight className="w-4 h-4 text-blue-600" />
+                <span>Withdrawal Request History</span>
+              </h2>
+              <span className="text-xs text-[#6B7280]">
+                {(userData.withdrawalRequests || []).length} records
+              </span>
+            </div>
+
+            {userData.withdrawalRequests?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs admin-table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Amount</th>
+                      <th>Destination Account</th>
+                      <th>Approval</th>
+                      <th>Payout Status</th>
+                      <th>Payout Ref / TID</th>
+                      <th>Reviewer / Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userData.withdrawalRequests.map((w: any) => (
+                      <tr key={w.id}>
+                        <td className="text-[#6B7280] whitespace-nowrap">
+                          {new Date(w.createdAt).toLocaleString()}
+                        </td>
+                        <td className="font-bold text-[#111827] whitespace-nowrap">
+                          PKR {Number(w.amount || 0).toLocaleString()}
+                        </td>
+                        <td>
+                          <div>
+                            <span className="font-semibold text-[#111827] block">
+                              {w.recipientName || '—'}
+                            </span>
+                            <span className="text-[11px] font-mono text-[#6B7280]">
+                              {w.paymentMethod}: {w.recipientAccount}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span
+                            className={`font-semibold text-[10px] px-2.5 py-0.5 rounded-full inline-block ${
+                              w.approvalStatus === 'APPROVED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : w.approvalStatus === 'REJECTED'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            {w.approvalStatus}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            className={`font-semibold text-[10px] px-2.5 py-0.5 rounded-full inline-block ${
+                              w.paymentStatus === 'PAID'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : w.paymentStatus === 'PROCESSING'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : w.paymentStatus === 'FAILED'
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            {w.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="font-mono text-[11px] text-[#111827]">
+                          {w.payoutReference || '—'}
+                        </td>
+                        <td className="text-[11px] text-[#4B5563]">
+                          {w.reviewerName ? (
+                            <span>
+                              <strong>{w.reviewerName}</strong>
+                              {w.reviewNotes ? `: ${w.reviewNotes}` : ''}
+                            </span>
+                          ) : (
+                            <span className="text-[#9CA3AF]">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-[#6B7280] space-y-1">
+                <ArrowUpRight className="w-8 h-8 text-[#9CA3AF] mx-auto opacity-50" />
+                <p className="font-semibold text-[#374151]">No withdrawal requests found</p>
+                <p>This user has not requested any withdrawals yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Spin History Tab */}
+      {activeTab === 'spin' && (
+        <div className="space-y-4">
+          {/* Active Spin Entitlements & Allocation Summary */}
+          <div className="admin-card p-6 space-y-4">
+            <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+              <Crown className="w-4 h-4 text-amber-600" />
+              <span>Current Spin Entitlements & Allocation Status</span>
+            </h2>
+
+            {userData.spinEntitlements?.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {userData.spinEntitlements.map((ent: any) => (
+                  <div
+                    key={ent.id}
+                    className="p-3.5 bg-[#F8FAFD] border border-[#D9E4F2] rounded-xl space-y-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#111827]">
+                        {ent.triggerReason || 'Fortune Wheel Entitlement'}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          ent.isEligible && ent.remainingSpins > 0
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}
+                      >
+                        {ent.remainingSpins > 0 ? `${ent.remainingSpins} Available` : 'Exhausted'}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] text-[#4B5563] space-y-1">
+                      <div className="flex justify-between">
+                        <span>Total Spins Granted:</span>
+                        <strong className="text-[#111827]">{ent.totalSpins}</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Remaining Spins:</span>
+                        <strong className="text-amber-700">{ent.remainingSpins}</strong>
+                      </div>
+                      {ent.assignedPrize && (
+                        <div className="flex justify-between pt-1 border-t border-[#EDF1F7]">
+                          <span>Assigned Prize:</span>
+                          <strong className="text-[#2563EB]">{ent.assignedPrize.name}</strong>
+                        </div>
+                      )}
+                      {ent.requiresAdminReview && (
+                        <div className="flex justify-between text-amber-700 font-semibold">
+                          <span>Admin Review:</span>
+                          <span>{ent.adminReviewed ? 'Reviewed' : 'Pending Allocation'}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[#6B7280]">No active spin entitlements recorded for this user.</p>
+            )}
+          </div>
+
+          {/* Historical Spin Outcomes */}
+          <div className="admin-card p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <Disc className="w-4 h-4 text-[#2563EB]" />
+                <span>Historical Wheel Spin Results</span>
+              </h2>
+              <span className="text-xs text-[#6B7280]">
+                {(userData.spinHistories || []).length} records
+              </span>
+            </div>
+
+            {userData.spinHistories?.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs admin-table">
+                  <thead>
+                    <tr>
+                      <th>Spun At</th>
+                      <th>Prize Won</th>
+                      <th>Prize Type</th>
+                      <th>Value</th>
+                      <th>Reward Status</th>
+                      <th>Transaction ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userData.spinHistories.map((h: any) => (
+                      <tr key={h.id}>
+                        <td className="text-[#6B7280] whitespace-nowrap">
+                          {new Date(h.createdAt).toLocaleString()}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#111827]">
+                              {h.prize?.name || h.resultLabel || 'Spin Prize'}
+                            </span>
+                            {h.prize?.displayLabel && (
+                              <span className="text-[10px] text-[#6B7280] font-mono">
+                                ({h.prize.displayLabel})
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <span
+                            className={`font-semibold text-[10px] px-2 py-0.5 rounded-full inline-block ${
+                              h.prize?.prizeType === 'PHYSICAL'
+                                ? 'bg-amber-50 text-amber-800 border border-amber-300'
+                                : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            }`}
+                          >
+                            {h.prize?.prizeType === 'PHYSICAL' ? 'BUMPER PHYSICAL' : 'CASH'}
+                          </span>
+                        </td>
+                        <td className="font-bold text-[#111827] whitespace-nowrap">
+                          PKR {Number(h.prizeValue || h.prize?.monetaryValue || 0).toLocaleString()}
+                        </td>
+                        <td>
+                          <span
+                            className={`font-semibold text-[10px] px-2.5 py-0.5 rounded-full inline-block ${
+                              h.rewardStatus === 'CREDITED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : h.rewardStatus === 'PENDING_LEVEL_10'
+                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            {h.rewardStatus === 'PENDING_LEVEL_10'
+                              ? 'Level 10 Dispatch'
+                              : h.rewardStatus || 'Credited'}
+                          </span>
+                        </td>
+                        <td className="font-mono text-[11px] text-[#6B7280]">
+                          {h.transactionId || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-xs text-[#6B7280] space-y-1">
+                <Disc className="w-8 h-8 text-[#9CA3AF] mx-auto opacity-50" />
+                <p className="font-semibold text-[#374151]">No spin history found</p>
+                <p>This user has not spun the wheel yet.</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
