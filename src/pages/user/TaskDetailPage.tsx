@@ -30,8 +30,9 @@ export const TaskDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { wallet, refreshUser } = useAuth();
 
-  const [taskData, setTaskData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedTask = taskId ? api.getCachedData<any>(`/tasks/${taskId}`) : null;
+  const [taskData, setTaskData] = useState<any>(cachedTask);
+  const [loading, setLoading] = useState(!cachedTask);
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [proofEvidence, setProofEvidence] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -133,7 +134,7 @@ export const TaskDetailPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !taskData) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin" />

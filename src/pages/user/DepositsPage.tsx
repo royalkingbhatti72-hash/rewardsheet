@@ -139,14 +139,6 @@ export const DepositsPage: React.FC = () => {
     }
   };
 
-  if (loading && !instructions && deposits.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   const selectedMethodInfo = instructions?.methods?.[method];
   const isMethodAvailable = Boolean(
     selectedMethodInfo?.isAvailable &&

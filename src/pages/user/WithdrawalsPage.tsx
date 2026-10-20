@@ -14,9 +14,10 @@ import { useAuth } from '../../context/AuthContext';
 
 export const WithdrawalsPage: React.FC = () => {
   const { wallet, refreshUser } = useAuth();
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [withdrawalQuota, setWithdrawalQuota] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const cachedWithdrawals = api.getCachedData<any>('/withdrawals');
+  const [withdrawals, setWithdrawals] = useState<any[]>(cachedWithdrawals?.withdrawals || []);
+  const [withdrawalQuota, setWithdrawalQuota] = useState<any>(cachedWithdrawals?.withdrawalQuota || null);
+  const [historyLoading, setHistoryLoading] = useState(!cachedWithdrawals);
   const [minWithdrawal, setMinWithdrawal] = useState(1000);
 
   const [method, setMethod] = useState<'EASYPAISA' | 'JAZZCASH' | 'BANK_TRANSFER'>('EASYPAISA');
@@ -32,16 +33,14 @@ export const WithdrawalsPage: React.FC = () => {
     ? withdrawalQuota.maxWithdrawableAmount
     : (wallet?.availableBalance || 0);
 
-  const loadData = (silent = false) => {
-    if (!silent) setLoading(true);
-    Promise.all([api.getWithdrawals(), api.getPublicSettings()])
-      .then(([wRes, sRes]) => {
+  const loadData = () => {
+    api.getWithdrawals()
+      .then((wRes) => {
         setWithdrawals(wRes.withdrawals || []);
         if (wRes.withdrawalQuota) setWithdrawalQuota(wRes.withdrawalQuota);
-        if (sRes.minWithdrawal) setMinWithdrawal(sRes.minWithdrawal);
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => setHistoryLoading(false));
   };
 
   useEffect(() => {
@@ -52,17 +51,14 @@ export const WithdrawalsPage: React.FC = () => {
   useEffect(() => {
     const handleLiveEvent = (e: any) => {
       const type = e.detail?.type;
-      if (type === 'wallet' || type === 'task' || type === 'notification' || type === 'command' || type === 'all') {
-        api.invalidateCache('/wallet');
-        loadData(true);
+      if (type === 'wallet' || type === 'all' || type === 'refresh') {
+        loadData();
         refreshUser();
       }
     };
     window.addEventListener('royal_live_update', handleLiveEvent);
-    window.addEventListener('royal_live_heartbeat', () => loadData(true));
     return () => {
       window.removeEventListener('royal_live_update', handleLiveEvent);
-      window.removeEventListener('royal_live_heartbeat', () => loadData(true));
     };
   }, []);
 
@@ -102,21 +98,13 @@ export const WithdrawalsPage: React.FC = () => {
         setWithdrawals((prev) => [res.withdrawal, ...prev]);
       }
       refreshUser();
-      loadData(true);
+      loadData();
     } catch (err: any) {
       setError(err.message || 'Withdrawal request failed');
     } finally {
       setSubmitting(false);
     }
   };
-
-  if (loading && withdrawals.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -276,7 +264,11 @@ export const WithdrawalsPage: React.FC = () => {
           <Clock className="w-4 h-4 text-[#2478FF]" /> Withdrawal History
         </h2>
 
-        {withdrawals.length > 0 ? (
+        {historyLoading && withdrawals.length === 0 ? (
+          <div className="text-center py-8 text-xs text-slate-400">
+            Loading withdrawal records...
+          </div>
+        ) : withdrawals.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
