@@ -1027,11 +1027,9 @@ export const TasksPage: React.FC = () => {
           </h4>
         </div>
         <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-          {activeLevelNumber === 1
-            ? 'Level 1 complete ho gya h baki 9 level rah gay h jald wo complete kry 1000 credit points collect kry or YouTube ki ek video ki earning hasil kry 7 to 8 lakh tak!'
-            : activeLevelNumber === 2
-            ? 'Level 2 complete ho gya h jald baki 8 level complete kry 1000 points collect kry or big withdraw same video earning hasil kry!'
-            : `Level ${activeLevelNumber} complete karein! Jald baqi ${Math.max(0, 10 - activeLevelNumber)} levels complete karein, 1000 credit points collect karein aur big withdraw / YouTube video earning hasil karein!`}
+          {activeLevelNumber === 10
+            ? 'Level 10 complete karein! 1000 credit points mukammal karein aur apna big withdraw hasil karein!'
+            : `Level ${activeLevelNumber} complete karein! Jald baqi ${Math.max(0, 10 - activeLevelNumber)} levels complete karein, 1000 credit points collect karein aur big withdraw hasil karein!`}
         </p>
       </section>
 
