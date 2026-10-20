@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/adminpanal/users': {
@@ -92,6 +93,12 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useBodyScrollLock(sidebarOpen);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const currentPath = location.pathname;
   const matchedPage = Object.entries(PAGE_TITLES).find(([path]) =>

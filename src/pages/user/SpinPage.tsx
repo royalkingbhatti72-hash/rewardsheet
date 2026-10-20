@@ -22,6 +22,7 @@ import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
 const DEFAULT_FALLBACK_PRIZES = [
   { id: 'p1', displayLabel: 'PKR 50', name: 'PKR 50', prizeType: 'CASH', monetaryValue: 50, color: '#1459E8' },
@@ -145,6 +146,9 @@ export const SpinPage: React.FC = () => {
   const [liveNotice, setLiveNotice] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
+
+  // Prevent background scrolling when rules modal is open
+  useBodyScrollLock(showRulesModal);
 
   // Blinking casino rim lights
   useEffect(() => {
@@ -703,11 +707,11 @@ export const SpinPage: React.FC = () => {
       {/* Interactive Rules & Distribution Modal (Touch / Tap Popup) */}
       {showRulesModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto overscroll-contain"
           onClick={() => setShowRulesModal(false)}
         >
           <div
-            className="bg-gradient-to-b from-[#0B1E48] via-[#04132F] to-[#020B20] border-2 border-[#FFD45A] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-[0_0_50px_rgba(255,212,90,0.35)] space-y-5 relative overflow-hidden"
+            className="bg-gradient-to-b from-[#0B1E48] via-[#04132F] to-[#020B20] border-2 border-[#FFD45A] rounded-3xl max-w-lg w-full max-h-[90dvh] overflow-y-auto overscroll-contain p-6 sm:p-7 shadow-[0_0_50px_rgba(255,212,90,0.35)] space-y-5 relative"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top decorative gradient bar */}

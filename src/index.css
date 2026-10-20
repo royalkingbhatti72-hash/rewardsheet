@@ -127,3 +127,13 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(36, 120, 255, 0.8);
 }
+
+/* Prevent background scroll leakage when modals/drawers are open */
+.overscroll-contain {
+  overscroll-behavior: contain !important;
+}
+
+body.scroll-locked {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}

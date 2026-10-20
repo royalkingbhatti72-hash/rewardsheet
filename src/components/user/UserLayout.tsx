@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/client';
+import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
 export const UserLayout: React.FC = () => {
   const { user, wallet, logout } = useAuth();
@@ -33,6 +34,14 @@ export const UserLayout: React.FC = () => {
   );
   const [refreshingPath, setRefreshingPath] = useState<string | null>(null);
   const lastClickRef = useRef<{ [key: string]: number }>({});
+
+  // Prevent background scrolling while the mobile drawer menu is open
+  useBodyScrollLock(mobileMenuOpen);
+
+  // Close mobile drawer on route navigation
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleRefresh = (path: string) => {
     setRefreshingPath(path);
@@ -237,24 +246,31 @@ export const UserLayout: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Slide-Out Drawer */}
+      {/* Mobile Slide-Out Drawer (Popup page with locked background scroll) */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-[#020B20]/95 backdrop-blur-xl flex flex-col p-6 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between pb-6 border-b border-[#214B91]/50">
+        <div
+          className="md:hidden fixed inset-0 z-50 bg-[#020B20]/95 backdrop-blur-xl flex flex-col p-4 sm:p-6 h-[100dvh] max-h-screen overflow-hidden overscroll-contain animate-in fade-in duration-200"
+          style={{ touchAction: 'pan-y' }}
+        >
+          {/* Drawer Top Bar */}
+          <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-[#214B91]/50 flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <Crown className="w-6 h-6 text-[#FFD45A]" />
               <span className="font-extrabold text-lg text-white">EARN SHEET</span>
             </div>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-lg bg-white/5 text-slate-300"
+              className="p-2 rounded-xl bg-white/5 border border-[#214B91]/40 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              aria-label="Close menu"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="py-4">
-            <div className="p-3 bg-[#04132F] rounded-xl border border-[#214B91] mb-4">
+          {/* Drawer Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto overscroll-contain py-3 sm:py-4 space-y-3 min-h-0 pr-1 select-none">
+            {/* User Profile Card */}
+            <div className="p-3 bg-[#04132F] rounded-xl border border-[#214B91]">
               <p className="text-xs text-slate-400">Logged in as</p>
               <p className="font-bold text-white text-base">{user?.name}</p>
               <p className="text-xs text-[#22D3EE] font-mono">{user?.phone}</p>
@@ -266,31 +282,43 @@ export const UserLayout: React.FC = () => {
               </div>
             </div>
 
+            {/* Navigation Items */}
             <nav className="space-y-1">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#214B91]/50 text-slate-200 transition-all"
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-[#214B91]/50 text-slate-200 transition-all active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5 text-[#2478FF]" />
                     <span className="font-medium text-sm">{item.label}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-500" />
+                  {item.badge ? (
+                    <span className="bg-[#FFD45A] text-[#020B20] text-[10px] font-black px-2 py-0.5 rounded-full">
+                      {item.badge}
+                    </span>
+                  ) : item.badgeCount && item.badgeCount > 0 ? (
+                    <span className="bg-[#EF4444] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {item.badgeCount}
+                    </span>
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-500" />
+                  )}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className="mt-auto pt-4 border-t border-[#214B91]/50">
+          {/* Drawer Footer Actions */}
+          <div className="pt-3 sm:pt-4 border-t border-[#214B91]/50 flex-shrink-0">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 logout();
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-semibold text-sm hover:bg-red-500/20"
+              className="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-semibold text-sm hover:bg-red-500/20 active:scale-[0.98] transition-all cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Sign Out

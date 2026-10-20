@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
 export const DashboardPage: React.FC = () => {
   const { user, wallet: authWallet, updateWallet } = useAuth();
@@ -64,6 +65,9 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(!cachedDashboard && !authWallet);
   const [copiedLink, setCopiedLink] = useState(false);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+
+  // Prevent background scrolling while help modal is active
+  useBodyScrollLock(helpModalOpen);
 
   useEffect(() => {
     api
@@ -774,8 +778,8 @@ export const DashboardPage: React.FC = () => {
           Interactive help modal when user clicks Help Center
           ======================================================== */}
       {helpModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#020B20]/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-[#071B3A] border border-[#173C73] p-6 space-y-5 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-[#020B20]/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in overflow-y-auto overscroll-contain">
+          <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-[#071B3A] border border-[#173C73] p-6 space-y-5 shadow-2xl relative">
             <div className="flex items-center justify-between border-b border-[#173C73]/50 pb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#10D6A0]/15 border border-[#10D6A0]/30 flex items-center justify-center text-[#10D6A0]">

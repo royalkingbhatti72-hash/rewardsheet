@@ -31,6 +31,7 @@ import {
 import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
 // Icons mapped to the 10 levels
 const LEVEL_ICONS: Record<number, React.ElementType> = {
@@ -165,6 +166,9 @@ export const TasksPage: React.FC = () => {
   const [prepaidModalTask, setPrepaidModalTask] = useState<any | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // Prevent background scrolling while any popup modal is active
+  useBodyScrollLock(Boolean(prepaidModalTask || congratsModalLevel));
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const tasksSectionRef = useRef<HTMLDivElement>(null);
@@ -1123,8 +1127,8 @@ export const TasksPage: React.FC = () => {
         const isSufficient = modalRemainingNeeded === 0;
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="royal-card w-full max-w-lg p-6 sm:p-7 rounded-3xl border border-[#FFD45A]/50 bg-gradient-to-b from-[#071B3A] to-[#041228] shadow-2xl relative space-y-5">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto overscroll-contain">
+            <div className="royal-card w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain p-6 sm:p-7 rounded-3xl border border-[#FFD45A]/50 bg-gradient-to-b from-[#071B3A] to-[#041228] shadow-2xl relative space-y-5">
               {/* Close Button */}
               <button
                 type="button"
@@ -1314,8 +1318,8 @@ export const TasksPage: React.FC = () => {
           CONGRATULATIONS MODAL WITH FIREWORKS CELEBRATION
           ======================================================== */}
       {congratsModalLevel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020B20]/85 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border-2 border-[#FFD45A]/60 p-6 sm:p-8 text-center shadow-2xl shadow-[#FFD45A]/30 animate-in zoom-in-95 duration-300 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#020B20]/85 backdrop-blur-md animate-in fade-in duration-300 overflow-y-auto overscroll-contain">
+          <div className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto overscroll-contain rounded-3xl bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border-2 border-[#FFD45A]/60 p-6 sm:p-8 text-center shadow-2xl shadow-[#FFD45A]/30 animate-in zoom-in-95 duration-300">
             {/* Background ambient radial glow */}
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FFD45A]/20 rounded-full blur-3xl pointer-events-none" />
 
