@@ -466,32 +466,105 @@ export const TasksPage: React.FC = () => {
   const progressPercent = Math.min(100, Math.round((approvedTaskCount / 10) * 100));
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-4xl mx-auto">
+    <div className="relative max-w-4xl mx-auto space-y-6 sm:space-y-8">
+      {/* Smooth Ambient Lighting Aura */}
+      <div className="absolute -top-16 left-1/4 w-96 h-96 bg-[#1459E8]/15 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-48 right-10 w-80 h-80 bg-[#FFD45A]/10 rounded-full blur-[110px] pointer-events-none" />
+
       {/* Action Messages */}
       {actionSuccess && (
-        <div className="p-3.5 bg-[#10D6A0]/15 border border-[#10D6A0]/40 rounded-2xl text-[#10D6A0] text-xs flex items-center gap-2.5 animate-in fade-in">
+        <div className="p-3.5 bg-[#10D6A0]/15 border border-[#10D6A0]/40 rounded-2xl text-[#10D6A0] text-xs flex items-center gap-2.5 animate-in fade-in shadow-lg backdrop-blur-md">
           <CheckCircle2 className="w-4 h-4 text-[#10D6A0] flex-shrink-0" />
-          <span className="font-medium">{actionSuccess}</span>
+          <span className="font-semibold">{actionSuccess}</span>
         </div>
       )}
       {actionError && (
-        <div className="p-3.5 bg-[#EF4444]/15 border border-[#EF4444]/40 rounded-2xl text-[#EF4444] text-xs flex items-center gap-2.5 animate-in fade-in">
+        <div className="p-3.5 bg-[#EF4444]/15 border border-[#EF4444]/40 rounded-2xl text-[#EF4444] text-xs flex items-center gap-2.5 animate-in fade-in shadow-lg backdrop-blur-md">
           <AlertCircle className="w-4 h-4 text-[#EF4444] flex-shrink-0" />
-          <span className="font-medium">{actionError}</span>
+          <span className="font-semibold">{actionError}</span>
         </div>
       )}
 
+      {/* ========================================================
+          A. SMOOTH PAGE HEADER & DIRECT LEVEL SELECTOR
+          ======================================================== */}
+      <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-r from-[#07193B]/90 via-[#0B2556]/80 to-[#051430]/90 border border-[#1B3E75]/60 shadow-2xl backdrop-blur-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FFD45A]/15 border border-[#FFD45A]/40 text-[#FFD45A]">
+                Tier Progression
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#1459E8]/20 border border-[#1459E8]/40 text-[#22D3EE]">
+                10 Standard Levels
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+              <span>Task & Level Hub</span>
+              <Crown className="w-5 h-5 text-[#FFD45A]" />
+            </h1>
+            <p className="text-xs text-slate-300">
+              Complete sequential tasks in each level to earn instant cash commissions, credit points, and big tier rewards.
+            </p>
+          </div>
 
+          <div className="flex items-center gap-2 self-start sm:self-center flex-shrink-0">
+            <div className="px-3.5 py-2 rounded-2xl bg-[#020B1C]/80 border border-[#1B3E75] text-right">
+              <span className="text-[10px] text-slate-400 block font-semibold uppercase">Current Tier</span>
+              <strong className="text-xs sm:text-sm font-black text-[#FFD45A]">
+                Level {userCurrentLevelNumber} ({userCurrentLevel?.title || 'Active'})
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Smooth 10-Level Mini Pills Bar */}
+        <div className="pt-2 border-t border-[#173768]/50 flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none pb-1">
+          {levels.map((lvl) => {
+            const isSelected = lvl.levelNumber === activeLevelNumber;
+            const isCompleted = lvl.isCompleted;
+            const isLocked = !lvl.isUnlocked;
+            const isCurrent = lvl.levelNumber === userCurrentLevelNumber;
+
+            return (
+              <button
+                key={lvl.id}
+                onClick={() => handleSelectLevel(lvl.levelNumber)}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-[#FFD45A] to-amber-400 text-[#020B20] shadow-md shadow-[#FFD45A]/30 scale-105 font-black'
+                    : isCompleted
+                    ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                    : isCurrent
+                    ? 'bg-[#1459E8]/25 border border-[#1459E8]/60 text-[#22D3EE] hover:bg-[#1459E8]/40'
+                    : isLocked
+                    ? 'bg-[#040E22]/60 border border-[#142A50]/50 text-slate-500 hover:text-slate-300'
+                    : 'bg-[#071D42]/70 border border-[#173C73] text-slate-200 hover:bg-[#0B2A60]'
+                }`}
+              >
+                {isCompleted ? (
+                  <Check className="w-3 h-3 text-emerald-400" />
+                ) : isLocked ? (
+                  <Lock className="w-3 h-3 text-slate-500" />
+                ) : (
+                  <span className="text-[10px] opacity-75">#</span>
+                )}
+                <span>L{lvl.levelNumber}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ========================================================
-          C. HORIZONTAL LEVEL CARD CAROUSEL (OPTION 1)
-          Prominent centered selected card, side peeks, touch scroll,
-          and arrow controls for all 10 standard levels
+          B. ULTRA-SMOOTH HORIZONTAL LEVEL CARD CAROUSEL
+          Prominent centered selected card, side peeks, smooth scale,
+          glowing glass aesthetics, and arrow controls
           ======================================================== */}
-      <section className="relative px-2 sm:px-8 select-none">
+      <section className="relative px-1 sm:px-6 select-none">
         {/* Auto Return Countdown Pill */}
         {returnCountdown !== null && activeLevelNumber !== userCurrentLevelNumber && (
-          <div className="mb-3 flex items-center justify-between gap-3 bg-[#0B2248]/95 border border-[#168BFF]/60 px-4 py-2 rounded-2xl text-xs text-white shadow-xl max-w-md mx-auto animate-in fade-in">
+          <div className="mb-3.5 flex items-center justify-between gap-3 bg-[#0B2248]/95 border border-[#168BFF]/60 px-4 py-2 rounded-2xl text-xs text-white shadow-xl max-w-md mx-auto animate-in fade-in backdrop-blur-md">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#FFD45A] animate-pulse flex-shrink-0" />
               <span className="text-slate-200">
@@ -512,30 +585,30 @@ export const TasksPage: React.FC = () => {
         <button
           onClick={handlePrevLevel}
           disabled={activeLevelNumber === 1}
-          className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-[#061633]/90 border border-[#173C73] text-white hover:border-[#168BFF] flex items-center justify-center shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="absolute left-0 sm:left-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-2xl bg-[#061633]/90 hover:bg-[#0C2454] border border-[#1C3E75] hover:border-[#FFD45A] text-white flex items-center justify-center shadow-2xl backdrop-blur-md disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer"
           title="Previous Level"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-5 h-5 text-slate-200" />
         </button>
 
         {/* Floating Right Navigation Button */}
         <button
           onClick={handleNextLevel}
           disabled={activeLevelNumber === 10}
-          className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-[#061633]/90 border border-[#173C73] text-white hover:border-[#168BFF] flex items-center justify-center shadow-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="absolute right-0 sm:right-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-2xl bg-[#061633]/90 hover:bg-[#0C2454] border border-[#1C3E75] hover:border-[#FFD45A] text-white flex items-center justify-center shadow-2xl backdrop-blur-md disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer"
           title="Next Level"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5 text-slate-200" />
         </button>
 
         {/* Horizontal Carousel Track */}
         <div
           ref={carouselRef}
           onScroll={handleCarouselScroll}
-          className="flex items-center gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-none justify-start"
+          className="flex items-center gap-3.5 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-none justify-start"
           style={{
-            paddingLeft: 'max(1.5rem, calc(50% - 155px))',
-            paddingRight: 'max(1.5rem, calc(50% - 155px))',
+            paddingLeft: 'max(1.5rem, calc(50% - 165px))',
+            paddingRight: 'max(1.5rem, calc(50% - 165px))',
           }}
         >
           {levels.map((lvl) => {
@@ -553,67 +626,64 @@ export const TasksPage: React.FC = () => {
                 id={`carousel-card-${lvl.levelNumber}`}
                 key={lvl.id}
                 onClick={() => handleSelectLevel(lvl.levelNumber)}
-                className={`flex-shrink-0 rounded-3xl p-5 sm:p-6 transition-all duration-300 snap-center cursor-pointer flex flex-col items-center text-center relative overflow-hidden select-none ${
+                className={`flex-shrink-0 rounded-[28px] p-5 sm:p-6 transition-all duration-300 snap-center cursor-pointer flex flex-col items-center text-center relative overflow-hidden select-none backdrop-blur-xl ${
                   isSelected
                     ? isLocked
-                      ? 'w-[250px] sm:w-[280px] md:w-[310px] bg-gradient-to-b from-[#091E42] via-[#071B3A] to-[#04132F] border-2 border-[#F59E0B] shadow-2xl shadow-[#F59E0B]/20 ring-2 ring-[#FFD45A]/50 z-20 scale-100'
-                      : 'w-[250px] sm:w-[280px] md:w-[310px] bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border-2 border-[#168BFF] shadow-2xl shadow-[#168BFF]/40 ring-2 ring-[#FFD45A]/70 z-20 scale-100'
+                      ? 'w-[260px] sm:w-[295px] md:w-[325px] bg-gradient-to-b from-[#0D2659]/95 via-[#081B3E]/95 to-[#030D1E]/95 border-2 border-[#F59E0B] shadow-[0_20px_50px_rgba(245,158,11,0.25)] ring-2 ring-[#FFD45A]/40 z-20 scale-100'
+                      : 'w-[260px] sm:w-[295px] md:w-[325px] bg-gradient-to-b from-[#0F2D6B]/95 via-[#0A1E4A]/95 to-[#030E24]/95 border-2 border-[#FFD45A] shadow-[0_20px_50px_rgba(20,89,232,0.35),0_0_25px_rgba(255,212,90,0.2)] ring-2 ring-[#FFD45A]/40 z-20 scale-100'
+                    : isCompleted
+                    ? 'w-[210px] sm:w-[235px] md:w-[250px] bg-gradient-to-b from-[#06242B]/85 via-[#061B30]/90 to-[#020E22]/95 border-2 border-emerald-400/50 shadow-[0_10px_30px_rgba(16,214,160,0.15)] opacity-80 hover:opacity-100 scale-90'
                     : isLocked
-                    ? 'w-[200px] sm:w-[230px] md:w-[245px] bg-[#051329]/80 border border-[#173C73]/60 opacity-60 hover:opacity-85 scale-90'
-                    : 'w-[200px] sm:w-[230px] md:w-[245px] bg-[#071B3A]/80 border border-[#173C73] opacity-70 hover:opacity-95 scale-90'
+                    ? 'w-[210px] sm:w-[235px] md:w-[250px] bg-[#040F24]/75 border border-[#163363]/60 opacity-60 hover:opacity-85 scale-90'
+                    : 'w-[210px] sm:w-[235px] md:w-[250px] bg-[#071D42]/80 border border-[#1A3E75] opacity-75 hover:opacity-100 scale-90'
                 }`}
               >
+                {/* Smooth Top Gradient Accent Line */}
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-transparent via-[#FFD45A] to-transparent'
+                      : isCompleted
+                      ? 'bg-gradient-to-r from-transparent via-emerald-400 to-transparent'
+                      : 'bg-transparent'
+                  }`}
+                />
+
                 {/* Glow behind center icon for active card */}
                 {isSelected && (
                   <div
-                    className={`absolute top-4 w-32 h-32 rounded-full blur-2xl pointer-events-none ${
-                      isLocked ? 'bg-[#F59E0B]/15' : 'bg-[#FFD45A]/15'
+                    className={`absolute top-4 w-36 h-36 rounded-full blur-3xl pointer-events-none ${
+                      isLocked ? 'bg-[#F59E0B]/20' : 'bg-[#1459E8]/25'
                     }`}
                   />
                 )}
 
-                {/* Level Badge / Icon */}
-                <div className="relative mb-3 flex items-center justify-center">
-                  <div
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-base transition-transform ${
-                      isSelected
-                        ? isLocked
-                          ? 'bg-gradient-to-tr from-[#F59E0B] to-[#FFD45A] p-0.5 shadow-lg shadow-[#F59E0B]/30 scale-105'
-                          : 'bg-gradient-to-tr from-[#1264F5] to-[#FFD45A] p-0.5 shadow-lg shadow-[#1264F5]/40 scale-105'
-                        : 'bg-[#061633] text-[#8194B7] border border-[#173C73]'
-                    }`}
-                  >
-                    <div className="w-full h-full bg-[#04132F] rounded-[14px] flex items-center justify-center">
-                      {isLocked ? (
-                        <Lock
-                          className={`w-7 h-7 ${isSelected ? 'text-[#FFD45A]' : 'text-slate-500'}`}
-                        />
-                      ) : isReadyToUnlock ? (
-                        <Unlock className="w-7 h-7 text-[#FFD45A] animate-pulse" />
-                      ) : (
-                        <LevelIconComponent
-                          className={`w-7 h-7 ${isSelected ? 'text-[#FFD45A]' : 'text-slate-400'}`}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Level Number & Title */}
-                <div className="mb-2 space-y-0.5">
+                {/* Status Pill Badge */}
+                <div className="mb-3.5 z-10">
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full inline-block ${
+                    className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm ${
                       isReadyToUnlock
-                        ? 'bg-gradient-to-r from-[#FFD45A]/25 to-[#10D6A0]/25 text-[#FFD45A] border border-[#FFD45A]/50 animate-pulse'
+                        ? 'bg-gradient-to-r from-[#FFD45A]/25 to-emerald-400/25 text-[#FFD45A] border border-[#FFD45A]/60 animate-pulse'
                         : isCurrent
-                        ? 'bg-[#1264F5]/25 text-[#22D3EE] border border-[#168BFF]/40'
+                        ? 'bg-[#1459E8]/25 text-[#22D3EE] border border-[#22D3EE]/40'
                         : isCompleted
-                        ? 'bg-[#10D6A0]/20 text-[#10D6A0] border border-[#10D6A0]/30'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/40'
                         : isLocked
-                        ? 'bg-[#061633] text-slate-400 border border-[#173C73]'
-                        : 'bg-[#061633] text-[#B7C6E4] border border-[#173C73]'
+                        ? 'bg-[#040D1F] text-slate-400 border border-[#163363]'
+                        : 'bg-[#061836] text-[#B7C6E4] border border-[#173C73]'
                     }`}
                   >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isCompleted
+                          ? 'bg-emerald-400'
+                          : isCurrent || isReadyToUnlock
+                          ? 'bg-[#FFD45A] animate-ping'
+                          : isLocked
+                          ? 'bg-slate-500'
+                          : 'bg-[#22D3EE]'
+                      }`}
+                    />
                     {isReadyToUnlock
                       ? 'Ready to Unlock'
                       : isCurrent
@@ -622,52 +692,95 @@ export const TasksPage: React.FC = () => {
                       ? 'Completed'
                       : isLocked
                       ? 'Locked'
-                      : 'Open'}
+                      : 'Available'}
                   </span>
-                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight pt-1">
+                </div>
+
+                {/* Smooth 3D Icon Medallion */}
+                <div className="relative mb-3 z-10">
+                  <div
+                    className={`w-16 h-16 sm:w-18 sm:h-18 rounded-2xl flex items-center justify-center p-0.5 transition-transform duration-200 ${
+                      isSelected
+                        ? isLocked
+                          ? 'bg-gradient-to-tr from-[#F59E0B] via-[#FFD45A] to-amber-300 shadow-xl shadow-[#F59E0B]/30 scale-105'
+                          : 'bg-gradient-to-tr from-[#1459E8] via-[#FFD45A] to-[#22D3EE] shadow-xl shadow-[#1459E8]/40 scale-105'
+                        : isCompleted
+                        ? 'bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-lg shadow-emerald-500/20'
+                        : 'bg-[#071B3E] border border-[#1A3E75]'
+                    }`}
+                  >
+                    <div className="w-full h-full bg-gradient-to-b from-[#051430] to-[#020B1C] rounded-[14px] flex items-center justify-center shadow-inner">
+                      {isLocked ? (
+                        <Lock
+                          className={`w-7 h-7 sm:w-8 sm:h-8 ${
+                            isSelected ? 'text-[#FFD45A]' : 'text-slate-500'
+                          }`}
+                        />
+                      ) : isReadyToUnlock ? (
+                        <Unlock className="w-7 h-7 sm:w-8 sm:h-8 text-[#FFD45A] animate-pulse" />
+                      ) : (
+                        <LevelIconComponent
+                          className={`w-7 h-7 sm:w-8 sm:h-8 ${
+                            isCompleted
+                              ? 'text-emerald-400'
+                              : isSelected
+                              ? 'text-[#FFD45A]'
+                              : 'text-slate-300'
+                          }`}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Level Number & Title */}
+                <div className="mb-3 space-y-0.5 z-10">
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
                     Level {lvl.levelNumber}
                   </h3>
-                  <p className="text-xs sm:text-sm font-bold text-[#22D3EE] tracking-wide truncate max-w-[200px]">
+                  <p className="text-xs sm:text-sm font-bold text-[#22D3EE] tracking-wide truncate max-w-[210px]">
                     {lvl.title}
                   </p>
                 </div>
 
-                {/* Progress Bar & Ratio */}
-                <div className="w-full space-y-1.5 mb-4">
-                  <div className="w-full h-2 bg-[#061633] rounded-full overflow-hidden border border-[#173C73]/50">
+                {/* Smooth Progress Bar & Ratio */}
+                <div className="w-full space-y-2 mb-4 z-10">
+                  <div className="w-full h-2.5 bg-[#020A1A] rounded-full overflow-hidden border border-[#163363]/70 p-0.5 shadow-inner">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${
                         isCompleted
-                          ? 'bg-[#10D6A0]'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-sm shadow-emerald-400/50'
                           : isLocked
-                          ? 'bg-slate-600'
-                          : 'bg-gradient-to-r from-[#1264F5] via-[#22D3EE] to-[#FFD45A]'
+                          ? 'bg-slate-700'
+                          : 'bg-gradient-to-r from-[#1459E8] via-[#22D3EE] to-[#FFD45A] shadow-sm shadow-[#FFD45A]/40'
                       }`}
                       style={{ width: `${lvlProgressPercent}%` }}
                     />
                   </div>
-                  <span className="text-[11px] font-semibold text-[#B7C6E4] block">
+
+                  <span className="text-[11px] font-semibold text-slate-300 block">
                     {isCompleted
-                      ? 'Level Completed'
+                      ? '10 / 10 Tasks Completed (100%)'
                       : isLocked
                       ? 'Locked Level'
                       : isReadyToUnlock
-                      ? 'Ready to Activate'
-                      : `${approved} Tasks Completed`}
+                      ? 'Ready to Activate Tier'
+                      : `${approved} / ${lvl.requiredTaskCount || 10} Tasks Done (${lvlProgressPercent}%)`}
                   </span>
-                  <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] flex-wrap">
-                    <span className="text-[#10D6A0] font-black">
+
+                  {/* Bonus & Points Tag Pills */}
+                  <div className="pt-1 flex items-center justify-center gap-2 text-[10px] flex-wrap">
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-black">
                       Bonus: PKR {lvl.completionReward?.toLocaleString()}
                     </span>
-                    <span className="text-slate-400">•</span>
-                    <span className="text-[#22D3EE] font-bold">
-                      {lvl.totalCreditPoints || 100} CPs
+                    <span className="px-2 py-0.5 rounded-md bg-[#22D3EE]/15 border border-[#22D3EE]/30 text-[#22D3EE] font-black">
+                      +{lvl.totalCreditPoints || 100} CPs
                     </span>
                   </div>
                 </div>
 
-                {/* Action Button inside Card */}
-                <div className="w-full">
+                {/* Smooth Action Button inside Card */}
+                <div className="w-full z-10 pt-1">
                   {isReadyToUnlock ? (
                     <button
                       onClick={(e) => {
@@ -675,7 +788,7 @@ export const TasksPage: React.FC = () => {
                         handleSelectLevel(lvl.levelNumber);
                         handleUnlockLevelAction(lvl);
                       }}
-                      className="w-full py-2.5 px-4 rounded-full text-xs font-black shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-105 active:scale-95 bg-gradient-to-r from-[#FFD45A] via-amber-400 to-[#10D6A0] text-[#020B20] shadow-[#FFD45A]/30 animate-pulse cursor-pointer"
+                      className="w-full py-2.5 px-4 rounded-xl text-xs font-black shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-105 active:scale-95 bg-gradient-to-r from-[#FFD45A] via-amber-400 to-[#10D6A0] text-[#020B20] shadow-[#FFD45A]/30 animate-pulse cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Unlock Level {lvl.levelNumber}</span>
@@ -686,21 +799,21 @@ export const TasksPage: React.FC = () => {
                         e.stopPropagation();
                         scrollToTasksSection();
                       }}
-                      className={`w-full py-2.5 px-4 rounded-full text-xs font-black shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-[1.02] ${
+                      className={`w-full py-2.5 px-4 rounded-xl text-xs font-black shadow-lg flex items-center justify-center gap-1.5 transition-all transform hover:scale-[1.02] active:scale-98 cursor-pointer ${
                         isLocked
                           ? 'bg-gradient-to-r from-[#F59E0B] to-[#FFD45A] text-[#020B20] shadow-[#F59E0B]/20'
-                          : 'bg-gradient-to-r from-[#FFD45A] to-[#F59E0B] text-[#020B20] shadow-[#FFD45A]/25'
+                          : 'bg-gradient-to-r from-[#FFD45A] via-yellow-400 to-[#FFD45A] text-[#020B20] shadow-[#FFD45A]/30'
                       }`}
                     >
                       <span>{isLocked ? 'Locked Level' : 'View Tasks'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   ) : (
-                    <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#061633] border border-[#173C73] text-[10px] text-[#8194B7] font-medium">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#040E24] border border-[#163363] text-[10px] text-slate-300 font-semibold">
                       {isLocked ? (
-                        <Lock className="w-2.5 h-2.5" />
+                        <Lock className="w-3 h-3 text-slate-500" />
                       ) : (
-                        <Check className="w-2.5 h-2.5 text-[#10D6A0]" />
+                        <Check className="w-3 h-3 text-emerald-400" />
                       )}
                       <span>{isLocked ? 'Locked' : isCompleted ? 'Completed' : 'Select'}</span>
                     </div>
@@ -712,15 +825,15 @@ export const TasksPage: React.FC = () => {
         </div>
 
         {/* Carousel Dot Indicators */}
-        <div className="flex items-center justify-center gap-1.5 pt-1">
+        <div className="flex items-center justify-center gap-1.5 pt-2">
           {levels.map((lvl) => (
             <button
               key={lvl.id}
               onClick={() => handleSelectLevel(lvl.levelNumber)}
-              className={`transition-all rounded-full ${
+              className={`transition-all duration-300 rounded-full cursor-pointer ${
                 lvl.levelNumber === activeLevelNumber
-                  ? 'w-5 h-1.5 bg-[#22D3EE]'
-                  : 'w-1.5 h-1.5 bg-[#173C73] hover:bg-[#8194B7]'
+                  ? 'w-7 h-2 bg-gradient-to-r from-[#22D3EE] to-[#FFD45A] shadow-md shadow-[#FFD45A]/40'
+                  : 'w-2 h-2 bg-[#173C73] hover:bg-[#8194B7]'
               }`}
               title={`Level ${lvl.levelNumber}`}
             />
@@ -730,26 +843,26 @@ export const TasksPage: React.FC = () => {
 
       {/* Locked Notice if selected level is locked */}
       {isSelectedLevelLocked && (
-        <div className="p-3.5 rounded-xl bg-[#061633] border border-[#F59E0B]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-[#0B1E48] via-[#071838] to-[#041026] border border-[#F59E0B]/40 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="space-y-0.5">
             <p className="font-bold text-[#FFD45A] flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <Lock className="w-4 h-4 text-[#F59E0B]" />
               Level {activeLevelNumber} is locked. Complete all tasks in Level{' '}
               {activeLevelNumber - 1} to unlock it.
             </p>
             {previousLevelSummary && (
-              <p className="text-[#B7C6E4] text-[11px]">
-                Level {activeLevelNumber - 1} Progress: {previousLevelApprovedTasks} tasks approved.
+              <p className="text-slate-300 text-[11px]">
+                Level {activeLevelNumber - 1} Progress: {previousLevelApprovedTasks} / 10 tasks approved.
               </p>
             )}
           </div>
 
           <button
             onClick={() => handleSelectLevel(userCurrentLevelNumber)}
-            className="inline-flex items-center gap-1 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all shadow-sm self-start sm:self-auto flex-shrink-0"
+            className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md self-start sm:self-auto flex-shrink-0 cursor-pointer"
           >
             <span>Go to Level {userCurrentLevelNumber}</span>
-            <ArrowRight className="w-3 h-3" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -972,14 +1085,17 @@ export const TasksPage: React.FC = () => {
           F. LEVEL COMPLETION INFORMATION & MOTIVATIONAL NOTIFICATION
           ======================================================== */}
       {isSelectedLevelCompleted ? (
-        <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#10D6A0]/15 via-[#071B3A] to-[#10D6A0]/15 border border-[#10D6A0]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h4 className="text-sm font-bold text-white">
-              Level {activeLevelNumber} Completed!
-            </h4>
-            <p className="text-xs text-[#B7C6E4]">
+        <section className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-[#071F42] to-teal-500/15 border-2 border-emerald-400/40 shadow-xl backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <h4 className="text-sm sm:text-base font-black text-white">
+                Level {activeLevelNumber} Completed! 🎉
+              </h4>
+            </div>
+            <p className="text-xs text-slate-300">
               All tasks approved. Completion reward of PKR{' '}
-              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} earned.
+              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} has been credited!
             </p>
           </div>
 
@@ -993,33 +1109,34 @@ export const TasksPage: React.FC = () => {
                   handleUnlockLevelAction(nextLvl);
                 }
               }}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:brightness-110 text-[#020B20] text-xs font-black px-4 py-2.5 rounded-xl transition-all shadow-md self-start sm:self-auto flex-shrink-0 cursor-pointer animate-pulse"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#FFD45A] to-amber-400 hover:brightness-110 text-[#020B20] text-xs font-black px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-[#FFD45A]/25 self-start sm:self-auto flex-shrink-0 cursor-pointer animate-pulse"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-4 h-4" />
               <span>Unlock Level {activeLevelNumber + 1} 🎉</span>
             </button>
           )}
         </section>
       ) : (
-        <section className="p-4 rounded-2xl bg-gradient-to-r from-[#071B3A] via-[#0B2248] to-[#071B3A] border border-[#173C73] flex items-center justify-between gap-3">
-          <div>
-            <h4 className="text-xs sm:text-sm font-bold text-white">
-              Level {activeLevelNumber} Completion Reward
+        <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#071D42]/90 via-[#0B2556]/80 to-[#071D42]/90 border border-[#1B3E75]/60 shadow-lg backdrop-blur-md flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <h4 className="text-xs sm:text-sm font-black text-white flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-[#FFD45A]" />
+              <span>Level {activeLevelNumber} Tier Completion Reward</span>
             </h4>
-            <p className="text-[11px] text-[#B7C6E4]">
+            <p className="text-[11px] sm:text-xs text-slate-300">
               Complete all tasks in this tier to claim PKR{' '}
-              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} bonus!
+              {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)} bonus reward!
             </p>
           </div>
 
-          <span className="text-xs font-bold text-[#FFD45A] bg-[#061633] border border-[#173C73] px-3 py-1.5 rounded-xl hidden sm:inline">
+          <span className="text-xs font-black text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/40 px-3 py-1.5 rounded-xl shadow-sm hidden sm:inline">
             +PKR {activeLevelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)}
           </span>
         </section>
       )}
 
       {/* Motivational Milestone Notification */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1264F5]/15 via-[#071B3A] to-[#FFD45A]/15 border border-[#FFD45A]/40 shadow-xl space-y-2">
+      <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1459E8]/20 via-[#081F48] to-[#FFD45A]/15 border border-[#FFD45A]/50 shadow-xl backdrop-blur-md space-y-2">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-[#FFD45A]" />
           <h4 className="text-xs sm:text-sm font-black text-white">
