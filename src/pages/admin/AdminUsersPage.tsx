@@ -258,22 +258,6 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-
-      {message && (
-        <div
-          className={`p-3.5 rounded-lg border text-xs flex items-center justify-between ${
-            message.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}
-        >
-          <span>{message.text}</span>
-          <button onClick={() => setMessage(null)} className="p-1">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       {/* Filter and Search Bar */}
       <div className="admin-card p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
         <form onSubmit={handleSearch} className="flex-1 w-full flex items-center gap-2">
