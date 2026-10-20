@@ -204,7 +204,7 @@ export const AdminUsersPage: React.FC = () => {
       const res = await api.adjustUserBalance(balanceModalUser.id, {
         amount: numAmount,
         actionType: adjustType,
-        reason: adjustReason,
+        reason: adjustReason?.trim() || 'Admin adjustment',
       });
       // Update ONLY this single user in local state directly without reloading the entire table!
       const newBalance = res.wallet?.availableBalance ?? (
@@ -619,20 +619,6 @@ export const AdminUsersPage: React.FC = () => {
                   value={adjustAmount}
                   onChange={(e) => setAdjustAmount(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-bold text-sm text-[#111827] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#374151] mb-1">
-                  Audit Logging Reason (Strictly Required) *
-                </label>
-                <textarea
-                  rows={2}
-                  required
-                  placeholder="Enter reason for balance adjustment"
-                  value={adjustReason}
-                  onChange={(e) => setAdjustReason(e.target.value)}
-                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"
                 />
               </div>
 
