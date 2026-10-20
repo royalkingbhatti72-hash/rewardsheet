@@ -93,6 +93,40 @@ const cleanTaskTitle = (title: string) => {
   return title.replace(/\s+Task\s*#?\d+$/i, '').trim();
 };
 
+// Helper to generate 10 locked tasks locally without hitting Supabase/backend
+const createLockedTasks = (lvlNum: number, lvlSummary?: any) => {
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: `locked-lvl-${lvlNum}-task-${i + 1}`,
+    taskNumber: i + 1,
+    title: `Task ${i + 1}`,
+    description: `Complete previous level tasks to unlock Level ${lvlNum}.`,
+    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
+    userStatus: 'LOCKED',
+    status: 'LOCKED',
+    isPaid: i === 4 || i === 9,
+    creditPoints: (i === 4 || i === 9) ? 30 : 5,
+    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
+    unlockFee: (i === 4 || i === 9) ? (lvlSummary?.requiredPrepaidAmount || 500) : 0,
+  }));
+};
+
+// Helper to generate 10 completed tasks locally without hitting Supabase/backend
+const createCompletedTasks = (lvlNum: number, lvlSummary?: any) => {
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: `completed-lvl-${lvlNum}-task-${i + 1}`,
+    taskNumber: i + 1,
+    title: `Task ${i + 1}`,
+    description: `Level ${lvlNum} assignment completed.`,
+    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
+    userStatus: 'APPROVED',
+    status: 'APPROVED',
+    isPaid: i === 4 || i === 9,
+    creditPoints: (i === 4 || i === 9) ? 30 : 5,
+    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
+    unlockFee: 0,
+  }));
+};
+
 export const TasksPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, refreshUser, wallet } = useAuth();
@@ -143,6 +177,17 @@ export const TasksPage: React.FC = () => {
   }));
   const cachedLevels = api.getCachedData<any>('/tasks/levels');
   const [levels, setLevels] = useState<any[]>(cachedLevels?.levels || DEFAULT_FALLBACK_LEVELS);
+
+  // Compute User's ACTUAL CURRENT ELIGIBLE / UNDER PROCESS Level (unlocked and in-progress)
+  const userCurrentLevel = useMemo(() => {
+    return (
+      levels.find((l: any) => l.isUnlocked && !l.isCompleted) ||
+      levels.filter((l: any) => l.isUnlocked).slice(-1)[0] ||
+      levels[0]
+    );
+  }, [levels]);
+  const userCurrentLevelNumber = userCurrentLevel?.levelNumber || 1;
+
   const [activeLevelNumber, setActiveLevelNumber] = useState<number>(() => {
     const paramLevel = parseInt(new URLSearchParams(window.location.search).get('level') || '', 10);
     if (paramLevel >= 1 && paramLevel <= 10) return paramLevel;
@@ -172,6 +217,57 @@ export const TasksPage: React.FC = () => {
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const tasksSectionRef = useRef<HTMLDivElement>(null);
+
+  // 4-second automatic return timer refs and state
+  const autoReturnTimerRef = useRef<any>(null);
+  const countdownIntervalRef = useRef<any>(null);
+  const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
+
+  // Center selected card into the exact horizontal center of the carousel & screen
+  const scrollToSelectedCard = (levelNum: number, behavior: ScrollBehavior = 'smooth') => {
+    const doScroll = () => {
+      const card = document.getElementById(`carousel-card-${levelNum}`);
+      const container = carouselRef.current;
+      if (card && container) {
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const currentScrollLeft = container.scrollLeft;
+        // Exact center alignment calculation
+        const targetScrollLeft =
+          currentScrollLeft +
+          (cardRect.left - containerRect.left) -
+          containerRect.width / 2 +
+          cardRect.width / 2;
+        container.scrollTo({ left: targetScrollLeft, behavior });
+      }
+    };
+
+    doScroll();
+    requestAnimationFrame(doScroll);
+    setTimeout(doScroll, 80);
+    setTimeout(doScroll, 320);
+  };
+
+  // Synchronized level selection through Carousel
+  const handleSelectLevel = (levelNumber: number) => {
+    if (levelNumber < 1 || levelNumber > 10) return;
+    setActiveLevelNumber(levelNumber);
+    setSearchParams({ level: String(levelNumber) });
+    scrollToSelectedCard(levelNumber, 'smooth');
+    setActionError(null);
+  };
+
+  const handlePrevLevel = () => {
+    if (activeLevelNumber > 1) {
+      handleSelectLevel(activeLevelNumber - 1);
+    }
+  };
+
+  const handleNextLevel = () => {
+    if (activeLevelNumber < 10) {
+      handleSelectLevel(activeLevelNumber + 1);
+    }
+  };
 
   // Fetch all 10 levels with user progression
   const fetchLevels = async (keepCurrentSelection = false) => {
@@ -212,40 +308,6 @@ export const TasksPage: React.FC = () => {
   useEffect(() => {
     fetchLevels();
   }, []);
-
-// Helper to generate 10 locked tasks locally without hitting Supabase/backend
-const createLockedTasks = (lvlNum: number, lvlSummary?: any) => {
-  return Array.from({ length: 10 }, (_, i) => ({
-    id: `locked-lvl-${lvlNum}-task-${i + 1}`,
-    taskNumber: i + 1,
-    title: `Task ${i + 1}`,
-    description: `Complete previous level tasks to unlock Level ${lvlNum}.`,
-    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
-    userStatus: 'LOCKED',
-    status: 'LOCKED',
-    isPaid: i === 4 || i === 9,
-    creditPoints: (i === 4 || i === 9) ? 30 : 5,
-    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
-    unlockFee: (i === 4 || i === 9) ? (lvlSummary?.requiredPrepaidAmount || 500) : 0,
-  }));
-};
-
-// Helper to generate 10 completed tasks locally without hitting Supabase/backend
-const createCompletedTasks = (lvlNum: number, lvlSummary?: any) => {
-  return Array.from({ length: 10 }, (_, i) => ({
-    id: `completed-lvl-${lvlNum}-task-${i + 1}`,
-    taskNumber: i + 1,
-    title: `Task ${i + 1}`,
-    description: `Level ${lvlNum} assignment completed.`,
-    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
-    userStatus: 'APPROVED',
-    status: 'APPROVED',
-    isPaid: i === 4 || i === 9,
-    creditPoints: (i === 4 || i === 9) ? 30 : 5,
-    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
-    unlockFee: 0,
-  }));
-};
 
   // Fetch tasks whenever selected level number changes (Zero-Supabase-Load Optimization Strategy)
   useEffect(() => {
@@ -363,62 +425,6 @@ const createCompletedTasks = (lvlNum: number, lvlSummary?: any) => {
     };
   }, [activeLevelNumber, userCurrentLevelNumber]);
 
-  // Compute User's ACTUAL CURRENT ELIGIBLE / UNDER PROCESS Level (unlocked and in-progress)
-  const userCurrentLevel = useMemo(() => {
-    return (
-      levels.find((l: any) => l.isUnlocked && !l.isCompleted) ||
-      levels.filter((l: any) => l.isUnlocked).slice(-1)[0] ||
-      levels[0]
-    );
-  }, [levels]);
-  const userCurrentLevelNumber = userCurrentLevel?.levelNumber || 1;
-
-  // Center selected card into the exact horizontal center of the carousel & screen
-  const scrollToSelectedCard = (levelNum: number, behavior: ScrollBehavior = 'smooth') => {
-    const doScroll = () => {
-      const card = document.getElementById(`carousel-card-${levelNum}`);
-      const container = carouselRef.current;
-      if (card && container) {
-        const containerRect = container.getBoundingClientRect();
-        const cardRect = card.getBoundingClientRect();
-        const currentScrollLeft = container.scrollLeft;
-        // Exact center alignment calculation
-        const targetScrollLeft =
-          currentScrollLeft +
-          (cardRect.left - containerRect.left) -
-          containerRect.width / 2 +
-          cardRect.width / 2;
-        container.scrollTo({ left: targetScrollLeft, behavior });
-      }
-    };
-
-    doScroll();
-    requestAnimationFrame(doScroll);
-    setTimeout(doScroll, 80);
-    setTimeout(doScroll, 320);
-  };
-
-  // Synchronized level selection through Carousel
-  const handleSelectLevel = (levelNumber: number) => {
-    if (levelNumber < 1 || levelNumber > 10) return;
-    setActiveLevelNumber(levelNumber);
-    setSearchParams({ level: String(levelNumber) });
-    scrollToSelectedCard(levelNumber, 'smooth');
-    setActionError(null);
-  };
-
-  const handlePrevLevel = () => {
-    if (activeLevelNumber > 1) {
-      handleSelectLevel(activeLevelNumber - 1);
-    }
-  };
-
-  const handleNextLevel = () => {
-    if (activeLevelNumber < 10) {
-      handleSelectLevel(activeLevelNumber + 1);
-    }
-  };
-
   // Maintain center alignment on window resize and level change
   useEffect(() => {
     if (activeLevelNumber) {
@@ -434,9 +440,6 @@ const createCompletedTasks = (lvlNum: number, lvlSummary?: any) => {
   }, [activeLevelNumber, levels.length]);
 
   // 4-second automatic return timer: if viewing another level, auto-push back to unlocked in-progress level
-  const autoReturnTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (autoReturnTimerRef.current) {
