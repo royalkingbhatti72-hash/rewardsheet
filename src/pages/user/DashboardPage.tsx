@@ -126,13 +126,13 @@ export const DashboardPage: React.FC = () => {
   const availableBalance = currentWallet?.availableBalance ?? (authWallet?.availableBalance || 0);
   const creditPoints = currentWallet?.creditPoints ?? (authWallet?.creditPoints || 0);
 
-  // Withdrawal Eligibility & Level Quota (10% per completed level, 100% on Level 10)
+  // Withdrawal Eligibility & Level Quota (10% of total balance on every level completion)
   const completedLevelsCount =
     data?.withdrawalEligibility?.completedLevelsCount ??
     levelProgress?.completedLevelsCount ??
     (currentLevelNumber > 1 ? currentLevelNumber - 1 : 0);
   const eligibleWithdrawalPercent =
-    data?.withdrawalEligibility?.eligiblePercent ?? Math.min(100, completedLevelsCount * 10);
+    data?.withdrawalEligibility?.eligiblePercent ?? (completedLevelsCount >= 1 ? 10 : 0);
   const maxWithdrawableAmount =
     data?.withdrawalEligibility?.maxWithdrawableAmount ??
     Math.floor((availableBalance * eligibleWithdrawalPercent) / 100);
@@ -565,9 +565,9 @@ export const DashboardPage: React.FC = () => {
             {/* Level Action Footer */}
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-t border-[#173C73]/40">
               <p className="text-[#B7C6E4]">
-                {completedLevelsCount < 10
-                  ? `Complete Level ${currentLevelNumber} to unlock +10% more withdrawal quota (${Math.min(100, (completedLevelsCount + 1) * 10)}% total) and claim the PKR Level Bonus!`
-                  : `All 10 Levels Completed! 100% full account balance withdrawal unlocked!`}
+                {completedLevelsCount === 0
+                  ? `Complete Level ${currentLevelNumber} tasks to unlock 10% account balance withdrawal and claim the PKR Level Reward!`
+                  : `Level ${currentLevelNumber} In Progress • Complete this level to claim the PKR Level Reward and withdraw 10% of your account balance!`}
               </p>
               <Link
                 to="/app/tasks"

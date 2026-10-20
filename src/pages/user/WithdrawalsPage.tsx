@@ -149,11 +149,11 @@ export const WithdrawalsPage: React.FC = () => {
           </span>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="text-xs font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-2.5 py-0.5 rounded-full">
-              Available for Withdrawal: PKR {exactAvailable.toLocaleString()} ({withdrawalQuota ? withdrawalQuota.eligiblePercent : 100}% Quota)
+              Available for Withdrawal: PKR {exactAvailable.toLocaleString()} ({withdrawalQuota ? withdrawalQuota.eligiblePercent : 10}% Quota)
             </span>
           </div>
-          <p className="text-[11px] text-[#A6C4FF] mt-2">
-            💡 Each completed level unlocks an additional 10% withdrawal of your total balance (up to 100% on Level 10). Withdrawals must be requested for the exact available balance.
+          <p className="text-[11px] text-[#A6C4FF] mt-2 leading-relaxed">
+            💡 Completing each level unlocks 10% of your total account balance for withdrawal (e.g. PKR 10 on PKR 100 balance, or PKR 100 on PKR 1,000 balance). Withdrawals must be requested for the exact 10% withdrawable amount.
           </p>
         </div>
         <div className="w-12 h-12 rounded-2xl bg-[#FFD45A]/15 border border-[#FFD45A]/30 flex items-center justify-center text-[#FFD45A] flex-shrink-0">
