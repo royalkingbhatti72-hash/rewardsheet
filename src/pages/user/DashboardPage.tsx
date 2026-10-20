@@ -80,23 +80,39 @@ export const DashboardPage: React.FC = () => {
 
   // Realtime Live Update Listener (Zero Reload Strategy)
   useEffect(() => {
-    const handleLiveEvent = () => {
-      api.invalidateCache('/user/dashboard');
-      api
-        .getDashboard()
-        .then((res: any) => {
-          setData(res);
-          if (res?.wallet) {
-            updateWallet(res.wallet);
-          }
-        })
-        .catch(() => {});
+    const handleLiveEvent = (e: any) => {
+      const type = e.detail?.type;
+      const payload = e.detail?.payload;
+
+      // Targeted direct update for wallet changes without refetching entire dashboard
+      if (type === 'wallet' && payload) {
+        setData((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            wallet: { ...prev.wallet, ...payload },
+          };
+        });
+        updateWallet(payload);
+        return;
+      }
+
+      if (type === 'task' || type === 'command' || type === 'all' || type === 'refresh') {
+        api.invalidateCache('/user/dashboard');
+        api
+          .getDashboard()
+          .then((res: any) => {
+            setData(res);
+            if (res?.wallet) {
+              updateWallet(res.wallet);
+            }
+          })
+          .catch(() => {});
+      }
     };
     window.addEventListener('royal_live_update', handleLiveEvent);
-    window.addEventListener('royal_live_heartbeat', handleLiveEvent);
     return () => {
       window.removeEventListener('royal_live_update', handleLiveEvent);
-      window.removeEventListener('royal_live_heartbeat', handleLiveEvent);
     };
   }, []);
 

@@ -87,8 +87,20 @@ class RealtimeHub {
   }
 
   public broadcast(type: LiveEventType, payload?: any) {
-    // Invalidate browser memory/session caches
-    api.invalidateCache();
+    // Targeted cache invalidation based on event type
+    if (type === 'wallet') {
+      api.invalidateCache('/wallet');
+      api.invalidateCache('/user/dashboard');
+    } else if (type === 'task') {
+      api.invalidateCache('/tasks');
+      api.invalidateCache('/user/dashboard');
+    } else if (type === 'spin') {
+      api.invalidateCache('/spin');
+    } else if (type === 'notification') {
+      api.invalidateCache('/notifications');
+    } else {
+      api.invalidateCache();
+    }
 
     // Fire custom event for any listening page / part to update without reloading
     if (typeof window !== 'undefined') {

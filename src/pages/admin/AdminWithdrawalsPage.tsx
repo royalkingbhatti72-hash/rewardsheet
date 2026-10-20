@@ -7,12 +7,14 @@ import {
   Send,
   X,
   CreditCard,
+  RefreshCw,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AdminWithdrawalsPage: React.FC = () => {
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloading, setReloading] = useState(false);
   const [approvalFilter, setApprovalFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -31,8 +33,12 @@ export const AdminWithdrawalsPage: React.FC = () => {
   const [executing, setExecuting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadWithdrawals = (p = 1) => {
-    setLoading(true);
+  const loadWithdrawals = (p = 1, isManual = false) => {
+    if (isManual) {
+      setReloading(true);
+    } else if (withdrawals.length === 0) {
+      setLoading(true);
+    }
     api.getAdminWithdrawals({
       approvalStatus: approvalFilter || undefined,
       paymentStatus: paymentFilter || undefined,
@@ -45,7 +51,10 @@ export const AdminWithdrawalsPage: React.FC = () => {
         setPage(p);
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setReloading(false);
+      });
   };
 
   useEffect(() => {
@@ -63,9 +72,15 @@ export const AdminWithdrawalsPage: React.FC = () => {
         action,
         reviewNotes: reviewNotes.trim() || undefined,
       });
+      // Update only this withdrawal in state directly
+      const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      setWithdrawals((prev) =>
+        prev.map((w) =>
+          w.id === reviewingReq.id ? { ...w, approvalStatus: newStatus } : w
+        )
+      );
       setMessage({ type: 'success', text: res.message });
       setReviewingReq(null);
-      loadWithdrawals(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Review execution failed' });
     } finally {
@@ -88,9 +103,21 @@ export const AdminWithdrawalsPage: React.FC = () => {
         payoutReference: payoutRef.trim(),
         reviewNotes: payoutNotes.trim() || undefined,
       });
+      // Update only this withdrawal in state directly
+      setWithdrawals((prev) =>
+        prev.map((w) =>
+          w.id === payingReq.id
+            ? {
+                ...w,
+                paymentStatus: 'PAID',
+                payoutReference: payoutRef.trim(),
+                paidAt: new Date().toISOString(),
+              }
+            : w
+        )
+      );
       setMessage({ type: 'success', text: res.message });
       setPayingReq(null);
-      loadWithdrawals(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Payout confirmation failed' });
     } finally {
@@ -148,11 +175,22 @@ export const AdminWithdrawalsPage: React.FC = () => {
             <option value="FAILED">Failed / Refunded</option>
           </select>
         </div>
+
+        <button
+          type="button"
+          onClick={() => loadWithdrawals(page, true)}
+          disabled={reloading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4F2] bg-white hover:bg-[#F8FAFD] text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 shadow-xs"
+          title="Reload withdrawal requests from database"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${reloading ? 'animate-spin' : ''}`} />
+          <span>{reloading ? 'Reloading...' : 'Reload Withdrawals'}</span>
+        </button>
       </div>
 
       {/* Table */}
       <div className="admin-card overflow-hidden">
-        {loading ? (
+        {loading && withdrawals.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading withdrawals...</div>
         ) : withdrawals.length > 0 ? (
           <div className="overflow-x-auto">

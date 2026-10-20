@@ -79,8 +79,10 @@ export const TaskDetailPage: React.FC = () => {
     try {
       const res = await api.unlockTask(taskId);
       setSuccess(res.message);
-      await refreshUser();
-      loadTask();
+      if (res.task) {
+        setTaskData((prev: any) => (prev ? { ...prev, task: { ...prev.task, ...res.task } } : prev));
+      }
+      refreshUser();
     } catch (err: any) {
       setError(err.message || 'Failed to unlock task');
     } finally {
@@ -106,8 +108,19 @@ export const TaskDetailPage: React.FC = () => {
         submissionNotes: 'Review My Task',
       });
       setSuccess(res.message);
-      await refreshUser();
-      loadTask();
+      setTaskData((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          task: {
+            ...prev.task,
+            userStatus: 'PENDING_VERIFICATION',
+            isPaidUnlocked: true,
+          },
+          submissions: res.submission ? [res.submission, ...(prev.submissions || [])] : prev.submissions,
+        };
+      });
+      refreshUser();
     } catch (err: any) {
       setError(err.message || 'Submission failed');
       if (err.remainingNeeded || err.redirectToDeposit) {

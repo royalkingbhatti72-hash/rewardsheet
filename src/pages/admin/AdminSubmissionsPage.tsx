@@ -9,12 +9,14 @@ import {
   X,
   User,
   ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AdminSubmissionsPage: React.FC = () => {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloading, setReloading] = useState(false);
   const [status, setStatus] = useState('PENDING');
   const [level, setLevel] = useState<string>('');
   const [page, setPage] = useState(1);
@@ -28,8 +30,12 @@ export const AdminSubmissionsPage: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadSubmissions = (p = 1) => {
-    setLoading(true);
+  const loadSubmissions = (p = 1, isManual = false) => {
+    if (isManual) {
+      setReloading(true);
+    } else if (submissions.length === 0) {
+      setLoading(true);
+    }
     api.getAdminSubmissions({
       status: status || undefined,
       level: level ? parseInt(level, 10) : undefined,
@@ -42,7 +48,10 @@ export const AdminSubmissionsPage: React.FC = () => {
         setPage(p);
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setReloading(false);
+      });
   };
 
   useEffect(() => {
@@ -134,11 +143,22 @@ export const AdminSubmissionsPage: React.FC = () => {
             ))}
           </select>
         </div>
+
+        <button
+          type="button"
+          onClick={() => loadSubmissions(page, true)}
+          disabled={reloading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4F2] bg-white hover:bg-[#F8FAFD] text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 shadow-xs"
+          title="Reload task submissions from database"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${reloading ? 'animate-spin' : ''}`} />
+          <span>{reloading ? 'Reloading...' : 'Reload Submissions'}</span>
+        </button>
       </div>
 
       {/* Submissions Table */}
       <div className="admin-card overflow-hidden">
-        {loading ? (
+        {loading && submissions.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading submissions...</div>
         ) : submissions.length > 0 ? (
           <div className="overflow-x-auto">

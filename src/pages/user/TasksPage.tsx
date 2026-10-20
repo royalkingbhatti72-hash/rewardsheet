@@ -243,7 +243,29 @@ export const TasksPage: React.FC = () => {
   useEffect(() => {
     const handleLiveEvent = (e: any) => {
       const type = e.detail?.type;
-      if (type === 'task' || type === 'notification' || type === 'wallet' || type === 'command' || type === 'all') {
+      // Do not refetch tasks or levels when unrelated events like wallet occur
+      if (type === 'wallet') return;
+
+      if (type === 'task' || type === 'command' || type === 'all' || type === 'refresh') {
+        const payload = e.detail?.payload;
+        // Targeted local update if payload has taskId
+        if (payload?.taskId && payload?.status) {
+          setCurrentLevelData((prev: any) => {
+            if (!prev || !prev.tasks) return prev;
+            return {
+              ...prev,
+              tasks: prev.tasks.map((t: any) =>
+                t.id === payload.taskId
+                  ? {
+                      ...t,
+                      userStatus: payload.status,
+                      ...(payload.status === 'APPROVED' ? { isPaidUnlocked: true } : {}),
+                    }
+                  : t
+              ),
+            };
+          });
+        }
         api.invalidateCache('/tasks');
         fetchLevels(true);
         if (activeLevelNumber) {
@@ -428,11 +450,20 @@ export const TasksPage: React.FC = () => {
     try {
       const res = await api.unlockTask(taskId);
       setActionSuccess(res.message);
-      await refreshUser();
-      const updated = await api.getLevelTasks(activeLevelNumber);
-      setCurrentLevelData(updated);
-      const resLevels = await api.getLevels();
-      setLevels(resLevels.levels || []);
+      if (res.task) {
+        setCurrentLevelData((prev: any) => {
+          if (!prev || !prev.tasks) return prev;
+          return {
+            ...prev,
+            tasks: prev.tasks.map((t: any) =>
+              t.id === taskId
+                ? { ...t, ...res.task }
+                : t
+            ),
+          };
+        });
+      }
+      refreshUser();
     } catch (err: any) {
       setActionError(err.message || 'Failed to unlock task');
     } finally {

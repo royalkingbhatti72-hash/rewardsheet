@@ -34,8 +34,8 @@ export const AdminSpinPage: React.FC = () => {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadData = () => {
-    setLoading(true);
+  const loadData = (silent = false) => {
+    if (!silent && !spinData) setLoading(true);
     Promise.all([api.getAdminSpin(), api.getAdminUsers({ limit: 100 })])
       .then(([spinRes, usersRes]) => {
         setSpinData(spinRes);
@@ -103,7 +103,7 @@ export const AdminSpinPage: React.FC = () => {
         totalSpins: parseInt(totalSpins, 10) || 1,
       });
       setMessage({ type: 'success', text: res.message });
-      loadData();
+      loadData(true);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Assignment failed' });
     } finally {
@@ -118,7 +118,14 @@ export const AdminSpinPage: React.FC = () => {
     try {
       const res = await api.assignMilestoneSpinPrize(entitlementId, { assignedPrizeId: prizeId });
       setMessage({ type: 'success', text: res.message });
-      loadData();
+      // Update only this milestone locally in memory without full-page re-render
+      setSpinData((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          pendingMilestones: (prev.pendingMilestones || []).filter((m: any) => m.id !== entitlementId),
+        };
+      });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to assign prize' });
     } finally {
@@ -126,7 +133,7 @@ export const AdminSpinPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !spinData) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-4 border-[#2563EB]/20 border-t-[#2563EB] rounded-full animate-spin" />

@@ -121,8 +121,11 @@ export const DepositsPage: React.FC = () => {
       setSuccess(res.message);
       setTrxRef('');
       setEvidence('');
-      await refreshUser();
-      loadData();
+      if (res.deposit) {
+        setDeposits((prev) => [res.deposit, ...prev]);
+      }
+      refreshUser();
+      loadData(true);
     } catch (err: any) {
       setError(err.message || 'Deposit submission failed');
       // If error indicates account is unavailable, offer telegram link

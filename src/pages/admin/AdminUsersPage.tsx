@@ -43,19 +43,33 @@ export const AdminUsersPage: React.FC = () => {
   const [pointsActionType, setPointsActionType] = useState<'ADD' | 'DEDUCT'>('ADD');
   const [pointsReason, setPointsReason] = useState('');
   const [pointsLoading, setPointsLoading] = useState(false);
+  const [reloadingAll, setReloadingAll] = useState(false);
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadUsers = (p = 1) => {
-    setLoading(true);
+  const loadUsers = (p = 1, isManualReload = false) => {
+    if (isManualReload) {
+      setReloadingAll(true);
+    } else if (users.length === 0) {
+      setLoading(true);
+    }
     api.getAdminUsers({ search: search.trim(), status, page: p, limit: 15 })
       .then((res) => {
         setUsers(res.users || []);
         setTotalPages(res.pagination?.totalPages || 1);
         setPage(p);
+        if (isManualReload) {
+          setMessage({ type: 'success', text: 'All user accounts reloaded successfully from database.' });
+        }
       })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .catch((err: any) => {
+        console.error(err);
+        setMessage({ type: 'error', text: err.message || 'Failed to load users' });
+      })
+      .finally(() => {
+        setLoading(false);
+        setReloadingAll(false);
+      });
   };
 
   useEffect(() => {
@@ -214,12 +228,23 @@ export const AdminUsersPage: React.FC = () => {
             <option value="ACTIVE">Active Accounts</option>
             <option value="SUSPENDED">Suspended Accounts</option>
           </select>
+
+          <button
+            type="button"
+            onClick={() => loadUsers(page, true)}
+            disabled={reloadingAll}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2563EB] bg-[#2563EB]/5 hover:bg-[#2563EB]/10 text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap shadow-xs"
+            title="Explicitly fetch all member accounts from database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${reloadingAll ? 'animate-spin' : ''}`} />
+            <span>{reloadingAll ? 'Reloading...' : 'Reload All Users'}</span>
+          </button>
         </div>
       </div>
 
       {/* Users Table */}
       <div className="admin-card overflow-hidden">
-        {loading ? (
+        {loading && users.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading users...</div>
         ) : users.length > 0 ? (
           <div className="overflow-x-auto">

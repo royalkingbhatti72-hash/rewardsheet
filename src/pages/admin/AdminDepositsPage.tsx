@@ -8,12 +8,14 @@ import {
   Filter,
   X,
   ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AdminDepositsPage: React.FC = () => {
   const [deposits, setDeposits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloading, setReloading] = useState(false);
   const [status, setStatus] = useState('PENDING');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -25,8 +27,12 @@ export const AdminDepositsPage: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const loadDeposits = (p = 1) => {
-    setLoading(true);
+  const loadDeposits = (p = 1, isManual = false) => {
+    if (isManual) {
+      setReloading(true);
+    } else if (deposits.length === 0) {
+      setLoading(true);
+    }
     api.getAdminDeposits({ status: status || undefined, page: p, limit: 15 })
       .then((res) => {
         setDeposits(res.deposits || []);
@@ -34,7 +40,10 @@ export const AdminDepositsPage: React.FC = () => {
         setPage(p);
       })
       .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setReloading(false);
+      });
   };
 
   useEffect(() => {
@@ -58,9 +67,13 @@ export const AdminDepositsPage: React.FC = () => {
         action,
         reviewNotes: reviewNotes.trim() || undefined,
       });
+      // Update only this deposit locally in state without full page refetch
+      const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      setDeposits((prev) =>
+        prev.map((d) => (d.id === reviewingDep.id ? { ...d, status: newStatus } : d))
+      );
       setMessage({ type: 'success', text: res.message });
       setReviewingDep(null);
-      loadDeposits(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Deposit review failed' });
     } finally {
@@ -105,11 +118,22 @@ export const AdminDepositsPage: React.FC = () => {
           <option value="APPROVED">Approved Deposits</option>
           <option value="REJECTED">Rejected Deposits</option>
         </select>
+
+        <button
+          type="button"
+          onClick={() => loadDeposits(page, true)}
+          disabled={reloading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4F2] bg-white hover:bg-[#F8FAFD] text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 shadow-xs"
+          title="Reload deposits from database"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${reloading ? 'animate-spin' : ''}`} />
+          <span>{reloading ? 'Reloading...' : 'Reload Deposits'}</span>
+        </button>
       </div>
 
       {/* Deposits Table */}
       <div className="admin-card overflow-hidden">
-        {loading ? (
+        {loading && deposits.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading deposit requests...</div>
         ) : deposits.length > 0 ? (
           <div className="overflow-x-auto">

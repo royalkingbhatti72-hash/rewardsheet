@@ -23,6 +23,7 @@ import { api } from '../../api/client';
 export const UserLayout: React.FC = () => {
   const { user, wallet, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const cachedNotifs = api.getCachedData<any>('/notifications');
   const cachedAnnounce = api.getCachedData<any>('/notifications/announcements');
   const [unreadCount, setUnreadCount] = useState<number>(cachedNotifs?.unreadCount || 0);
@@ -35,12 +36,23 @@ export const UserLayout: React.FC = () => {
 
   const handleRefresh = (path: string) => {
     setRefreshingPath(path);
-    api.invalidateCache();
+    if (path.includes('wallet')) api.invalidateCache('/wallet');
+    else if (path.includes('tasks')) api.invalidateCache('/tasks');
+    else if (path.includes('spin')) api.invalidateCache('/spin');
+    else if (path.includes('withdrawals')) api.invalidateCache('/withdrawals');
+    else api.invalidateCache('/user/dashboard');
+
     if (location.pathname === path) {
-      window.location.reload();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.dispatchEvent(
+        new CustomEvent('royal_live_update', {
+          detail: { type: 'refresh', timestamp: Date.now() },
+        })
+      );
     } else {
-      window.location.href = path;
+      navigate(path);
     }
+    setTimeout(() => setRefreshingPath(null), 400);
   };
 
   const handleBottomNavClick = (path: string, e: React.MouseEvent) => {
@@ -62,7 +74,7 @@ export const UserLayout: React.FC = () => {
   };
 
   useEffect(() => {
-    // Fetch notifications unread count and announcements
+    // Fetch notifications unread count on mount and listen to live events
     api.getNotifications()
       .then((res) => setUnreadCount(res.unreadCount || 0))
       .catch(() => {});
@@ -74,7 +86,17 @@ export const UserLayout: React.FC = () => {
         }
       })
       .catch(() => {});
-  }, [location.pathname]);
+
+    const handleLiveEvent = (e: any) => {
+      if (e.detail?.type === 'notification' || e.detail?.type === 'refresh') {
+        api.getNotifications()
+          .then((res) => setUnreadCount(res.unreadCount || 0))
+          .catch(() => {});
+      }
+    };
+    window.addEventListener('royal_live_update', handleLiveEvent);
+    return () => window.removeEventListener('royal_live_update', handleLiveEvent);
+  }, []);
 
   const navItems = [
     { label: 'Dashboard', path: '/app', icon: Home },

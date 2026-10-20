@@ -49,21 +49,20 @@ export const WalletPage: React.FC = () => {
   useEffect(() => {
     const handleLiveEvent = (e: any) => {
       const type = e.detail?.type;
-      if (type === 'wallet' || type === 'task' || type === 'spin' || type === 'notification' || type === 'command' || type === 'all') {
+      const payload = e.detail?.payload;
+      if (type === 'wallet' && payload) {
+        setWallet((prev: any) => (prev ? { ...prev, ...payload } : prev));
+        updateWallet(payload);
+      }
+      if (type === 'wallet' || type === 'all' || type === 'refresh') {
         api.invalidateCache('/wallet');
         loadData(page);
       }
     };
 
-    const handleHeartbeat = () => {
-      loadData(page);
-    };
-
     window.addEventListener('royal_live_update', handleLiveEvent);
-    window.addEventListener('royal_live_heartbeat', handleHeartbeat);
     return () => {
       window.removeEventListener('royal_live_update', handleLiveEvent);
-      window.removeEventListener('royal_live_heartbeat', handleHeartbeat);
     };
   }, [page]);
 
