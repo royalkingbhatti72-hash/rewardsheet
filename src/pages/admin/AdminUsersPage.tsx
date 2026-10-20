@@ -147,13 +147,6 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">Member Management</h1>
-        <p className="text-xs text-[#6B7280] mt-0.5">
-          View member accounts, reset passwords with audit logging, and perform balance adjustments.
-        </p>
-      </div>
 
       {message && (
         <div

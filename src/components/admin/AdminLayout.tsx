@@ -24,11 +24,83 @@ import {
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 
+const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
+  '/adminpanal/users': {
+    title: 'Member Management',
+    subtitle: 'View member accounts, reset passwords with audit logging, and perform balance adjustments.',
+  },
+  '/adminpanal/dashboard': {
+    title: 'Administrative Overview',
+    subtitle: 'System performance, user metrics, real-time platform activity and summary.',
+  },
+  '/adminpanal/levels': {
+    title: 'Level Management',
+    subtitle: 'Configure tier progression rules, completion rewards, and prerequisite thresholds.',
+  },
+  '/adminpanal/tasks': {
+    title: 'Task Management',
+    subtitle: 'Create, edit, organize tasks and manage task configuration.',
+  },
+  '/adminpanal/submissions': {
+    title: 'Task Verification Desk',
+    subtitle: 'Review proof submissions, verify transactions, and approve member progress.',
+  },
+  '/adminpanal/spin': {
+    title: 'Spin Wheel & Prize Management',
+    subtitle: 'Configure lucky wheel prizes, probabilities, and approve milestone spin wins.',
+  },
+  '/adminpanal/deposits': {
+    title: 'Deposit Management',
+    subtitle: 'Verify inbound account deposits, bank receipts, and credit balances.',
+  },
+  '/adminpanal/withdrawals': {
+    title: 'Withdrawal Management',
+    subtitle: 'Process and disburse withdrawal requests according to level withdrawal quota.',
+  },
+  '/adminpanal/wallets': {
+    title: 'Balance Management Desk',
+    subtitle: 'Manual balance and credit point adjustments with audit logging.',
+  },
+  '/adminpanal/referrals': {
+    title: 'Referral Program Management',
+    subtitle: 'Track affiliate trees, referral earnings, and reward tiers.',
+  },
+  '/adminpanal/transactions': {
+    title: 'Financial Transactions Ledger',
+    subtitle: 'Comprehensive audit trail of all platform financial movements.',
+  },
+  '/adminpanal/announcements': {
+    title: 'Announcement Management',
+    subtitle: 'Publish platform notices, alerts, and system broadcast banners.',
+  },
+  '/adminpanal/reports': {
+    title: 'Financial Reports & Intelligence',
+    subtitle: 'System cash flow analytics, profit and loss, and transaction metrics.',
+  },
+  '/adminpanal/settings': {
+    title: 'Website Settings',
+    subtitle: 'Platform parameters, payment accounts, system rules, and configurations.',
+  },
+  '/adminpanal/activity-logs': {
+    title: 'Administrative Audit Trail',
+    subtitle: 'Tamper-proof record of all admin activities and changes.',
+  },
+};
+
 export const AdminLayout: React.FC = () => {
   const { admin, adminLogout } = useAdminAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const currentPath = location.pathname;
+  const matchedPage = Object.entries(PAGE_TITLES).find(([path]) =>
+    currentPath === path || (path !== '/adminpanal' && currentPath.startsWith(path))
+  );
+  const pageInfo = matchedPage ? matchedPage[1] : {
+    title: 'Earn Sheet Administration',
+    subtitle: 'Light-Mode Control Panel',
+  };
 
   const menuItems = [
     { label: 'Dashboard', path: '/adminpanal/dashboard', icon: LayoutDashboard },
@@ -169,28 +241,28 @@ export const AdminLayout: React.FC = () => {
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-[#D9E4F2] px-4 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
-          <div className="flex items-center gap-3">
+        <header className="h-16 sm:h-18 bg-white border-b border-[#D9E4F2] px-4 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-[#4B5563] hover:bg-[#F8FAFD] rounded-lg border border-[#D9E4F2]"
+              className="lg:hidden p-2 text-[#4B5563] hover:bg-[#F8FAFD] rounded-lg border border-[#D9E4F2] flex-shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div>
-              <span className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider block">
-                Earn Sheet Administration
-              </span>
-              <span className="text-sm font-bold text-[#111827] block">
-                Light-Mode Control Panel
-              </span>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#111827] truncate">
+                {pageInfo.title}
+              </h1>
+              <p className="text-[11px] sm:text-xs text-[#6B7280] truncate max-w-xl hidden sm:block">
+                {pageInfo.subtitle}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-[#F8FAFD] px-3 py-1.5 rounded-lg border border-[#D9E4F2] text-xs">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 bg-[#F8FAFD] px-3 py-1.5 rounded-lg border border-[#D9E4F2] text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-[#111827]">Live Database Synchronized</span>
+              <span className="font-semibold text-[#111827]">Live Synchronized</span>
             </div>
             <Link
               to="/app"
