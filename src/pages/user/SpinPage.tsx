@@ -35,20 +35,20 @@ const DEFAULT_FALLBACK_PRIZES = [
 ];
 
 const getPrizeProductImage = (prize: any) => {
-  if (!prize) return null;
+  if (!prize) return '/images/spin/product-cash-bundle.jpg';
   if (prize.imageUrl) return prize.imageUrl;
   if (prize.image) return prize.image;
 
-  const type = (prize.prizeType || '').toUpperCase();
   const name = (prize.name || '').toLowerCase();
   const label = (prize.displayLabel || '').toLowerCase();
   const icon = (prize.icon || '').toLowerCase();
+  const val = Number(prize.monetaryValue || 0);
 
-  // Real Car
+  // Real Suzuki Alto Car
   if (name.includes('alto') || label.includes('alto') || name.includes('car') || label.includes('car') || icon.includes('car') || label.includes('250')) {
     return '/images/spin/product-car.jpg';
   }
-  // Real iPhone
+  // Real Apple iPhone
   if (name.includes('iphone') || label.includes('iphone') || name.includes('phone') || label.includes('phone') || icon.includes('phone') || icon.includes('mobile')) {
     return '/images/spin/product-smartphone.jpg';
   }
@@ -56,38 +56,35 @@ const getPrizeProductImage = (prize: any) => {
   if (name.includes('watch') || label.includes('watch') || icon.includes('watch') || icon.includes('clock')) {
     return '/images/spin/product-watch.jpg';
   }
-  // Cash jackpot
-  if (type === 'CASH' || name.includes('pkr') || label.includes('pkr') || icon === 'coins') {
-    return '/images/spin/product-cash.svg';
+  // 5,000 Mega Jackpot
+  if (name.includes('5,000') || label.includes('5,000') || name.includes('5000') || label.includes('5000') || label.includes('mega') || name.includes('mega') || val >= 5000) {
+    return '/images/spin/spin-jackpot-treasure.jpg';
   }
-  // Physical gift / general physical product
-  if (type === 'PHYSICAL' || name.includes('gift') || label.includes('gift') || icon.includes('gift')) {
-    return '/images/spin/product-gift.svg';
-  }
-  return null;
+  // Real Cash Bundle (PKR 50, 100, 500, 1,000)
+  return '/images/spin/product-cash-bundle.jpg';
 };
 
 // Enlarged, high-impact font sizes for bold casino excitement
 const getFormattedWheelText = (rawLabel: string) => {
   const label = (rawLabel || '').trim();
-  if (!label) return { line1: '', line2: null, fontSize: '4.0' };
+  if (!label) return { line1: '', line2: null, fontSize: '3.4' };
 
   if (label.includes(' ') && label.length > 5) {
     const words = label.split(' ');
     if (words.length === 2) {
       const maxLen = Math.max(words[0].length, words[1].length);
-      const fs = maxLen > 10 ? '3.0' : maxLen > 7 ? '3.5' : '4.0';
+      const fs = maxLen > 10 ? '2.5' : maxLen > 7 ? '2.9' : '3.3';
       return { line1: words[0], line2: words[1], fontSize: fs };
     }
     const mid = Math.ceil(words.length / 2);
     const line1 = words.slice(0, mid).join(' ');
     const line2 = words.slice(mid).join(' ');
     const maxLen = Math.max(line1.length, line2.length);
-    const fs = maxLen > 10 ? '2.9' : maxLen > 7 ? '3.4' : '3.8';
+    const fs = maxLen > 10 ? '2.4' : maxLen > 7 ? '2.8' : '3.2';
     return { line1, line2, fontSize: fs };
   }
 
-  const fs = label.length > 10 ? '3.3' : label.length > 7 ? '3.8' : '4.4';
+  const fs = label.length > 10 ? '2.7' : label.length > 7 ? '3.1' : '3.6';
   return { line1: label, line2: null, fontSize: fs };
 };
 
@@ -161,7 +158,6 @@ export const SpinPage: React.FC = () => {
   const [rotationDegrees, setRotationDegrees] = useState(0);
   const [wonPrize, setWonPrize] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeLedPhase, setActiveLedPhase] = useState(0);
   const [liveNotice, setLiveNotice] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
@@ -196,14 +192,6 @@ export const SpinPage: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [wonPrize]);
-
-  // Blinking casino rim lights
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveLedPhase((p) => (p + 1) % 2);
-    }, 450);
-    return () => clearInterval(interval);
-  }, []);
 
   const loadSpinStatus = (silent = false) => {
     if (!silent) setIsSyncing(true);
@@ -364,14 +352,56 @@ export const SpinPage: React.FC = () => {
         </div>
       )}
 
-      {/* The 3D Casino Wheel Main Stage (Enlarged with Casino Vibes) */}
+      {/* Embedded High-Performance Zero-CPU Styles for Casino LED Bulbs */}
+      <style>{`
+        @keyframes spinLedEven {
+          0%, 100% {
+            background-color: #FFD45A;
+            box-shadow: 0 0 10px #FFD45A, 0 0 18px #FFD45A;
+          }
+          50% {
+            background-color: #1459E8;
+            box-shadow: 0 0 8px #22D3EE;
+          }
+        }
+        @keyframes spinLedOdd {
+          0%, 100% {
+            background-color: #1459E8;
+            box-shadow: 0 0 8px #22D3EE;
+          }
+          50% {
+            background-color: #FFD45A;
+            box-shadow: 0 0 10px #FFD45A, 0 0 18px #FFD45A;
+          }
+        }
+        .spin-led-bulb-even {
+          animation: spinLedEven 1.1s infinite ease-in-out;
+          will-change: background-color, box-shadow;
+        }
+        .spin-led-bulb-odd {
+          animation: spinLedOdd 1.1s infinite ease-in-out;
+          will-change: background-color, box-shadow;
+        }
+      `}</style>
+
+      {/* The 3D Casino Wheel Main Stage (Optimized Smooth 60fps GPU Compositing) */}
       <div className="relative rounded-3xl p-4 sm:p-10 md:p-12 flex flex-col items-center justify-center bg-gradient-to-b from-[#0B1E48]/80 via-[#04132F] to-[#020B20] border border-[#214B91]/50 shadow-2xl overflow-hidden">
-        {/* Glow backdrop aura */}
-        <div className="absolute w-[450px] h-[450px] bg-[#1459E8]/25 rounded-full blur-3xl pointer-events-none -top-10" />
-        <div className="absolute w-[450px] h-[450px] bg-[#FFD45A]/20 rounded-full blur-3xl pointer-events-none -bottom-10" />
+        {/* Lightweight Zero-CPU Radial Glow Aura (No blur-3xl GPU drain) */}
+        <div
+          className="absolute w-[420px] h-[420px] rounded-full pointer-events-none -top-10"
+          style={{
+            background: 'radial-gradient(circle, rgba(20, 89, 232, 0.22) 0%, rgba(20, 89, 232, 0.08) 45%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute w-[420px] h-[420px] rounded-full pointer-events-none -bottom-10"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 212, 90, 0.18) 0%, rgba(255, 212, 90, 0.05) 45%, transparent 70%)',
+          }}
+        />
 
         {/* Realistic Pointer Needle at Top (Enlarged) */}
-        <div className="relative z-30 -mb-8 sm:-mb-9 flex flex-col items-center">
+        <div className="relative z-30 -mb-8 sm:-mb-9 flex flex-col items-center pointer-events-none">
           <div
             className={`w-14 h-18 sm:w-16 sm:h-22 relative transition-transform duration-100 ${
               isSpinning ? 'rotate-[-4deg] scale-105' : 'rotate-0'
@@ -387,21 +417,19 @@ export const SpinPage: React.FC = () => {
 
         {/* Outer Casino Bezel with 24 Blinking LED Bulbs (Enlarged from 420px to 480px) */}
         <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] md:w-[480px] md:h-[480px] rounded-full p-4 sm:p-5 flex items-center justify-center bg-gradient-to-b from-[#FFE58F] via-[#B8860B] to-[#78590A] shadow-[0_0_60px_rgba(255,212,90,0.45),inset_0_0_25px_rgba(0,0,0,0.85)] border-4 border-[#FFD45A]">
-          {/* LED Bulbs placed circularly */}
+          {/* LED Bulbs placed circularly - Zero JS Timer, 100% GPU CSS */}
           {ledBulbs.map((_, i) => {
             const angle = (i * 360) / ledBulbs.length;
-            const isLightOn = (i + activeLedPhase) % 2 === 0;
+            const isEven = i % 2 === 0;
             return (
               <div
                 key={i}
-                className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-300"
+                className={`absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full ${
+                  isEven ? 'spin-led-bulb-even' : 'spin-led-bulb-odd'
+                }`}
                 style={{
                   top: `calc(50% - 6px + ${48 * Math.sin((angle * Math.PI) / 180)}%)`,
                   left: `calc(50% - 6px + ${48 * Math.cos((angle * Math.PI) / 180)}%)`,
-                  backgroundColor: isLightOn ? '#FFD45A' : '#1459E8',
-                  boxShadow: isLightOn
-                    ? '0 0 12px #FFD45A, 0 0 22px #FFD45A'
-                    : '0 0 10px #22D3EE',
                 }}
               />
             );
@@ -409,130 +437,159 @@ export const SpinPage: React.FC = () => {
 
           {/* Inner Golden Rim Frame */}
           <div className="w-full h-full rounded-full p-2 bg-[#020B20] border-2 border-[#FFE58F]/60 shadow-[inset_0_0_25px_rgba(0,0,0,0.9)] relative flex items-center justify-center overflow-hidden">
-            {/* The Rotating Wheel SVG */}
-            <svg
-              className="w-full h-full rounded-full shadow-2xl transition-transform duration-[4500ms] cubic-bezier(0.12, 0.95, 0.22, 1)"
-              viewBox="0 0 100 100"
-              style={{ transform: `rotate(${rotationDegrees}deg)` }}
+            {/* The Rotating Wheel GPU-Accelerated Wrapper */}
+            <div
+              className="w-full h-full rounded-full relative"
+              style={{
+                transform: `translate3d(0, 0, 0) rotate(${rotationDegrees}deg)`,
+                transition: isSpinning
+                  ? 'transform 4500ms cubic-bezier(0.12, 0.95, 0.22, 1)'
+                  : 'none',
+                willChange: isSpinning ? 'transform' : 'auto',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+              }}
             >
-              <defs>
-                <radialGradient id="royalWheelGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#0B1E48" />
-                  <stop offset="85%" stopColor="#020B20" />
-                  <stop offset="100%" stopColor="#000000" />
-                </radialGradient>
-                <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="0" stdDeviation="0.8" floodColor="#FFD45A" floodOpacity="0.8" />
-                </filter>
-              </defs>
+              <svg
+                className="w-full h-full rounded-full block"
+                viewBox="0 0 100 100"
+              >
+                <defs>
+                  <linearGradient id="barOverlay" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#020B20" stopOpacity="0.45" />
+                    <stop offset="25%" stopColor="#020B20" stopOpacity="0.08" />
+                    <stop offset="70%" stopColor="#020B20" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#020B20" stopOpacity="0.92" />
+                  </linearGradient>
 
-              {prizes.map((p: any, idx: number) => {
-                const startAngle = idx * segmentAngle;
-                const endAngle = (idx + 1) * segmentAngle;
-                const x1 = 50 + 50 * Math.cos((Math.PI * (startAngle - 90)) / 180);
-                const y1 = 50 + 50 * Math.sin((Math.PI * (startAngle - 90)) / 180);
-                const x2 = 50 + 50 * Math.cos((Math.PI * (endAngle - 90)) / 180);
-                const y2 = 50 + 50 * Math.sin((Math.PI * (endAngle - 90)) / 180);
-                const pathData = `M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`;
+                  {prizes.map((p: any, idx: number) => {
+                    const startAngle = idx * segmentAngle;
+                    const endAngle = (idx + 1) * segmentAngle;
+                    const x1 = 50 + 50 * Math.cos((Math.PI * (startAngle - 90)) / 180);
+                    const y1 = 50 + 50 * Math.sin((Math.PI * (startAngle - 90)) / 180);
+                    const x2 = 50 + 50 * Math.cos((Math.PI * (endAngle - 90)) / 180);
+                    const y2 = 50 + 50 * Math.sin((Math.PI * (endAngle - 90)) / 180);
+                    const pathData = `M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`;
+                    return (
+                      <clipPath key={`clip-${p.id || idx}`} id={`wedge-clip-${p.id || idx}`}>
+                        <path d={pathData} />
+                      </clipPath>
+                    );
+                  })}
+                </defs>
 
-                // Mid angle for text label and icon placement
-                const midAngle = startAngle + segmentAngle / 2;
-                const rad = (Math.PI * (midAngle - 90)) / 180;
+                {prizes.map((p: any, idx: number) => {
+                  const startAngle = idx * segmentAngle;
+                  const endAngle = (idx + 1) * segmentAngle;
+                  const x1 = 50 + 50 * Math.cos((Math.PI * (startAngle - 90)) / 180);
+                  const y1 = 50 + 50 * Math.sin((Math.PI * (startAngle - 90)) / 180);
+                  const x2 = 50 + 50 * Math.cos((Math.PI * (endAngle - 90)) / 180);
+                  const y2 = 50 + 50 * Math.sin((Math.PI * (endAngle - 90)) / 180);
+                  const pathData = `M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`;
 
-                // Center of text label placed at r=36.5 (wide outer region)
-                const tx = 50 + 36.5 * Math.cos(rad);
-                const ty = 50 + 36.5 * Math.sin(rad);
+                  const midAngle = startAngle + segmentAngle / 2;
+                  const productImg = getPrizeProductImage(p);
+                  const wheelText = getFormattedWheelText(p.displayLabel || p.name);
 
-                // Picture of product placed at r=22 (enlarged for prominent visual vibe)
-                const ix = 50 + 22 * Math.cos(rad);
-                const iy = 50 + 22 * Math.sin(rad);
-                const productImg = getPrizeProductImage(p);
+                  return (
+                    <g key={p.id || idx}>
+                      {/* The Prize Bar with Image Background clipped to sector */}
+                      <g clipPath={`url(#wedge-clip-${p.id || idx})`}>
+                        {/* Deep dark backing */}
+                        <path d={pathData} fill="#04132F" />
 
-                // Segment color schemes
-                const segmentStyles = [
-                  { fill: '#1459E8', text: '#FFFFFF' },
-                  { fill: '#792BFF', text: '#FFFFFF' },
-                  { fill: '#059669', text: '#FFFFFF' },
-                  { fill: '#DC2626', text: '#FFFFFF' },
-                  { fill: '#0284C7', text: '#FFFFFF' },
-                  { fill: '#D97706', text: '#020B20' },
-                  { fill: '#4F46E5', text: '#FFFFFF' },
-                  { fill: '#EAB308', text: '#020B20' },
-                ];
-                const currentStyle = segmentStyles[idx % segmentStyles.length];
-                const wheelText = getFormattedWheelText(p.displayLabel || p.name);
+                        {/* Rotated along the sector's radial axis */}
+                        <g transform={`rotate(${midAngle}, 50, 50)`}>
+                          {/* Real Product/Reward Image filling the bar */}
+                          <image
+                            href={productImg}
+                            xlinkHref={productImg}
+                            x="20"
+                            y="0"
+                            width="60"
+                            height="52"
+                            preserveAspectRatio="xMidYMid slice"
+                          />
 
-                return (
-                  <g key={p.id || idx}>
-                    <path
-                      d={pathData}
-                      fill={p.color || currentStyle.fill}
-                      stroke="#FFD45A"
-                      strokeWidth="0.8"
-                    />
+                          {/* High-definition contrast gradient overlay */}
+                          <rect
+                            x="18"
+                            y="0"
+                            width="64"
+                            height="52"
+                            fill="url(#barOverlay)"
+                          />
 
-                    {/* Luxury Product Prize Medallion with Real Photorealistic Image */}
-                    {productImg && (
-                      <g transform={`rotate(${midAngle}, ${ix}, ${iy})`}>
-                        <defs>
-                          <clipPath id={`prize-clip-${p.id || idx}`}>
-                            <circle cx={ix} cy={iy} r="5.6" />
-                          </clipPath>
-                        </defs>
-                        {/* Golden Medallion Ring */}
-                        <circle
-                          cx={ix}
-                          cy={iy}
-                          r="6"
-                          fill="#FFD45A"
-                          stroke="#020B20"
-                          strokeWidth="0.4"
-                          style={{ filter: 'drop-shadow(0px 1.5px 3px rgba(0,0,0,0.9))' }}
-                        />
-                        <circle
-                          cx={ix}
-                          cy={iy}
-                          r="5.6"
-                          fill="#020B20"
-                        />
-                        <image
-                          href={productImg}
-                          xlinkHref={productImg}
-                          x={ix - 5.6}
-                          y={iy - 5.6}
-                          width="11.2"
-                          height="11.2"
-                          clipPath={`url(#prize-clip-${p.id || idx})`}
-                          preserveAspectRatio="xMidYMid slice"
-                        />
+                          {/* Medallion Ring framing the product image */}
+                          <circle
+                            cx="50"
+                            cy="28"
+                            r="6.5"
+                            fill="none"
+                            stroke="#FFD45A"
+                            strokeWidth="0.5"
+                            opacity="0.8"
+                          />
+
+                          {/* Reward Bar Capsule where the reward is written */}
+                          <rect
+                            x="32.5"
+                            y="5.5"
+                            width="35"
+                            height="11"
+                            rx="5.5"
+                            fill="rgba(2, 11, 32, 0.92)"
+                            stroke="#FFD45A"
+                            strokeWidth="0.65"
+                          />
+                          <circle cx="35" cy="11" r="0.9" fill="#FFD45A" />
+                          <circle cx="65" cy="11" r="0.9" fill="#FFD45A" />
+
+                          {/* Bold, Crisp Reward Text (Zero CPU filter, hardware accelerated stroke) */}
+                          <text
+                            x="50"
+                            y={wheelText.line2 ? '9.3' : '11.2'}
+                            fill="#FFFFFF"
+                            fontSize={wheelText.fontSize}
+                            fontWeight="900"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            stroke="#020B20"
+                            strokeWidth="0.35"
+                            paintOrder="stroke fill"
+                          >
+                            {wheelText.line2 ? (
+                              <>
+                                <tspan x="50" dy="0">{wheelText.line1}</tspan>
+                                <tspan x="50" dy="3.4" fill="#FFD45A">{wheelText.line2}</tspan>
+                              </>
+                            ) : (
+                              wheelText.line1
+                            )}
+                          </text>
+                        </g>
                       </g>
-                    )}
 
-                    {/* Enlarged, Bold Wheel Prize Display Text */}
-                    <text
-                      x={tx}
-                      y={ty}
-                      fill={currentStyle.text}
-                      fontSize={wheelText.fontSize}
-                      fontWeight="900"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.95))"
-                      transform={`rotate(${midAngle}, ${tx}, ${ty})`}
-                    >
-                      {wheelText.line2 ? (
-                        <>
-                          <tspan x={tx} dy="-1.5">{wheelText.line1}</tspan>
-                          <tspan x={tx} dy="3.5">{wheelText.line2}</tspan>
-                        </>
-                      ) : (
-                        wheelText.line1
-                      )}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+                      {/* Gold Spoke Border Dividers */}
+                      <line
+                        x1="50"
+                        y1="50"
+                        x2={x1}
+                        y2={y1}
+                        stroke="#FFE58F"
+                        strokeWidth="0.85"
+                      />
+                      <path
+                        d={pathData}
+                        fill="none"
+                        stroke="#FFD45A"
+                        strokeWidth="0.6"
+                      />
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
 
             {/* 3D Realistic Gold Center Medallion (Enlarged) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
