@@ -10,8 +10,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Lock,
-  Volume2,
-  VolumeX,
   ArrowRight,
   RefreshCw,
   ChevronRight,
@@ -93,38 +91,59 @@ const getFormattedWheelText = (rawLabel: string) => {
   return { line1: label, line2: null, fontSize: fs };
 };
 
+// Shared AudioContext singleton for mobile and desktop audio
+let sharedAudioCtx: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
+  if (!sharedAudioCtx) {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioCtx) {
+      sharedAudioCtx = new AudioCtx();
+    }
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+};
+
 // Synthesize pleasant casino audio clicks using Web Audio API
 const playTick = () => {
   try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(650, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.04);
-    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.04);
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.start();
+    osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.05);
   } catch (_) {}
 };
 
 const playFanfare = () => {
   try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const chords = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
     chords.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + idx * 0.12);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.12);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.5);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -142,7 +161,6 @@ export const SpinPage: React.FC = () => {
   const [rotationDegrees, setRotationDegrees] = useState(0);
   const [wonPrize, setWonPrize] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeLedPhase, setActiveLedPhase] = useState(0);
   const [liveNotice, setLiveNotice] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -150,6 +168,24 @@ export const SpinPage: React.FC = () => {
 
   // Prevent background scrolling when rules modal or won prize popup is open
   useBodyScrollLock(showRulesModal || !!wonPrize);
+
+  // Auto-unlock audio on first touch/click (essential for mobile phone browsers)
+  useEffect(() => {
+    const unlockAudio = () => {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    };
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    };
+  }, []);
 
   // Auto-close congratulation popup after 7 seconds without showing timing
   useEffect(() => {
@@ -210,6 +246,12 @@ export const SpinPage: React.FC = () => {
   const handleSpin = async () => {
     if (isSpinning || !spinData?.isEligible || spinData?.remainingSpins <= 0) return;
 
+    // Immediately unlock and resume audio on user tap (critical for mobile phones)
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
     setError(null);
     setWonPrize(null);
     setIsSpinning(true);
@@ -226,24 +268,21 @@ export const SpinPage: React.FC = () => {
 
       setRotationDegrees((prev) => prev + targetAngle);
 
-      // Sound ticks during deceleration
-      if (soundEnabled) {
-        let tickCount = 0;
-        const tickInterval = setInterval(() => {
-          tickCount++;
-          playTick();
-          if (tickCount > 28) clearInterval(tickInterval);
-        }, 120);
-      }
+      // Sound ticks during deceleration (always on)
+      let tickCount = 0;
+      const tickInterval = setInterval(() => {
+        tickCount++;
+        playTick();
+        if (tickCount > 28) clearInterval(tickInterval);
+      }, 120);
 
       // 4.5 seconds for wheel deceleration
       setTimeout(async () => {
         setIsSpinning(false);
         setWonPrize(res.prize);
 
-        if (soundEnabled) {
-          playFanfare();
-        }
+        // Fanfare audio (always on)
+        playFanfare();
 
         confetti({
           particleCount: 130,
@@ -298,40 +337,6 @@ export const SpinPage: React.FC = () => {
           <span className="font-bold">{liveNotice}</span>
         </div>
       )}
-
-      {/* Clean Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2.5">
-            <span>Daily Fortune Wheel</span>
-            <Crown className="w-6 h-6 text-[#FFD45A]" />
-          </h1>
-          <p className="text-xs text-slate-400">Spin the wheel to win verified instant rewards & bumper gifts</p>
-        </div>
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 transition-colors cursor-pointer"
-          >
-            {soundEnabled ? (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-[#FFD45A]" />
-                <span>Sound ON</span>
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-                <span>Sound OFF</span>
-              </>
-            )}
-          </button>
-          <div className="px-4 py-2 bg-[#FFD45A]/15 border border-[#FFD45A]/40 rounded-xl text-xs font-bold text-[#FFD45A] flex items-center gap-1.5">
-            <span>Available Spins: </span>
-            <strong className="text-base text-white ml-0.5">{remainingSpins}</strong>
-            {isSyncing && <RefreshCw className="w-3 h-3 text-[#FFD45A] animate-spin ml-1" />}
-          </div>
-        </div>
-      </div>
 
       {/* Milestone Spin Under Review Banner */}
       {pendingMilestone && (
