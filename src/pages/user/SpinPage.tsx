@@ -17,6 +17,7 @@ import {
   ChevronRight,
   X,
   Info,
+  ShieldCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
@@ -298,18 +299,9 @@ export const SpinPage: React.FC = () => {
           <p className="text-xs text-slate-400">Spin the wheel to win verified instant rewards & bumper gifts</p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Touch function button for Rules */}
-          <button
-            onClick={() => setShowRulesModal(true)}
-            className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FFD45A]/20 via-[#FFD45A]/10 to-[#FFD45A]/20 hover:from-[#FFD45A]/30 hover:to-[#FFD45A]/30 border border-[#FFD45A]/60 text-[#FFD45A] transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            <Info className="w-4 h-4 text-[#FFD45A]" />
-            <span>Prize Rules (Touch Karein)</span>
-          </button>
-
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             {soundEnabled ? (
               <>
@@ -328,36 +320,6 @@ export const SpinPage: React.FC = () => {
             <strong className="text-base text-white ml-0.5">{remainingSpins}</strong>
             {isSyncing && <RefreshCw className="w-3 h-3 text-[#FFD45A] animate-spin ml-1" />}
           </div>
-        </div>
-      </div>
-
-      {/* Prominent Interactive Touch Banner explaining Level 10 & Cash rules */}
-      <div
-        onClick={() => setShowRulesModal(true)}
-        className="w-full cursor-pointer group bg-gradient-to-r from-[#FFD45A]/15 via-[#0B2248] to-[#1264F5]/25 hover:from-[#FFD45A]/25 hover:to-[#1264F5]/35 border-2 border-[#FFD45A]/70 hover:border-[#FFD45A] rounded-2xl p-4 transition-all duration-200 shadow-xl hover:shadow-[#FFD45A]/20 flex items-center justify-between gap-4 text-left"
-      >
-        <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFD45A] to-amber-500 text-slate-950 flex items-center justify-center font-black flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-            🎁
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#FFD45A] bg-[#FFD45A]/20 border border-[#FFD45A]/40 px-2 py-0.5 rounded-md">
-                Prize Rules & Delivery Policy (Touch / Tap Here)
-              </span>
-              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                Tap to view details
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-200 font-medium">
-              Watch, Car aur Mobile <strong className="text-[#FFD45A] font-bold">Level 10</strong> ke baad milenge • Cash rewards <strong className="text-emerald-400 font-bold">sath sath</strong> wallet mein add honge!
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 text-[#FFD45A] text-xs font-bold flex-shrink-0 pl-2">
-          <span className="hidden sm:inline">Read Policy</span>
-          <ChevronRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
         </div>
       </div>
 
@@ -624,55 +586,16 @@ export const SpinPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Rules & Information Cards - Clickable touch to open Modal */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div
+      {/* Terms & Conditions / Rules Footer Trigger (Below rewards products) */}
+      <div className="pt-2 pb-6 flex justify-center">
+        <button
           onClick={() => setShowRulesModal(true)}
-          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#FFD45A]/15 via-[#0B2248] to-[#1459E8]/20 hover:from-[#FFD45A]/25 hover:to-[#1459E8]/30 border border-[#FFD45A]/50 text-[#FFD45A] transition-all shadow-lg active:scale-95 cursor-pointer group backdrop-blur-md"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white font-bold text-sm">
-              <Coins className="w-4 h-4 text-[#FFD45A]" />
-              <span>Instant Cash Rewards</span>
-            </div>
-            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Tamam cash amounts (PKR 50 se 5,000) spin jeetne ke foran baad <strong className="text-emerald-400">sath sath wallet mein add</strong> kar diye jaate hain.
-          </p>
-        </div>
-
-        <div
-          onClick={() => setShowRulesModal(true)}
-          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white font-bold text-sm">
-              <Gift className="w-4 h-4 text-[#22D3EE]" />
-              <span>Luxury Bumper Prizes</span>
-            </div>
-            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Suzuki Alto Car, iPhone 15 Pro, aur Expensive Watch jaise physical inaamat <strong className="text-[#FFD45A]">Level 10 complete</strong> karne par milenge.
-          </p>
-        </div>
-
-        <div
-          onClick={() => setShowRulesModal(true)}
-          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-white font-bold text-sm">
-              <Trophy className="w-4 h-4 text-[#10D6A0]" />
-              <span>Level & Referral Spins</span>
-            </div>
-            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Har level mukammal karne par spin milta hai. Azafi spin ke liye 24 ghante ke andar 3 friends ko invite karein.
-          </p>
-        </div>
+          <Info className="w-4 h-4 text-[#FFD45A] group-hover:rotate-12 transition-transform" />
+          <span>Terms & Conditions / Prize Rules (Touch Karein)</span>
+          <ChevronRight className="w-4 h-4 text-[#FFD45A]/70 group-hover:translate-x-1 transition-transform" />
+        </button>
       </div>
 
       {/* Recent Won Prizes History */}
@@ -704,7 +627,7 @@ export const SpinPage: React.FC = () => {
         </div>
       )}
 
-      {/* Interactive Rules & Distribution Modal (Touch / Tap Popup) */}
+      {/* Interactive Terms & Conditions Modal (Touch / Tap Popup) */}
       {showRulesModal && (
         <div
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto overscroll-contain"
@@ -723,8 +646,8 @@ export const SpinPage: React.FC = () => {
                   <Crown className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">Spin Wheel Prize & Delivery Rules</h3>
-                  <p className="text-[11px] text-slate-300">Inaamat hasil karne ke zaroori qawaneen</p>
+                  <h3 className="text-lg font-black text-white">Terms & Conditions & Prize Rules</h3>
+                  <p className="text-[11px] text-slate-300">Qawaneen, inaamat delivery & policy details</p>
                 </div>
               </div>
               <button
@@ -740,10 +663,10 @@ export const SpinPage: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
                 <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
                   <Coins className="w-4 h-4 flex-shrink-0" />
-                  <span>Cash Rewards (Sath Sath Add Honge)</span>
+                  <span>Instant Cash Rewards (Sath Sath Add Honge)</span>
                 </div>
                 <p className="text-slate-200 leading-relaxed pl-6">
-                  Wheel se jeete gaye tamam cash inaamat (<strong>PKR 50, PKR 100, PKR 500, PKR 1,000, PKR 5,000</strong>) spin mukammal hone ke foran baad <strong>sath sath aap ke account wallet balance mein add</strong> kar diye jaate hain aur foran balance mein show ho jaate hain.
+                  Wheel se jeete gaye tamam cash amounts (<strong>PKR 50, PKR 100, PKR 500, PKR 1,000, PKR 5,000</strong>) spin mukammal hone ke foran baad <strong>sath sath aap ke account wallet balance mein add</strong> kar diye jaate hain aur foran balance mein show ho jaate hain.
                 </p>
               </div>
 
@@ -751,7 +674,7 @@ export const SpinPage: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-[#FFD45A]/15 border border-[#FFD45A]/50 space-y-1">
                 <div className="flex items-center gap-2 text-[#FFD45A] font-bold text-sm">
                   <Gift className="w-4 h-4 flex-shrink-0" />
-                  <span>Car, Mobile, Watch (Level 10 Ke Baad Milenge)</span>
+                  <span>Luxury Bumper Physical Prizes: Car, Mobile, Watch (Level 10 Ke Baad)</span>
                 </div>
                 <p className="text-slate-200 leading-relaxed pl-6">
                   Tamam physical bumper gifts jaise <strong>Suzuki Alto Car, iPhone 15 Pro, aur Expensive Luxury Watch</strong> client ko <strong className="text-[#FFD45A] underline">Level 10 mukammal (complete) karne ke baad</strong> deliver kiye jayenge. Company VIP courier ke zariye aap ke address par bhejegi.
@@ -762,10 +685,21 @@ export const SpinPage: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-[#1459E8]/15 border border-[#1459E8]/40 space-y-1">
                 <div className="flex items-center gap-2 text-[#22D3EE] font-bold text-sm">
                   <Trophy className="w-4 h-4 flex-shrink-0" />
-                  <span>Daily Spin Hasil Karne Ka Qanoon</span>
+                  <span>Daily Spin & Referral Policy</span>
                 </div>
                 <p className="text-slate-300 leading-relaxed pl-6">
-                  Har level mukammal karne par <strong>1 Free Spin</strong> milta hai. Azafi spins ke liye 24 ghante ke andar 3 friends ko apne referral code se register karwayen.
+                  Har level mukammal karne par <strong>1 Free Spin</strong> milta hai. Azafi spins ke liye 24 ghante ke andar 3 friends ko apne referral code se register karwayen. Task milestones par free spins live unlock hote hain.
+                </p>
+              </div>
+
+              {/* Rule 4: Fair Play & Verification */}
+              <div className="p-3.5 rounded-2xl bg-[#0B2248] border border-[#214B91]/70 space-y-1">
+                <div className="flex items-center gap-2 text-slate-200 font-bold text-sm">
+                  <ShieldCheck className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
+                  <span>Fair Play & Verification Rules</span>
+                </div>
+                <p className="text-slate-300 leading-relaxed pl-6">
+                  Ek user ka ek hi verified account allowed hai. Multi-accounting ya system manipulation sakht mana hai. Tamam prizes automated audit trail mein verified hote hain.
                 </p>
               </div>
             </div>
