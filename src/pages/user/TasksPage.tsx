@@ -534,8 +534,10 @@ export const TasksPage: React.FC = () => {
     ? !selectedLevelSummary.isUnlocked
     : !isLevelUnlocked;
   const isSelectedLevelCompleted =
-    selectedLevelSummary?.isCompleted ||
-    (tasks.length === 10 && tasks.every((t: any) => t.userStatus === 'APPROVED'));
+    Boolean(selectedLevelSummary?.isCompleted) ||
+    (selectedLevelSummary?.approvedTaskCount ?? 0) >= 10 ||
+    (tasks.length === 10 && tasks.every((t: any) => t.userStatus === 'APPROVED' || t.status === 'APPROVED')) ||
+    (tasks.filter((t: any) => t.userStatus === 'APPROVED' || t.status === 'APPROVED').length >= 10);
 
   // Prerequisite level information for locked levels
   const previousLevelSummary =
@@ -1126,20 +1128,22 @@ export const TasksPage: React.FC = () => {
         </section>
       )}
 
-      {/* Motivational Milestone Notification */}
-      <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1459E8]/20 via-[#081F48] to-[#FFD45A]/15 border border-[#FFD45A]/50 shadow-xl backdrop-blur-md space-y-2">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#FFD45A]" />
-          <h4 className="text-xs sm:text-sm font-black text-white">
-            Level {activeLevelNumber} Milestone Notice
-          </h4>
-        </div>
-        <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-          {activeLevelNumber === 10
-            ? 'Level 10 complete karein! 1000 credit points mukammal karein aur apna big withdraw hasil karein!'
-            : `Level ${activeLevelNumber} complete karein! Jald baqi ${Math.max(0, 10 - activeLevelNumber)} levels complete karein, 1000 credit points collect karein aur big withdraw hasil karein!`}
-        </p>
-      </section>
+      {/* Motivational Milestone Notification (Only show if level tasks are not all completed) */}
+      {!isSelectedLevelCompleted && approvedTaskCount < 10 && (
+        <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1459E8]/20 via-[#081F48] to-[#FFD45A]/15 border border-[#FFD45A]/50 shadow-xl backdrop-blur-md space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#FFD45A]" />
+            <h4 className="text-xs sm:text-sm font-black text-white">
+              Level {activeLevelNumber} Milestone Notice
+            </h4>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+            {activeLevelNumber === 10
+              ? 'Level 10 complete karein! 1000 credit points mukammal karein aur apna big withdraw hasil karein!'
+              : `Level ${activeLevelNumber} complete karein! Jald baqi ${Math.max(0, 10 - activeLevelNumber)} levels complete karein, 1000 credit points collect karein aur big withdraw hasil karein!`}
+          </p>
+        </section>
+      )}
 
       {/* ========================================================
           TEMPORARY POPUP: PREPAID TASK BALANCE & REQUIREMENT MODAL
