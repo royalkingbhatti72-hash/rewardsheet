@@ -315,6 +315,8 @@ export const api = {
     request(`/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify(payload) }, true),
   adjustUserBalance: (userId: string, payload: any) =>
     request(`/admin/users/${userId}/adjust-balance`, { method: 'POST', body: JSON.stringify(payload) }, true),
+  adjustUserCreditPoints: (userId: string, payload: { points: number; actionType: 'ADD' | 'DEDUCT'; reason: string; notes?: string }) =>
+    request(`/admin/users/${userId}/adjust-credit-points`, { method: 'POST', body: JSON.stringify(payload) }, true),
 
   // Admin Levels & Tasks
   getAdminLevels: () => request('/admin/levels', {}, true),

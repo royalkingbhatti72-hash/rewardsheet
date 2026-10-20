@@ -11,6 +11,7 @@ import {
   AlertCircle,
   X,
   Filter,
+  Sparkles,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -33,6 +34,13 @@ export const AdminUsersPage: React.FC = () => {
   const [adjustType, setAdjustType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
   const [adjustReason, setAdjustReason] = useState('');
   const [adjustLoading, setAdjustLoading] = useState(false);
+
+  // Credit Points Adjustment Modal state
+  const [pointsModalUser, setPointsModalUser] = useState<any | null>(null);
+  const [adjustPoints, setAdjustPoints] = useState<string>('');
+  const [pointsActionType, setPointsActionType] = useState<'ADD' | 'DEDUCT'>('ADD');
+  const [pointsReason, setPointsReason] = useState('');
+  const [pointsLoading, setPointsLoading] = useState(false);
 
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -112,6 +120,31 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
+  const handleAdjustPoints = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pointsModalUser) return;
+    const numPoints = parseInt(adjustPoints, 10);
+    if (isNaN(numPoints) || numPoints <= 0) {
+      setMessage({ type: 'error', text: 'Enter a valid positive number of credit points' });
+      return;
+    }
+    setPointsLoading(true);
+    try {
+      const res = await api.adjustUserCreditPoints(pointsModalUser.id, {
+        points: numPoints,
+        actionType: pointsActionType,
+        reason: pointsReason,
+      });
+      setMessage({ type: 'success', text: res.message });
+      setPointsModalUser(null);
+      loadUsers(page);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Credit points adjustment failed' });
+    } finally {
+      setPointsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -184,6 +217,7 @@ export const AdminUsersPage: React.FC = () => {
                   <th>Phone</th>
                   <th>Referral Code</th>
                   <th>Approved Tasks</th>
+                  <th>Credit Points</th>
                   <th>Wallet Balance</th>
                   <th>Status</th>
                   <th className="text-right">Actions</th>
@@ -210,6 +244,12 @@ export const AdminUsersPage: React.FC = () => {
                         {u.approvedTasksCount} / 100
                       </span>
                     </td>
+                    <td>
+                      <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded text-[11px] inline-flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        {u.creditPoints ?? 0} CPs
+                      </span>
+                    </td>
                     <td className="font-bold text-[#111827]">
                       PKR {u.walletBalance.toLocaleString()}
                     </td>
@@ -233,6 +273,18 @@ export const AdminUsersPage: React.FC = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
+                        <button
+                          onClick={() => {
+                            setAdjustPoints('');
+                            setPointsReason('');
+                            setPointsActionType('ADD');
+                            setPointsModalUser(u);
+                          }}
+                          className="p-1.5 rounded-md hover:bg-amber-50 text-[#4B5563] hover:text-amber-600"
+                          title="Add / Decrease Credit Points"
+                        >
+                          <Sparkles className="w-4 h-4 text-amber-600" />
+                        </button>
                         <button
                           onClick={() => {
                             setAdjustAmount('');
@@ -458,6 +510,110 @@ export const AdminUsersPage: React.FC = () => {
                   className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8]"
                 >
                   {adjustLoading ? 'Executing...' : 'Confirm Balance Adjustment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Credit Points Adjustment Modal */}
+      {pointsModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="admin-card p-6 w-full max-w-md bg-white space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D9E4F2]">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600" /> Adjust Credit Points: {pointsModalUser.name}
+              </h2>
+              <button onClick={() => setPointsModalUser(null)} className="p-1 text-[#6B7280]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-lg text-xs flex justify-between items-center">
+              <span className="text-amber-900 font-medium">Current Credit Points Balance:</span>
+              <strong className="text-amber-800 font-black text-sm flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                {(pointsModalUser.creditPoints ?? 0).toLocaleString()} CPs
+              </strong>
+            </div>
+
+            <form onSubmit={handleAdjustPoints} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Action Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPointsActionType('ADD')}
+                    className={`py-2 rounded-lg font-bold border text-xs flex items-center justify-center gap-1.5 ${
+                      pointsActionType === 'ADD'
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                        : 'border-[#D9E4F2] text-[#4B5563]'
+                    }`}
+                  >
+                    + Add Points (Reward)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPointsActionType('DEDUCT')}
+                    className={`py-2 rounded-lg font-bold border text-xs flex items-center justify-center gap-1.5 ${
+                      pointsActionType === 'DEDUCT'
+                        ? 'bg-red-50 border-red-300 text-red-800'
+                        : 'border-[#D9E4F2] text-[#4B5563]'
+                    }`}
+                  >
+                    - Deduct Points (Decrease)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Credit Points Amount (CPs) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="1"
+                  placeholder="Enter CPs (e.g. 5, 10, 30, 50)"
+                  value={adjustPoints}
+                  onChange={(e) => setAdjustPoints(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-bold text-sm text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Audit Logging Reason (Strictly Required) *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Enter reason (e.g. Task reward manual correction, bonus reward points)"
+                  value={pointsReason}
+                  onChange={(e) => setPointsReason(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPointsModalUser(null)}
+                  className="px-4 py-2 border border-[#D9E4F2] rounded-lg text-[#4B5563] font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pointsLoading}
+                  className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {pointsLoading ? 'Updating CPs...' : 'Confirm Points Adjustment'}
                 </button>
               </div>
             </form>

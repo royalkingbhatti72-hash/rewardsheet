@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   Disc,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -84,11 +85,21 @@ export const AdminUserDetailPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-3 bg-[#F8FAFD] border border-[#D9E4F2] rounded-lg text-right">
-            <span className="text-[10px] text-[#6B7280] block font-semibold uppercase">Wallet Balance</span>
-            <span className="text-lg font-black text-[#111827]">
-              PKR {(userData.wallet?.availableBalance || 0).toLocaleString()}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-lg text-right">
+              <span className="text-[10px] text-amber-800 block font-semibold uppercase">Credit Points</span>
+              <span className="text-lg font-black text-amber-700 flex items-center justify-end gap-1">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                {(userData.wallet?.creditPoints || 0).toLocaleString()} CPs
+              </span>
+            </div>
+
+            <div className="p-3 bg-[#F8FAFD] border border-[#D9E4F2] rounded-lg text-right">
+              <span className="text-[10px] text-[#6B7280] block font-semibold uppercase">Wallet Balance</span>
+              <span className="text-lg font-black text-[#111827]">
+                PKR {(userData.wallet?.availableBalance || 0).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -133,6 +144,13 @@ export const AdminUserDetailPage: React.FC = () => {
             <span className="text-[11px] font-semibold text-[#6B7280] block">Total Withdrawn</span>
             <span className="text-sm font-bold text-blue-700">
               PKR {(userData.wallet?.totalWithdrawn || 0).toLocaleString()}
+            </span>
+          </div>
+          <div className="admin-card p-4 space-y-1">
+            <span className="text-[11px] font-semibold text-[#6B7280] block">Earned Credit Points</span>
+            <span className="text-sm font-bold text-amber-600 flex items-center gap-1">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              {(userData.wallet?.creditPoints || 0).toLocaleString()} CPs
             </span>
           </div>
         </div>
