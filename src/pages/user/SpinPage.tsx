@@ -148,8 +148,18 @@ export const SpinPage: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
 
-  // Prevent background scrolling when rules modal is open
-  useBodyScrollLock(showRulesModal);
+  // Prevent background scrolling when rules modal or won prize popup is open
+  useBodyScrollLock(showRulesModal || !!wonPrize);
+
+  // Auto-close congratulation popup after 7 seconds without showing timing
+  useEffect(() => {
+    if (wonPrize) {
+      const timer = setTimeout(() => {
+        setWonPrize(null);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [wonPrize]);
 
   // Blinking casino rim lights
   useEffect(() => {
@@ -346,41 +356,6 @@ export const SpinPage: React.FC = () => {
         <div className="p-4 bg-red-500/15 border border-red-500/50 rounded-2xl text-red-300 text-sm flex items-center gap-3 max-w-xl mx-auto shadow-lg backdrop-blur-md">
           <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
           <span>{error}</span>
-        </div>
-      )}
-
-      {/* Winner Celebration Modal Banner */}
-      {wonPrize && (
-        <div className="p-8 rounded-3xl border-2 border-[#FFD45A] bg-gradient-to-br from-[#0B1E48] via-[#04132F] to-[#020B20] text-center space-y-4 animate-in fade-in zoom-in duration-300 max-w-xl mx-auto shadow-2xl shadow-[#FFD45A]/30 relative overflow-hidden">
-          <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-[#FFD45A] bg-black">
-            <img
-              src="/images/spin/spin-jackpot-treasure.jpg"
-              alt="Won Prize"
-              className="w-full h-full object-cover animate-pulse"
-            />
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFD45A]/20 border border-[#FFD45A] text-[#FFD45A] rounded-full text-xs font-bold uppercase tracking-wider">
-            <Crown className="w-3.5 h-3.5" />
-            <span>Winner Announcement</span>
-          </div>
-          <h2 className="text-3xl font-black text-white">Congratulations! 🎉</h2>
-          <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl">
-            <p className="text-2xl font-black text-[#FFD45A]">{wonPrize.name}</p>
-            <p className="text-xs text-slate-200 mt-1.5 font-medium leading-relaxed">
-              {wonPrize.prizeType === 'CASH'
-                ? `PKR ${wonPrize.monetaryValue.toLocaleString()} aap ke wallet balance mein sath sath add kar diya gaya hai!`
-                : `Mubarak ho! Ye bumper prize (${wonPrize.name}) Level 10 mukammal karne ke baad VIP courier ke zariye aap ke address par deliver kiya jayega.`}
-            </p>
-          </div>
-          <div className="pt-2 flex justify-center gap-3">
-            <Link
-              to="/wallet"
-              className="px-6 py-2.5 bg-[#1459E8] hover:bg-[#1048bf] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg"
-            >
-              <span>View Wallet Balance</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
         </div>
       )}
 
@@ -728,6 +703,60 @@ export const SpinPage: React.FC = () => {
               >
                 Samajh Gaya / Understood
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Winner Congratulation Popup Modal (Auto-closes after 7s, cross button, no timing text) */}
+      {wonPrize && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md p-6 sm:p-8 rounded-3xl border-2 border-[#FFD45A] bg-gradient-to-br from-[#0B1E48] via-[#04132F] to-[#020B20] text-center space-y-4 shadow-2xl shadow-[#FFD45A]/30 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Cross Button */}
+            <button
+              type="button"
+              onClick={() => setWonPrize(null)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer z-10"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Prize Image */}
+            <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-[#FFD45A] bg-black">
+              <img
+                src={getPrizeProductImage(wonPrize) || '/images/spin/spin-jackpot-treasure.jpg'}
+                alt="Won Prize"
+                className="w-full h-full object-cover animate-pulse"
+              />
+            </div>
+
+            {/* Winner Announcement Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFD45A]/20 border border-[#FFD45A] text-[#FFD45A] rounded-full text-xs font-bold uppercase tracking-wider">
+              <Crown className="w-3.5 h-3.5" />
+              <span>Winner Announcement</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-black text-white">Congratulations! 🎉</h2>
+
+            <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl">
+              <p className="text-2xl font-black text-[#FFD45A]">{wonPrize.name}</p>
+              <p className="text-xs text-slate-200 mt-1.5 font-medium leading-relaxed">
+                {wonPrize.prizeType === 'CASH'
+                  ? `PKR ${wonPrize.monetaryValue.toLocaleString()} aap ke wallet balance mein sath sath add kar diya gaya hai!`
+                  : `Mubarak ho! Ye bumper prize (${wonPrize.name}) Level 10 mukammal karne ke baad VIP courier ke zariye aap ke address par deliver kiya jayega.`}
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-center gap-3">
+              <Link
+                to="/wallet"
+                onClick={() => setWonPrize(null)}
+                className="px-6 py-2.5 bg-[#1459E8] hover:bg-[#1048bf] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg"
+              >
+                <span>View Wallet Balance</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>
