@@ -12,6 +12,7 @@ import {
   X,
   Filter,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -22,6 +23,7 @@ export const AdminUsersPage: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // Modals state
   const [resetModalUser, setResetModalUser] = useState<any | null>(null);
@@ -67,12 +69,18 @@ export const AdminUsersPage: React.FC = () => {
 
   const handleToggleStatus = async (user: any) => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    setUpdatingUserId(user.id);
     try {
       await api.updateUserStatus(user.id, newStatus, `Admin manual status toggle to ${newStatus}`);
-      setMessage({ type: 'success', text: `User status changed to ${newStatus}` });
-      loadUsers(page);
+      // Update ONLY this single user in local state directly without reloading the entire table!
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, accountStatus: newStatus } : u))
+      );
+      setMessage({ type: 'success', text: `User ${user.name} status changed to ${newStatus}` });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Status update failed' });
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -110,9 +118,15 @@ export const AdminUsersPage: React.FC = () => {
         actionType: adjustType,
         reason: adjustReason,
       });
+      // Update ONLY this single user in local state directly without reloading the entire table!
+      const newBalance = res.wallet?.availableBalance ?? (
+        balanceModalUser.walletBalance + (adjustType === 'CREDIT' ? numAmount : -numAmount)
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u.id === balanceModalUser.id ? { ...u, walletBalance: newBalance } : u))
+      );
       setMessage({ type: 'success', text: res.message });
       setBalanceModalUser(null);
-      loadUsers(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Balance adjustment failed' });
     } finally {
@@ -135,9 +149,15 @@ export const AdminUsersPage: React.FC = () => {
         actionType: pointsActionType,
         reason: pointsReason,
       });
+      // Update ONLY this single user in local state directly without reloading the entire table!
+      const newPoints = res.creditPoints ?? (
+        (pointsModalUser.creditPoints ?? 0) + (pointsActionType === 'ADD' ? numPoints : -numPoints)
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u.id === pointsModalUser.id ? { ...u, creditPoints: newPoints } : u))
+      );
       setMessage({ type: 'success', text: res.message });
       setPointsModalUser(null);
-      loadUsers(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Credit points adjustment failed' });
     } finally {
@@ -302,14 +322,21 @@ export const AdminUsersPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleToggleStatus(u)}
-                          className={`p-1.5 rounded-md text-xs font-semibold ${
-                            u.accountStatus === 'ACTIVE'
+                          disabled={updatingUserId === u.id}
+                          className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
+                            updatingUserId === u.id
+                              ? 'opacity-50 cursor-wait'
+                              : u.accountStatus === 'ACTIVE'
                               ? 'text-red-600 hover:bg-red-50'
                               : 'text-emerald-600 hover:bg-emerald-50'
                           }`}
                           title={u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Reactivate'}
                         >
-                          {u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                          {updatingUserId === u.id ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Activate'
+                          )}
                         </button>
                       </div>
                     </td>

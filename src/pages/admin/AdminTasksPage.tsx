@@ -75,9 +75,21 @@ export const AdminTasksPage: React.FC = () => {
         rewardAmount: parseFloat(editingTask.rewardAmount),
         unlockFee: parseFloat(editingTask.unlockFee || 0),
       });
+      // Update only this task directly without reloading the whole table!
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === editingTask.id
+            ? {
+                ...t,
+                ...editingTask,
+                rewardAmount: parseFloat(editingTask.rewardAmount),
+                unlockFee: parseFloat(editingTask.unlockFee || 0),
+              }
+            : t
+        )
+      );
       setMessage({ type: 'success', text: res.message });
       setEditingTask(null);
-      loadTasks();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to update task configuration' });
     } finally {

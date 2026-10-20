@@ -68,9 +68,13 @@ export const AdminSubmissionsPage: React.FC = () => {
         reviewNotes: reviewNotes.trim() || undefined,
         rejectionReason: action === 'REJECT' ? rejectionReason : undefined,
       });
+      // Update only this submission directly without reloading the whole table!
+      const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === reviewingSub.id ? { ...s, status: newStatus } : s))
+      );
       setMessage({ type: 'success', text: res.message });
       setReviewingSub(null);
-      loadSubmissions(page);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Review execution failed' });
     } finally {

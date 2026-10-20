@@ -35,9 +35,22 @@ export const AdminLevelsPage: React.FC = () => {
         completionReward: parseFloat(editingLevel.completionReward),
         status: editingLevel.status,
       });
+      // Update only this level directly without reloading the whole table!
+      setLevels((prev) =>
+        prev.map((l) =>
+          l.id === editingLevel.id
+            ? {
+                ...l,
+                title: editingLevel.title,
+                description: editingLevel.description,
+                completionReward: parseFloat(editingLevel.completionReward),
+                status: editingLevel.status,
+              }
+            : l
+        )
+      );
       setMessage({ type: 'success', text: res.message });
       setEditingLevel(null);
-      loadLevels();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Level update failed' });
     } finally {
