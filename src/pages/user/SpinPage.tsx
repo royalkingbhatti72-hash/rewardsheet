@@ -658,48 +658,65 @@ export const SpinPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs">
-              {/* Rule 1: Cash Rewards Sath Sath */}
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                  <Coins className="w-4 h-4 flex-shrink-0" />
-                  <span>Instant Cash Rewards (Sath Sath Add Honge)</span>
-                </div>
-                <p className="text-slate-200 leading-relaxed pl-6">
-                  Wheel se jeete gaye tamam cash amounts (<strong>PKR 50, PKR 100, PKR 500, PKR 1,000, PKR 5,000</strong>) spin mukammal hone ke foran baad <strong>sath sath aap ke account wallet balance mein add</strong> kar diye jaate hain aur foran balance mein show ho jaate hain.
+            {/* Formal Paragraph Design Document Content */}
+            <div className="space-y-4 text-xs leading-relaxed text-slate-300 pr-1">
+              {/* Introduction Paragraph */}
+              <p className="text-[11.5px] text-slate-400 leading-relaxed border-b border-[#214B91]/40 pb-3">
+                Ye rasmi sharaait aur qawaneen Earn Sheet platform par Daily Fortune Wheel se jeete gaye cash inaamat aur physical bumper prizes ki taqseem, verification aur delivery ke nizam ko wazeh karte hain. Spin mein hissa lete waqt tamam arkaan in sharaait ke paband hain.
+              </p>
+
+              {/* Clause 1: Instant Cash */}
+              <div className="space-y-1">
+                <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#10D6A0]/20 text-[#10D6A0] text-[10px] font-black flex items-center justify-center flex-shrink-0">1</span>
+                  <span>Instant Cash Rewards &amp; Wallet Crediting</span>
+                </h4>
+                <p className="text-slate-300 pl-7 leading-relaxed">
+                  Wheel se jeete gaye tamam cash amounts (<strong>PKR 50, PKR 100, PKR 500, PKR 1,000, aur PKR 5,000</strong>) spin mukammal hone ke foran baad <strong>sath sath aap ke account wallet balance mein add</strong> kar diye jaate hain. Cash rewards ke liye kisi qisam ki manual claim ya lambay intizar ki zaroorat nahi hoti; raqam foran aap ke balance mein show ho jaati hai aur platform withdrawal quota ke mutabiq withdrawable hoti hai.
                 </p>
               </div>
 
-              {/* Rule 2: Car, Mobile, Watch Level 10 Ke Baad */}
-              <div className="p-3.5 rounded-2xl bg-[#FFD45A]/15 border border-[#FFD45A]/50 space-y-1">
-                <div className="flex items-center gap-2 text-[#FFD45A] font-bold text-sm">
-                  <Gift className="w-4 h-4 flex-shrink-0" />
-                  <span>Luxury Bumper Physical Prizes: Car, Mobile, Watch (Level 10 Ke Baad)</span>
-                </div>
-                <p className="text-slate-200 leading-relaxed pl-6">
-                  Tamam physical bumper gifts jaise <strong>Suzuki Alto Car, iPhone 15 Pro, aur Expensive Luxury Watch</strong> client ko <strong className="text-[#FFD45A] underline">Level 10 mukammal (complete) karne ke baad</strong> deliver kiye jayenge. Company VIP courier ke zariye aap ke address par bhejegi.
+              {/* Clause 2: Luxury Bumper Gifts */}
+              <div className="space-y-1">
+                <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#FFD45A]/20 text-[#FFD45A] text-[10px] font-black flex items-center justify-center flex-shrink-0">2</span>
+                  <span>Luxury Bumper Physical Prizes: Car, Mobile &amp; Watch</span>
+                </h4>
+                <p className="text-slate-300 pl-7 leading-relaxed">
+                  Tamam physical bumper inaamat—jin mein <strong>Suzuki Alto Car, Apple iPhone 15 Pro, aur Expensive Luxury Watch</strong> shamil hain—platform ke grand tier completion inaamat hain. Platform rules ke mutabiq ye physical inaamat client ko <strong className="text-[#FFD45A] underline">Level 10 ke tamam marahil mukammal (complete) karne ke baad</strong> deliver kiye jayenge. Level 10 complete hone ke baad company ki dispatch team aap ke registered address par insured VIP courier ke zariye inaam rawana karegi.
                 </p>
               </div>
 
-              {/* Rule 3: Free Spins & Referral */}
-              <div className="p-3.5 rounded-2xl bg-[#1459E8]/15 border border-[#1459E8]/40 space-y-1">
-                <div className="flex items-center gap-2 text-[#22D3EE] font-bold text-sm">
-                  <Trophy className="w-4 h-4 flex-shrink-0" />
-                  <span>Daily Spin & Referral Policy</span>
-                </div>
-                <p className="text-slate-300 leading-relaxed pl-6">
-                  Har level mukammal karne par <strong>1 Free Spin</strong> milta hai. Azafi spins ke liye 24 ghante ke andar 3 friends ko apne referral code se register karwayen. Task milestones par free spins live unlock hote hain.
+              {/* Clause 3: Spin Allocation & Referrals */}
+              <div className="space-y-1">
+                <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#2478FF]/20 text-[#22D3EE] text-[10px] font-black flex items-center justify-center flex-shrink-0">3</span>
+                  <span>Daily Spin Allocation &amp; Referral Program</span>
+                </h4>
+                <p className="text-slate-300 pl-7 leading-relaxed">
+                  Har registered member ko har tier level mukammal karne par <strong>1 Free Spin</strong> faraham kiya jata hai. Is ke ilawa, arkaan 24 ghante ke doran apne referral code se 3 active doston ko invite karwa kar azafi bonus spins hasil kar sakte hain. Task milestone assignments complete hone par admin approval ke baad special spins foran live unlock ho jaate hain.
                 </p>
               </div>
 
-              {/* Rule 4: Fair Play & Verification */}
-              <div className="p-3.5 rounded-2xl bg-[#0B2248] border border-[#214B91]/70 space-y-1">
-                <div className="flex items-center gap-2 text-slate-200 font-bold text-sm">
-                  <ShieldCheck className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
-                  <span>Fair Play & Verification Rules</span>
-                </div>
-                <p className="text-slate-300 leading-relaxed pl-6">
-                  Ek user ka ek hi verified account allowed hai. Multi-accounting ya system manipulation sakht mana hai. Tamam prizes automated audit trail mein verified hote hain.
+              {/* Clause 4: Fair Play & Security */}
+              <div className="space-y-1">
+                <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-black flex items-center justify-center flex-shrink-0">4</span>
+                  <span>Fair Play, Anti-Tampering &amp; Cryptographic Audit</span>
+                </h4>
+                <p className="text-slate-300 pl-7 leading-relaxed">
+                  Har member ke liye strictly ek (1) tasdeeq shuda account istemal karne ki ijazat hai. Multiple accounts banana, fake referrals generate karna ya automated bot scripts ka istemal sakht mana hai. Har spin ka result automated cryptographic audit trail mein mehfooz hota hai taake 100% transparency aur barabari barqarar rahay.
+                </p>
+              </div>
+
+              {/* Clause 5: Verification & Delivery Protocol */}
+              <div className="space-y-1">
+                <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black flex items-center justify-center flex-shrink-0">5</span>
+                  <span>Physical Delivery &amp; Identity Verification Protocol</span>
+                </h4>
+                <p className="text-slate-300 pl-7 leading-relaxed">
+                  Physical inaamat ki delivery se qabl member ka valid CNIC (National Identity Card) aur phone contact verify kiya jata hai taake inaam asal haqdar tak puhanche. Dispatch hone ke foran baad VIP courier tracking number member ke dashboard par faraham kiya jayega.
                 </p>
               </div>
             </div>
