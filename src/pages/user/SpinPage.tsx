@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Crown,
   Disc,
@@ -12,10 +12,11 @@ import {
   Lock,
   Volume2,
   VolumeX,
-  Flame,
   ArrowRight,
-  ShieldCheck,
   RefreshCw,
+  ChevronRight,
+  X,
+  Info,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
@@ -28,7 +29,7 @@ const DEFAULT_FALLBACK_PRIZES = [
   { id: 'p3', displayLabel: 'Alto Car', name: 'Suzuki Alto Car', prizeType: 'PHYSICAL', monetaryValue: 2500000, color: '#059669', icon: 'car' },
   { id: 'p4', displayLabel: 'PKR 500', name: 'PKR 500', prizeType: 'CASH', monetaryValue: 500, color: '#DC2626' },
   { id: 'p5', displayLabel: 'PKR 1,000', name: 'PKR 1,000', prizeType: 'CASH', monetaryValue: 1000, color: '#0284C7' },
-  { id: 'p6', displayLabel: 'PKR 5,000 Mega', name: 'PKR 5,000', prizeType: 'CASH', monetaryValue: 5000, color: '#D97706' },
+  { id: 'p6', displayLabel: 'PKR 5,000 Mega', name: 'PKR 5,000', prizeType: 'CASH', monetaryValue: 500, color: '#D97706' },
   { id: 'p7', displayLabel: 'Expensive Watch', name: 'Expensive Watch', prizeType: 'PHYSICAL', monetaryValue: 45000, color: '#4F46E5', icon: 'watch' },
   { id: 'p8', displayLabel: 'iPhone 15 Pro', name: 'iPhone 15 Pro', prizeType: 'PHYSICAL', monetaryValue: 350000, color: '#EAB308', icon: 'smartphone' },
 ];
@@ -66,26 +67,27 @@ const getPrizeProductImage = (prize: any) => {
   return null;
 };
 
+// Enlarged, high-impact font sizes for bold casino excitement
 const getFormattedWheelText = (rawLabel: string) => {
   const label = (rawLabel || '').trim();
-  if (!label) return { line1: '', line2: null, fontSize: '2.5' };
+  if (!label) return { line1: '', line2: null, fontSize: '4.0' };
 
-  if (label.includes(' ') && label.length > 6) {
+  if (label.includes(' ') && label.length > 5) {
     const words = label.split(' ');
     if (words.length === 2) {
       const maxLen = Math.max(words[0].length, words[1].length);
-      const fs = maxLen > 10 ? '2.1' : maxLen > 7 ? '2.3' : '2.5';
+      const fs = maxLen > 10 ? '3.0' : maxLen > 7 ? '3.5' : '4.0';
       return { line1: words[0], line2: words[1], fontSize: fs };
     }
     const mid = Math.ceil(words.length / 2);
     const line1 = words.slice(0, mid).join(' ');
     const line2 = words.slice(mid).join(' ');
     const maxLen = Math.max(line1.length, line2.length);
-    const fs = maxLen > 10 ? '2.0' : maxLen > 7 ? '2.2' : '2.4';
+    const fs = maxLen > 10 ? '2.9' : maxLen > 7 ? '3.4' : '3.8';
     return { line1, line2, fontSize: fs };
   }
 
-  const fs = label.length > 10 ? '2.0' : label.length > 7 ? '2.3' : '2.6';
+  const fs = label.length > 10 ? '3.3' : label.length > 7 ? '3.8' : '4.4';
   return { line1: label, line2: null, fontSize: fs };
 };
 
@@ -142,6 +144,7 @@ export const SpinPage: React.FC = () => {
   const [activeLedPhase, setActiveLedPhase] = useState(0);
   const [liveNotice, setLiveNotice] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
 
   // Blinking casino rim lights
   useEffect(() => {
@@ -172,7 +175,6 @@ export const SpinPage: React.FC = () => {
   }, []);
 
   // Realtime Live Update Listener (Zero Reload Strategy)
-  // When admin approves a spin or sends a command, update immediately without page refresh
   useEffect(() => {
     const handleLiveEvent = (e: any) => {
       const type = e.detail?.type;
@@ -184,15 +186,9 @@ export const SpinPage: React.FC = () => {
       }
     };
 
-    const handleHeartbeat = () => {
-      loadSpinStatus(true);
-    };
-
     window.addEventListener('royal_live_update', handleLiveEvent);
-    window.addEventListener('royal_live_heartbeat', handleHeartbeat);
     return () => {
       window.removeEventListener('royal_live_update', handleLiveEvent);
-      window.removeEventListener('royal_live_heartbeat', handleHeartbeat);
     };
   }, []);
 
@@ -235,8 +231,8 @@ export const SpinPage: React.FC = () => {
         }
 
         confetti({
-          particleCount: 120,
-          spread: 80,
+          particleCount: 130,
+          spread: 85,
           origin: { y: 0.6 },
           colors: ['#FFD45A', '#1459E8', '#22D3EE', '#792BFF', '#FFFFFF'],
         });
@@ -295,12 +291,21 @@ export const SpinPage: React.FC = () => {
             <span>Daily Fortune Wheel</span>
             <Crown className="w-6 h-6 text-[#FFD45A]" />
           </h1>
-          <p className="text-xs text-slate-400">Spin the wheel to win verified instant rewards</p>
+          <p className="text-xs text-slate-400">Spin the wheel to win verified instant rewards & bumper gifts</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Touch function button for Rules */}
+          <button
+            onClick={() => setShowRulesModal(true)}
+            className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#FFD45A]/20 via-[#FFD45A]/10 to-[#FFD45A]/20 hover:from-[#FFD45A]/30 hover:to-[#FFD45A]/30 border border-[#FFD45A]/60 text-[#FFD45A] transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <Info className="w-4 h-4 text-[#FFD45A]" />
+            <span>Prize Rules (Touch Karein)</span>
+          </button>
+
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 transition-colors"
           >
             {soundEnabled ? (
               <>
@@ -314,11 +319,41 @@ export const SpinPage: React.FC = () => {
               </>
             )}
           </button>
-          <div className="px-4 py-1.5 bg-[#FFD45A]/15 border border-[#FFD45A]/40 rounded-xl text-xs font-bold text-[#FFD45A] flex items-center gap-1.5">
+          <div className="px-4 py-2 bg-[#FFD45A]/15 border border-[#FFD45A]/40 rounded-xl text-xs font-bold text-[#FFD45A] flex items-center gap-1.5">
             <span>Available Spins: </span>
             <strong className="text-base text-white ml-0.5">{remainingSpins}</strong>
             {isSyncing && <RefreshCw className="w-3 h-3 text-[#FFD45A] animate-spin ml-1" />}
           </div>
+        </div>
+      </div>
+
+      {/* Prominent Interactive Touch Banner explaining Level 10 & Cash rules */}
+      <div
+        onClick={() => setShowRulesModal(true)}
+        className="w-full cursor-pointer group bg-gradient-to-r from-[#FFD45A]/15 via-[#0B2248] to-[#1264F5]/25 hover:from-[#FFD45A]/25 hover:to-[#1264F5]/35 border-2 border-[#FFD45A]/70 hover:border-[#FFD45A] rounded-2xl p-4 transition-all duration-200 shadow-xl hover:shadow-[#FFD45A]/20 flex items-center justify-between gap-4 text-left"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFD45A] to-amber-500 text-slate-950 flex items-center justify-center font-black flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform">
+            🎁
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#FFD45A] bg-[#FFD45A]/20 border border-[#FFD45A]/40 px-2 py-0.5 rounded-md">
+                Prize Rules & Delivery Policy (Touch / Tap Here)
+              </span>
+              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                Tap to view details
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-200 font-medium">
+              Watch, Car aur Mobile <strong className="text-[#FFD45A] font-bold">Level 10</strong> ke baad milenge • Cash rewards <strong className="text-emerald-400 font-bold">sath sath</strong> wallet mein add honge!
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-[#FFD45A] text-xs font-bold flex-shrink-0 pl-2">
+          <span className="hidden sm:inline">Read Policy</span>
+          <ChevronRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
         </div>
       </div>
 
@@ -365,10 +400,10 @@ export const SpinPage: React.FC = () => {
           <h2 className="text-3xl font-black text-white">Congratulations! 🎉</h2>
           <div className="p-4 bg-[#FFD45A]/10 border border-[#FFD45A]/30 rounded-2xl">
             <p className="text-2xl font-black text-[#FFD45A]">{wonPrize.name}</p>
-            <p className="text-xs text-slate-200 mt-1 font-medium">
+            <p className="text-xs text-slate-200 mt-1.5 font-medium leading-relaxed">
               {wonPrize.prizeType === 'CASH'
-                ? `PKR ${wonPrize.monetaryValue.toLocaleString()} has been credited straight into your wallet balance!`
-                : 'Exclusive physical product reward! Our VIP team will contact your phone number for immediate delivery.'}
+                ? `PKR ${wonPrize.monetaryValue.toLocaleString()} aap ke wallet balance mein sath sath add kar diya gaya hai!`
+                : `Mubarak ho! Ye bumper prize (${wonPrize.name}) Level 10 mukammal karne ke baad VIP courier ke zariye aap ke address par deliver kiya jayega.`}
             </p>
           </div>
           <div className="pt-2 flex justify-center gap-3">
@@ -383,29 +418,29 @@ export const SpinPage: React.FC = () => {
         </div>
       )}
 
-      {/* The 3D Casino Wheel Main Stage */}
-      <div className="relative rounded-3xl p-6 sm:p-12 flex flex-col items-center justify-center bg-gradient-to-b from-[#0B1E48]/80 via-[#04132F] to-[#020B20] border border-[#214B91]/50 shadow-2xl overflow-hidden">
+      {/* The 3D Casino Wheel Main Stage (Enlarged with Casino Vibes) */}
+      <div className="relative rounded-3xl p-4 sm:p-10 md:p-12 flex flex-col items-center justify-center bg-gradient-to-b from-[#0B1E48]/80 via-[#04132F] to-[#020B20] border border-[#214B91]/50 shadow-2xl overflow-hidden">
         {/* Glow backdrop aura */}
-        <div className="absolute w-96 h-96 bg-[#1459E8]/20 rounded-full blur-3xl pointer-events-none -top-10" />
-        <div className="absolute w-96 h-96 bg-[#FFD45A]/15 rounded-full blur-3xl pointer-events-none -bottom-10" />
+        <div className="absolute w-[450px] h-[450px] bg-[#1459E8]/25 rounded-full blur-3xl pointer-events-none -top-10" />
+        <div className="absolute w-[450px] h-[450px] bg-[#FFD45A]/20 rounded-full blur-3xl pointer-events-none -bottom-10" />
 
-        {/* Realistic Pointer Needle at Top */}
-        <div className="relative z-30 -mb-7 flex flex-col items-center">
+        {/* Realistic Pointer Needle at Top (Enlarged) */}
+        <div className="relative z-30 -mb-8 sm:-mb-9 flex flex-col items-center">
           <div
-            className={`w-12 h-16 sm:w-14 sm:h-18 relative transition-transform duration-100 ${
-              isSpinning ? 'rotate-[-3deg] scale-105' : 'rotate-0'
+            className={`w-14 h-18 sm:w-16 sm:h-22 relative transition-transform duration-100 ${
+              isSpinning ? 'rotate-[-4deg] scale-105' : 'rotate-0'
             }`}
           >
             <img
               src="/images/spin/spin-golden-pointer.svg"
               alt="Golden Pointer Needle"
-              className="w-full h-full object-contain filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.85)] drop-shadow-[0_0_15px_rgba(255,212,90,0.7)]"
+              className="w-full h-full object-contain filter drop-shadow-[0_12px_18px_rgba(0,0,0,0.9)] drop-shadow-[0_0_18px_rgba(255,212,90,0.8)]"
             />
           </div>
         </div>
 
-        {/* Outer Casino Bezel with 24 Blinking LED Bulbs */}
-        <div className="relative w-80 h-80 sm:w-[420px] sm:h-[420px] rounded-full p-4 sm:p-5 flex items-center justify-center bg-gradient-to-b from-[#FFE58F] via-[#B8860B] to-[#78590A] shadow-[0_0_50px_rgba(255,212,90,0.35),inset_0_0_20px_rgba(0,0,0,0.8)] border-4 border-[#FFD45A]">
+        {/* Outer Casino Bezel with 24 Blinking LED Bulbs (Enlarged from 420px to 480px) */}
+        <div className="relative w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] md:w-[480px] md:h-[480px] rounded-full p-4 sm:p-5 flex items-center justify-center bg-gradient-to-b from-[#FFE58F] via-[#B8860B] to-[#78590A] shadow-[0_0_60px_rgba(255,212,90,0.45),inset_0_0_25px_rgba(0,0,0,0.85)] border-4 border-[#FFD45A]">
           {/* LED Bulbs placed circularly */}
           {ledBulbs.map((_, i) => {
             const angle = (i * 360) / ledBulbs.length;
@@ -419,8 +454,8 @@ export const SpinPage: React.FC = () => {
                   left: `calc(50% - 6px + ${48 * Math.cos((angle * Math.PI) / 180)}%)`,
                   backgroundColor: isLightOn ? '#FFD45A' : '#1459E8',
                   boxShadow: isLightOn
-                    ? '0 0 10px #FFD45A, 0 0 20px #FFD45A'
-                    : '0 0 8px #22D3EE',
+                    ? '0 0 12px #FFD45A, 0 0 22px #FFD45A'
+                    : '0 0 10px #22D3EE',
                 }}
               />
             );
@@ -458,13 +493,13 @@ export const SpinPage: React.FC = () => {
                 const midAngle = startAngle + segmentAngle / 2;
                 const rad = (Math.PI * (midAngle - 90)) / 180;
 
-                // Center of text label placed at r=34
-                const tx = 50 + 34 * Math.cos(rad);
-                const ty = 50 + 34 * Math.sin(rad);
+                // Center of text label placed at r=36.5 (wide outer region)
+                const tx = 50 + 36.5 * Math.cos(rad);
+                const ty = 50 + 36.5 * Math.sin(rad);
 
-                // Small adjusted picture of physical product placed at r=20.5 (ideal gap between center hub and text)
-                const ix = 50 + 20.5 * Math.cos(rad);
-                const iy = 50 + 20.5 * Math.sin(rad);
+                // Picture of product placed at r=22 (enlarged for prominent visual vibe)
+                const ix = 50 + 22 * Math.cos(rad);
+                const iy = 50 + 22 * Math.sin(rad);
                 const productImg = getPrizeProductImage(p);
 
                 // Segment color schemes
@@ -487,40 +522,40 @@ export const SpinPage: React.FC = () => {
                       d={pathData}
                       fill={p.color || currentStyle.fill}
                       stroke="#FFD45A"
-                      strokeWidth="0.75"
+                      strokeWidth="0.8"
                     />
 
-                    {/* Physical product small picture adjusted to slice width */}
+                    {/* Enlarged Product Image (12x12 instead of 7.5x7.5 for maximum visual impact) */}
                     {productImg && (
                       <image
                         href={productImg}
                         xlinkHref={productImg}
-                        x={ix - 3.75}
-                        y={iy - 3.75}
-                        width="7.5"
-                        height="7.5"
+                        x={ix - 6}
+                        y={iy - 6}
+                        width="12"
+                        height="12"
                         preserveAspectRatio="xMidYMid meet"
                         transform={`rotate(${midAngle}, ${ix}, ${iy})`}
-                        style={{ filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.85))' }}
+                        style={{ filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.95))' }}
                       />
                     )}
 
-                    {/* Prize display text */}
+                    {/* Enlarged, Bold Wheel Prize Display Text */}
                     <text
                       x={tx}
                       y={ty}
                       fill={currentStyle.text}
                       fontSize={wheelText.fontSize}
-                      fontWeight="800"
+                      fontWeight="900"
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      filter="drop-shadow(0px 0.8px 1.5px rgba(0,0,0,0.9))"
+                      filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.95))"
                       transform={`rotate(${midAngle}, ${tx}, ${ty})`}
                     >
                       {wheelText.line2 ? (
                         <>
-                          <tspan x={tx} dy="-1.3">{wheelText.line1}</tspan>
-                          <tspan x={tx} dy="2.7">{wheelText.line2}</tspan>
+                          <tspan x={tx} dy="-1.5">{wheelText.line1}</tspan>
+                          <tspan x={tx} dy="3.5">{wheelText.line2}</tspan>
                         </>
                       ) : (
                         wheelText.line1
@@ -531,9 +566,9 @@ export const SpinPage: React.FC = () => {
               })}
             </svg>
 
-            {/* 3D Realistic Gold Center Medallion */}
+            {/* 3D Realistic Gold Center Medallion (Enlarged) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-[#FFD45A] shadow-[0_0_25px_rgba(255,212,90,0.8)] bg-[#020B20] relative flex items-center justify-center">
+              <div className="w-22 h-22 sm:w-26 sm:h-26 rounded-full overflow-hidden border-4 border-[#FFD45A] shadow-[0_0_30px_rgba(255,212,90,0.85)] bg-[#020B20] relative flex items-center justify-center">
                 <img
                   src="/images/spin/spin-gold-center-hub.jpg"
                   alt="Royal Crown Hub"
@@ -578,42 +613,60 @@ export const SpinPage: React.FC = () => {
             ) : (
               <div className="px-8 py-4 bg-[#0B2248]/80 border border-[#1459E8]/40 text-slate-300 rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2 text-center">
                 <Lock className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
-                <span>Har level complete karne par 1 Free Spin milta hai. Azafi spin hasil karne ke liye 24 hours mein ek dafa 3 friends invite karein.</span>
+                <span>Har level complete karne par 1 Free Spin milta hai. Azafi spin hasil karne ke liye 24 hours mein 3 friends invite karein.</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Rules & Information Cards */}
+      {/* Rules & Information Cards - Clickable touch to open Modal */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
-          <div className="flex items-center gap-2 text-white font-bold text-sm">
-            <Coins className="w-4 h-4 text-[#FFD45A]" />
-            <span>Instant Cash Rewards</span>
+        <div
+          onClick={() => setShowRulesModal(true)}
+          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <Coins className="w-4 h-4 text-[#FFD45A]" />
+              <span>Instant Cash Rewards</span>
+            </div>
+            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            All cash amounts won from the wheel are directly credited to your wallet balance in real time.
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Tamam cash amounts (PKR 50 se 5,000) spin jeetne ke foran baad <strong className="text-emerald-400">sath sath wallet mein add</strong> kar diye jaate hain.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
-          <div className="flex items-center gap-2 text-white font-bold text-sm">
-            <Gift className="w-4 h-4 text-[#22D3EE]" />
-            <span>Luxury Bumper Prizes</span>
+        <div
+          onClick={() => setShowRulesModal(true)}
+          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <Gift className="w-4 h-4 text-[#22D3EE]" />
+              <span>Luxury Bumper Prizes</span>
+            </div>
+            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Win high-value luxury rewards including Suzuki Alto Car, iPhone 15 Pro, and Expensive Watches delivered to you.
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Suzuki Alto Car, iPhone 15 Pro, aur Expensive Watch jaise physical inaamat <strong className="text-[#FFD45A]">Level 10 complete</strong> karne par milenge.
           </p>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#07132B]/70 border border-[#162E5B] space-y-2">
-          <div className="flex items-center gap-2 text-white font-bold text-sm">
-            <Trophy className="w-4 h-4 text-[#10D6A0]" />
-            <span>Level & Referral Spins</span>
+        <div
+          onClick={() => setShowRulesModal(true)}
+          className="p-5 rounded-2xl bg-[#07132B]/70 hover:bg-[#0B2248]/80 border border-[#162E5B] hover:border-[#FFD45A]/50 space-y-2 cursor-pointer transition-all duration-200 group shadow-md"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <Trophy className="w-4 h-4 text-[#10D6A0]" />
+              <span>Level & Referral Spins</span>
+            </div>
+            <span className="text-[10px] text-[#FFD45A] bg-[#FFD45A]/15 px-2 py-0.5 rounded-full font-bold">Touch Info</span>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Har level complete karne par spin milta hai. Azafi spin hasil karne ke liye 24 ghante mein 3 friends invite karein.
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Har level mukammal karne par spin milta hai. Azafi spin ke liye 24 ghante ke andar 3 friends ko invite karein.
           </p>
         </div>
       </div>
@@ -643,6 +696,84 @@ export const SpinPage: React.FC = () => {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Rules & Distribution Modal (Touch / Tap Popup) */}
+      {showRulesModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShowRulesModal(false)}
+        >
+          <div
+            className="bg-gradient-to-b from-[#0B1E48] via-[#04132F] to-[#020B20] border-2 border-[#FFD45A] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-[0_0_50px_rgba(255,212,90,0.35)] space-y-5 relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top decorative gradient bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#FFD45A] via-[#1459E8] to-[#FFD45A]" />
+
+            <div className="flex items-center justify-between border-b border-[#214B91]/50 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-[#FFD45A]/20 border border-[#FFD45A] flex items-center justify-center text-[#FFD45A] shadow-md">
+                  <Crown className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Spin Wheel Prize & Delivery Rules</h3>
+                  <p className="text-[11px] text-slate-300">Inaamat hasil karne ke zaroori qawaneen</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowRulesModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              {/* Rule 1: Cash Rewards Sath Sath */}
+              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                  <Coins className="w-4 h-4 flex-shrink-0" />
+                  <span>Cash Rewards (Sath Sath Add Honge)</span>
+                </div>
+                <p className="text-slate-200 leading-relaxed pl-6">
+                  Wheel se jeete gaye tamam cash inaamat (<strong>PKR 50, PKR 100, PKR 500, PKR 1,000, PKR 5,000</strong>) spin mukammal hone ke foran baad <strong>sath sath aap ke account wallet balance mein add</strong> kar diye jaate hain aur foran balance mein show ho jaate hain.
+                </p>
+              </div>
+
+              {/* Rule 2: Car, Mobile, Watch Level 10 Ke Baad */}
+              <div className="p-3.5 rounded-2xl bg-[#FFD45A]/15 border border-[#FFD45A]/50 space-y-1">
+                <div className="flex items-center gap-2 text-[#FFD45A] font-bold text-sm">
+                  <Gift className="w-4 h-4 flex-shrink-0" />
+                  <span>Car, Mobile, Watch (Level 10 Ke Baad Milenge)</span>
+                </div>
+                <p className="text-slate-200 leading-relaxed pl-6">
+                  Tamam physical bumper gifts jaise <strong>Suzuki Alto Car, iPhone 15 Pro, aur Expensive Luxury Watch</strong> client ko <strong className="text-[#FFD45A] underline">Level 10 mukammal (complete) karne ke baad</strong> deliver kiye jayenge. Company VIP courier ke zariye aap ke address par bhejegi.
+                </p>
+              </div>
+
+              {/* Rule 3: Free Spins & Referral */}
+              <div className="p-3.5 rounded-2xl bg-[#1459E8]/15 border border-[#1459E8]/40 space-y-1">
+                <div className="flex items-center gap-2 text-[#22D3EE] font-bold text-sm">
+                  <Trophy className="w-4 h-4 flex-shrink-0" />
+                  <span>Daily Spin Hasil Karne Ka Qanoon</span>
+                </div>
+                <p className="text-slate-300 leading-relaxed pl-6">
+                  Har level mukammal karne par <strong>1 Free Spin</strong> milta hai. Azafi spins ke liye 24 ghante ke andar 3 friends ko apne referral code se register karwayen.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setShowRulesModal(false)}
+                className="w-full py-3 bg-gradient-to-r from-[#FFD45A] to-yellow-400 hover:from-yellow-400 hover:to-amber-300 text-slate-950 font-black rounded-xl text-xs transition-all shadow-lg active:scale-98 cursor-pointer"
+              >
+                Samajh Gaya / Understood
+              </button>
+            </div>
           </div>
         </div>
       )}
