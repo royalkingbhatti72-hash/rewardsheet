@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowUpRight,
-  Crown,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -146,9 +145,6 @@ export const WithdrawalsPage: React.FC = () => {
           <p className="text-[11px] text-[#A6C4FF] mt-2 leading-relaxed">
             💡 Completing each level unlocks 10% of your total account balance for withdrawal (e.g. PKR 10 on PKR 100 balance, or PKR 100 on PKR 1,000 balance). Withdrawals must be requested for the exact 10% withdrawable amount.
           </p>
-        </div>
-        <div className="w-12 h-12 rounded-2xl bg-[#FFD45A]/15 border border-[#FFD45A]/30 flex items-center justify-center text-[#FFD45A] flex-shrink-0">
-          <Crown className="w-6 h-6" />
         </div>
       </div>
 
