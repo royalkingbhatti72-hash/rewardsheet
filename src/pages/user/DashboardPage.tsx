@@ -727,18 +727,15 @@ export const DashboardPage: React.FC = () => {
                       <Gift className="w-5 h-5" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-[#FFD45A] bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-2.5 py-1 rounded-full flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-[#FFD45A]" /> 24h Spin Rule
+                  <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <Users className="w-3 h-3 text-[#22D3EE]" /> Active Program
                   </span>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">
-                    Level Completion & Referral Spin
+                    Referral Link
                   </h3>
-                  <p className="text-xs text-[#B7C6E4] leading-relaxed">
-                    Har level complete karne par spin milega. Aur azafi spin hasil karne ke liye 24 hours mein ek dafa aapko 3 friends invite karne honge jis se client ko azafi ek spin milega 24 hours mein. Iske ilawa invite friend lock rahega.
-                  </p>
                 </div>
 
                 {/* Referral Link Box with Copy Action */}
