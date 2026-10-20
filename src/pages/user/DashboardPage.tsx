@@ -353,12 +353,6 @@ export const DashboardPage: React.FC = () => {
                 <h3 className="text-2xl sm:text-3xl font-black text-[#FFD45A] tracking-tight">
                   PKR {availableBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </h3>
-                <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                  <span className="text-[10px] font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <CheckCircle2 className="w-2.5 h-2.5" />
-                    Withdrawable Quota: {eligibleWithdrawalPercent}% (PKR {maxWithdrawableAmount.toLocaleString()})
-                  </span>
-                </div>
               </div>
 
               <div className="pt-3 mt-3 border-t border-[#173C73]/40 flex items-center justify-between text-xs">
