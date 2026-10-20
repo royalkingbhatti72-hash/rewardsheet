@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ArrowUpRight,
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -107,16 +106,6 @@ export const WithdrawalsPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
-          <ArrowUpRight className="w-7 h-7 text-[#FFD45A]" /> Request Withdrawal
-        </h1>
-        <p className="text-xs text-slate-300 mt-1">
-          Withdraw verified wallet earnings to Easypaisa, JazzCash, or Bank Transfer.
-        </p>
-      </div>
-
       {success && (
         <div className="p-4 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs flex items-center gap-2.5">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
