@@ -181,7 +181,13 @@ export const TasksPage: React.FC = () => {
   // Compute User's ACTUAL CURRENT ELIGIBLE / UNDER PROCESS Level (unlocked and in-progress)
   const userCurrentLevel = useMemo(() => {
     return (
-      levels.find((l: any) => l.isUnlocked && !l.isCompleted) ||
+      levels.find(
+        (l: any) =>
+          l.isUnlocked &&
+          !l.isCompleted &&
+          (l.approvedTaskCount || 0) < 10 &&
+          (typeof window === 'undefined' || localStorage.getItem(`royal_completed_lvl_${l.levelNumber}`) !== 'true')
+      ) ||
       levels.filter((l: any) => l.isUnlocked).slice(-1)[0] ||
       levels[0]
     );
@@ -317,7 +323,13 @@ export const TasksPage: React.FC = () => {
 
     const targetLvl = levels.find((l) => l.levelNumber === activeLevelNumber);
     const isLocked = targetLvl ? !targetLvl.isUnlocked : (activeLevelNumber > userCurrentLevelNumber);
-    const isCompleted = targetLvl?.isCompleted || (targetLvl?.approvedTaskCount === 10 && activeLevelNumber < userCurrentLevelNumber);
+    const isCompleted =
+      Boolean(targetLvl?.isCompleted) ||
+      (targetLvl?.approvedTaskCount ?? 0) >= 10 ||
+      activeLevelNumber < userCurrentLevelNumber ||
+      Boolean(unlockedLevels[activeLevelNumber + 1]) ||
+      (typeof window !== 'undefined' && localStorage.getItem(`royal_unlocked_lvl_${activeLevelNumber + 1}`) === 'true') ||
+      (typeof window !== 'undefined' && localStorage.getItem(`royal_completed_lvl_${activeLevelNumber}`) === 'true');
 
     // 1. LOCKED LEVEL STRATEGY:
     // If viewing a locked level, NEVER hit Supabase or backend API.
@@ -533,18 +545,70 @@ export const TasksPage: React.FC = () => {
   const isSelectedLevelLocked = selectedLevelSummary
     ? !selectedLevelSummary.isUnlocked
     : !isLevelUnlocked;
+
+  // Real-time live count of completed tasks from the active level tasks array
+  const liveApprovedTasksCount = useMemo(() => {
+    if (!tasks || !Array.isArray(tasks)) return 0;
+    return tasks.filter((t: any) => {
+      const uStatus = String(t.userStatus || '').toUpperCase();
+      const status = String(t.status || '').toUpperCase();
+      const subStatus = String(t.submission?.status || '').toUpperCase();
+      return (
+        uStatus === 'APPROVED' ||
+        uStatus === 'COMPLETED' ||
+        uStatus === 'DONE' ||
+        status === 'APPROVED' ||
+        status === 'COMPLETED' ||
+        subStatus === 'APPROVED' ||
+        t.isCompleted === true ||
+        t.completed === true
+      );
+    }).length;
+  }, [tasks]);
+
+  const summaryApprovedCount = selectedLevelSummary?.approvedTaskCount ?? 0;
+  const approvedTaskCount = Math.max(summaryApprovedCount, liveApprovedTasksCount);
+  const progressPercent = Math.min(100, Math.round((approvedTaskCount / 10) * 100));
+
   const isSelectedLevelCompleted =
     Boolean(selectedLevelSummary?.isCompleted) ||
-    (selectedLevelSummary?.approvedTaskCount ?? 0) >= 10 ||
-    (tasks.length === 10 && tasks.every((t: any) => t.userStatus === 'APPROVED' || t.status === 'APPROVED')) ||
-    (tasks.filter((t: any) => t.userStatus === 'APPROVED' || t.status === 'APPROVED').length >= 10);
+    Boolean(level?.isCompleted) ||
+    approvedTaskCount >= 10 ||
+    liveApprovedTasksCount >= 10 ||
+    summaryApprovedCount >= 10 ||
+    (tasks.length >= 10 && tasks.every((t: any) => {
+      const uStatus = String(t.userStatus || '').toUpperCase();
+      const status = String(t.status || '').toUpperCase();
+      const subStatus = String(t.submission?.status || '').toUpperCase();
+      return (
+        uStatus === 'APPROVED' ||
+        uStatus === 'COMPLETED' ||
+        uStatus === 'DONE' ||
+        status === 'APPROVED' ||
+        status === 'COMPLETED' ||
+        subStatus === 'APPROVED' ||
+        t.isCompleted === true ||
+        t.completed === true
+      );
+    })) ||
+    (tasks.length > 0 && liveApprovedTasksCount >= (level?.requiredTaskCount || 10)) ||
+    (activeLevelNumber < userCurrentLevelNumber) ||
+    Boolean(unlockedLevels[activeLevelNumber + 1]) ||
+    (typeof window !== 'undefined' && localStorage.getItem(`royal_unlocked_lvl_${activeLevelNumber + 1}`) === 'true') ||
+    (typeof window !== 'undefined' && localStorage.getItem(`royal_completed_lvl_${activeLevelNumber}`) === 'true');
 
   // Prerequisite level information for locked levels
   const previousLevelSummary =
     activeLevelNumber > 1 ? levels.find((l) => l.levelNumber === activeLevelNumber - 1) : null;
   const previousLevelApprovedTasks = previousLevelSummary?.approvedTaskCount || 0;
-  const approvedTaskCount = selectedLevelSummary?.approvedTaskCount || 0;
-  const progressPercent = Math.min(100, Math.round((approvedTaskCount / 10) * 100));
+
+  useEffect(() => {
+    if (isSelectedLevelCompleted && activeLevelNumber) {
+      try {
+        localStorage.setItem(`royal_completed_lvl_${activeLevelNumber}`, 'true');
+      } catch {}
+    }
+  }, [isSelectedLevelCompleted, activeLevelNumber]);
 
   return (
     <div className="relative max-w-4xl mx-auto space-y-6 sm:space-y-8">
@@ -624,11 +688,15 @@ export const TasksPage: React.FC = () => {
         >
           {levels.map((lvl) => {
             const isSelected = lvl.levelNumber === activeLevelNumber;
-            const isCurrent = lvl.levelNumber === userCurrentLevelNumber;
-            const isCompleted = lvl.isCompleted;
-            const isLocked = !lvl.isUnlocked;
+            const isCompleted =
+              Boolean(lvl.isCompleted) ||
+              (lvl.approvedTaskCount || 0) >= 10 ||
+              lvl.levelNumber < userCurrentLevelNumber ||
+              Boolean(unlockedLevels[lvl.levelNumber + 1]) ||
+              (typeof window !== 'undefined' && localStorage.getItem(`royal_completed_lvl_${lvl.levelNumber}`) === 'true');
+            const isLocked = !lvl.isUnlocked && !isCompleted;
             const isReadyToUnlock = lvl.isUnlocked && !isCompleted && !isLevelUnlockedByUser(lvl);
-            const approved = lvl.approvedTaskCount || 0;
+            const approved = isCompleted ? 10 : Math.max(lvl.approvedTaskCount || 0, isSelected ? approvedTaskCount : 0);
             const lvlProgressPercent = Math.min(100, Math.round((approved / (lvl.requiredTaskCount || 10)) * 100));
             const LevelIconComponent = LEVEL_ICONS[lvl.levelNumber] || Crown;
 
@@ -1129,7 +1197,7 @@ export const TasksPage: React.FC = () => {
       )}
 
       {/* Motivational Milestone Notification (Only show if level tasks are not all completed) */}
-      {!isSelectedLevelCompleted && approvedTaskCount < 10 && (
+      {!isSelectedLevelCompleted && approvedTaskCount < 10 && liveApprovedTasksCount < 10 && (
         <section className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#1459E8]/20 via-[#081F48] to-[#FFD45A]/15 border border-[#FFD45A]/50 shadow-xl backdrop-blur-md space-y-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#FFD45A]" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -116,15 +116,24 @@ export const AdminLayout: React.FC = () => {
 
   useBodyScrollLock(sidebarOpen);
 
-  const fetchNotificationCounts = () => {
+  const isFetchingRef = useRef(false);
+
+  const fetchNotificationCounts = useCallback(() => {
+    if (isFetchingRef.current || (typeof document !== 'undefined' && document.hidden)) {
+      return;
+    }
+    isFetchingRef.current = true;
     api.getAdminNotificationCounts()
       .then((res: any) => {
         if (res?.counts) {
           setNotificationCounts(res.counts);
         }
       })
-      .catch(() => {});
-  };
+      .catch(() => {})
+      .finally(() => {
+        isFetchingRef.current = false;
+      });
+  }, []);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -132,8 +141,20 @@ export const AdminLayout: React.FC = () => {
 
   useEffect(() => {
     fetchNotificationCounts();
-    // Auto-refresh every 20 seconds
-    const interval = setInterval(fetchNotificationCounts, 20000);
+    // Auto-refresh every 45 seconds when tab is active and visible
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchNotificationCounts();
+      }
+    }, 45000);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchNotificationCounts();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const handleLiveEvent = () => fetchNotificationCounts();
     window.addEventListener('royal_live_update', handleLiveEvent);
 
@@ -146,10 +167,11 @@ export const AdminLayout: React.FC = () => {
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('royal_live_update', handleLiveEvent);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [fetchNotificationCounts]);
 
   const currentPath = location.pathname;
   const matchedPage = Object.entries(PAGE_TITLES).find(([path]) =>

@@ -5,6 +5,10 @@ function resolveApiBase(): string {
   if (rawApiUrl && !rawApiUrl.includes('<')) {
     return rawApiUrl.replace(/\/$/, '');
   }
+  // When running inside the Admin SPA served directly by the backend, always use same-origin relative /api
+  if (typeof window !== 'undefined' && (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/adminpanal'))) {
+    return '/api';
+  }
   if (import.meta.env.PROD) {
     return DEFAULT_PROD_URL;
   }
@@ -166,12 +170,18 @@ async function request<T = any>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const controller = new AbortController();
+  const timeoutMs = (options as any).timeoutMs || (isAdmin ? 15000 : 25000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const fetchPromise = (async () => {
     try {
       const res = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers,
+        signal: options.signal || controller.signal,
       });
+      clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => ({}));
 
@@ -216,6 +226,7 @@ async function request<T = any>(
 
       return data as T;
     } finally {
+      clearTimeout(timeoutId);
       if (isGet) {
         inFlightRequests.delete(endpoint);
       }
