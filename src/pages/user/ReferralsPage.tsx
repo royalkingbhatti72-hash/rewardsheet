@@ -9,11 +9,6 @@ import {
   Clock,
   FileText,
   X,
-  Gift,
-  Lock,
-  Award,
-  ShieldAlert,
-  Sparkles,
   Check,
 } from 'lucide-react';
 import { api } from '../../api/client';
@@ -93,17 +88,8 @@ export const ReferralsPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Copy Link, Code & Terms Action */}
+          {/* Quick Copy Link & Code */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setShowTermsModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD45A]/15 hover:bg-[#FFD45A]/25 border border-[#FFD45A]/40 text-xs font-bold text-[#FFD45A] rounded-lg transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
-              title="View Referral & Spin Terms & Conditions"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Terms & Conditions</span>
-            </button>
-
             <button
               onClick={handleCopyCode}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#061633] border border-[#173C73] hover:border-[#22D3EE]/50 text-xs text-white rounded-lg transition-all cursor-pointer"
@@ -129,15 +115,8 @@ export const ReferralsPage: React.FC = () => {
           <div className="flex items-center gap-2 text-slate-300 flex-wrap">
             <Disc className="w-4 h-4 text-[#FFD45A] flex-shrink-0 animate-spin-slow" />
             <span>
-              <strong>Spin Program:</strong> 1 Free Spin on Level Completion + Extra Spin every 24h by inviting 3 friends.
+              <strong>Next Spin Condition:</strong> You get <strong>1 Free Spin</strong> whenever an invited client completes <strong>Level 1</strong>.
             </span>
-            <button
-              onClick={() => setShowTermsModal(true)}
-              className="text-[#22D3EE] hover:underline font-bold cursor-pointer inline-flex items-center gap-0.5 ml-1"
-            >
-              <span>View Terms</span>
-              <FileText className="w-3 h-3" />
-            </button>
           </div>
 
           <div className="flex items-center gap-3 text-xs flex-shrink-0">
@@ -238,8 +217,20 @@ export const ReferralsPage: React.FC = () => {
         )}
       </div>
 
+      {/* 3. Bottom of Page: Terms & Conditions Button */}
+      <div className="flex justify-center sm:justify-end pt-1 pb-6">
+        <button
+          onClick={() => setShowTermsModal(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFD45A]/15 hover:bg-[#FFD45A]/25 border border-[#FFD45A]/40 text-xs font-bold text-[#FFD45A] rounded-lg transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+          title="View Referral & Spin Terms & Conditions"
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span>Terms & Conditions</span>
+        </button>
+      </div>
+
       {/* ========================================================
-          TERMS & CONDITIONS POPUP MODAL (Visible on Popup Only)
+          TERMS & CONDITIONS POPUP MODAL (Clean Written View)
           ======================================================== */}
       {showTermsModal && (
         <div
@@ -247,25 +238,18 @@ export const ReferralsPage: React.FC = () => {
           onClick={() => setShowTermsModal(false)}
         >
           <div
-            className="bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border border-[#1C3E75] rounded-3xl max-w-lg w-full max-h-[88vh] overflow-y-auto shadow-2xl p-5 sm:p-7 space-y-5 text-white relative animate-scale-up"
+            className="bg-gradient-to-b from-[#0B2248] via-[#071B3A] to-[#04132F] border border-[#1C3E75] rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl p-6 sm:p-7 text-white relative animate-scale-up space-y-5"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#FFD45A] to-[#F59E0B] p-0.5 shadow-md flex items-center justify-center flex-shrink-0">
-                  <div className="w-full h-full bg-[#020B20] rounded-[14px] flex items-center justify-center text-[#FFD45A]">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-white">
-                    Terms & Conditions
-                  </h3>
-                  <p className="text-xs text-[#8194B7]">
-                    Referral Program & Lucky Spin Official Rules
-                  </p>
-                </div>
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  Terms & Conditions
+                </h3>
+                <p className="text-xs text-[#8194B7] mt-0.5">
+                  Referral Program & Lucky Spin Rules
+                </p>
               </div>
 
               <button
@@ -277,86 +261,61 @@ export const ReferralsPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Modal Body: Rules & Conditions */}
-            <div className="space-y-3.5 text-xs">
-              {/* Section 1: Level Completion Spin */}
-              <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#173C73]/60 space-y-1.5">
-                <div className="flex items-center gap-2 text-[#FFD45A] font-bold text-xs">
-                  <Award className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
-                  <span>1. Level Completion Spin (Har Level Par Spin)</span>
-                </div>
-                <p className="text-[#B7C6E4] leading-relaxed">
-                  Har level complete karne par client ko automatically <strong>1 Free Spin</strong> milega. Level 1 se lekar Level 10 tak har level ke tamam tasks mukammal karne par ye reward unlock hota hai.
-                </p>
-                <p className="text-[11px] text-[#8194B7] italic">
-                  Every user earns 1 Free Spin automatically upon completing all tasks in each level.
+            {/* Written Document View (Clean typography, no nested boxes) */}
+            <div className="space-y-4 text-xs text-slate-300 leading-relaxed">
+              <div>
+                <h4 className="font-bold text-white text-[13px] mb-1 text-[#FFD45A]">
+                  1. Level Completion Spin
+                </h4>
+                <p className="text-[#C5D5F0]">
+                  Har level complete karne par spin milega. Level 1 se lekar Level 10 tak har level ke tamam tasks mukammal karne par client ko automatically 1 Free Spin milta hai.
                 </p>
               </div>
 
-              {/* Section 2: 24h 3 Friends Rule */}
-              <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#173C73]/60 space-y-1.5">
-                <div className="flex items-center gap-2 text-[#22D3EE] font-bold text-xs">
-                  <Gift className="w-4 h-4 text-[#22D3EE] flex-shrink-0" />
-                  <span>2. Extra Spin Rule (24 Hours Mein 3 Friends)</span>
-                </div>
-                <p className="text-[#B7C6E4] leading-relaxed">
-                  Aur azafi spin hasil karne ke liye <strong>24 hours mein ek dafa aapko 3 friends invite karne honge</strong> jis se client ko azafi ek spin milega 24 hours mein.
-                </p>
-                <p className="text-[11px] text-[#8194B7] italic">
-                  To earn an extra spin via invitations, you must invite a minimum of 3 friends within 24 hours. Upon successful registration, you receive 1 additional spin.
+              <div>
+                <h4 className="font-bold text-white text-[13px] mb-1 text-[#22D3EE]">
+                  2. Extra Spin Requirement (24 Hours)
+                </h4>
+                <p className="text-[#C5D5F0]">
+                  Aur azafi spin hasil karne ke liye 24 hours mein ek dafa aapko 3 friends invite karne honge jis se client ko azafi ek spin milega 24 hours mein.
                 </p>
               </div>
 
-              {/* Section 3: 24h Lock Policy */}
-              <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#173C73]/60 space-y-1.5">
-                <div className="flex items-center gap-2 text-[#F59E0B] font-bold text-xs">
-                  <Lock className="w-4 h-4 text-[#F59E0B] flex-shrink-0" />
-                  <span>3. 24-Hour Invite Lock Policy (Invite Friend Lock)</span>
-                </div>
-                <p className="text-[#B7C6E4] leading-relaxed">
-                  <strong>Iske ilawa invite friend lock rahega.</strong> Extra referral spin sirf 24 hours mein ek martaba hasil kiya ja sakta hai. Baqi waqt invite friend extra spin feature locked rahega jab tak naya 24-hour quota mukammal na ho.
-                </p>
-                <p className="text-[11px] text-[#8194B7] italic">
-                  Outside of qualifying 3 friends in the active 24-hour window, the referral bonus spin remains locked.
+              <div>
+                <h4 className="font-bold text-white text-[13px] mb-1 text-[#F59E0B]">
+                  3. 24-Hour Invite Lock Policy
+                </h4>
+                <p className="text-[#C5D5F0]">
+                  Iske ilawa invite friend lock rahega. Extra referral spin sirf 24 hours mein ek dafa hasil kiya ja sakta hai. Baqi waqt invite friend feature lock rahega jab tak agla 24-hour cycle na aye.
                 </p>
               </div>
 
-              {/* Section 4: Genuine Active Accounts */}
-              <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#173C73]/60 space-y-1.5">
-                <div className="flex items-center gap-2 text-[#10D6A0] font-bold text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-[#10D6A0] flex-shrink-0" />
-                  <span>4. Client Qualification & Level 1 Progress</span>
-                </div>
-                <p className="text-[#B7C6E4] leading-relaxed">
-                  Invited doston ka unique aur real hona lazmi hai. Unka Level 1 progress aur account activity system ke automated ledger mein verify hoti hai.
-                </p>
-                <p className="text-[11px] text-[#8194B7] italic">
-                  Invited friends must be genuine active accounts and complete Level 1 tasks for standard partner tracking.
+              <div>
+                <h4 className="font-bold text-white text-[13px] mb-1 text-[#10D6A0]">
+                  4. Client Qualification & Level Progress
+                </h4>
+                <p className="text-[#C5D5F0]">
+                  Invited clients ka unique aur real hona lazmi hai. Unka Level 1 progress aur account activity system ke automated ledger mein verify hoti hai.
                 </p>
               </div>
 
-              {/* Section 5: Strict Anti-Fraud Policy */}
-              <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#EF4444]/40 space-y-1.5">
-                <div className="flex items-center gap-2 text-[#EF4444] font-bold text-xs">
-                  <ShieldAlert className="w-4 h-4 text-[#EF4444] flex-shrink-0" />
-                  <span>5. Anti-Fraud & Fair Play (Sakht Pabandi)</span>
-                </div>
-                <p className="text-[#B7C6E4] leading-relaxed">
-                  Ek hi mobile/device ya ek hi IP/WiFi address se multiple accounts banana, clone apps, ya VPN ka istemal karna sakht mana hai. Aisa karne par user ka account fori tor par permanently suspend kar diya jayega.
-                </p>
-                <p className="text-[11px] text-[#8194B7] italic">
-                  Self-referrals, clone apps, and multi-accounting on the same IP or device will result in immediate disqualification and permanent account ban.
+              <div>
+                <h4 className="font-bold text-white text-[13px] mb-1 text-[#EF4444]">
+                  5. Anti-Fraud & Fair Play Policy
+                </h4>
+                <p className="text-[#C5D5F0]">
+                  Ek hi mobile/device ya ek hi IP/WiFi address se multiple fake accounts banana, clone apps, ya VPN ka istemal karna sakht mana hai. Aisa karne par user ka account fori tor par permanently suspend kar diya jayega.
                 </p>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-2 border-t border-white/10">
+            <div className="pt-3 border-t border-white/10 flex justify-end">
               <button
                 onClick={() => setShowTermsModal(false)}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FFD45A] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#FFD45A] text-[#020B20] text-xs font-black shadow-lg shadow-[#FFD45A]/20 transition-all active:scale-95 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FFD45A] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#FFD45A] text-[#020B20] text-xs font-black shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                I Understand & Accept (Theek Hai)
+                Close
               </button>
             </div>
           </div>
