@@ -1,7 +1,7 @@
 {
   "name": "earn-sheet-frontend",
   "version": "1.0.0",
-  "description": "Earn Sheet - Frontend Client Application",
+  "description": "Earn Street - Frontend Client Application",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -21,7 +21,9 @@ import {
   X,
   Shield,
   ChevronRight,
+  Bell,
 } from 'lucide-react';
+import { api } from '../../api/client';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
 
@@ -93,20 +95,85 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [notificationCounts, setNotificationCounts] = useState<{
+    total: number;
+    tasks: number;
+    submissions: number;
+    spins: number;
+    deposits: number;
+    withdrawals: number;
+  }>({
+    total: 0,
+    tasks: 0,
+    submissions: 0,
+    spins: 0,
+    deposits: 0,
+    withdrawals: 0,
+  });
 
   useBodyScrollLock(sidebarOpen);
+
+  const fetchNotificationCounts = () => {
+    api.getAdminNotificationCounts()
+      .then((res: any) => {
+        if (res?.counts) {
+          setNotificationCounts(res.counts);
+        }
+      })
+      .catch(() => {});
+  };
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    fetchNotificationCounts();
+    // Auto-refresh every 20 seconds
+    const interval = setInterval(fetchNotificationCounts, 20000);
+    const handleLiveEvent = () => fetchNotificationCounts();
+    window.addEventListener('royal_live_update', handleLiveEvent);
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const currentPath = location.pathname;
   const matchedPage = Object.entries(PAGE_TITLES).find(([path]) =>
     currentPath === path || (path !== '/adminpanal' && currentPath.startsWith(path))
   );
   const pageInfo = matchedPage ? matchedPage[1] : {
-    title: 'Earn Sheet Administration',
+    title: 'Earn Street Administration',
     subtitle: 'Light-Mode Control Panel',
+  };
+
+  const getItemCount = (path: string) => {
+    if (path === '/adminpanal/submissions' || path === '/adminpanal/tasks') {
+      return notificationCounts.tasks;
+    }
+    if (path === '/adminpanal/spin') {
+      return notificationCounts.spins;
+    }
+    if (path === '/adminpanal/deposits') {
+      return notificationCounts.deposits;
+    }
+    if (path === '/adminpanal/withdrawals') {
+      return notificationCounts.withdrawals;
+    }
+    return 0;
   };
 
   const menuItems = [
@@ -157,18 +224,30 @@ export const AdminLayout: React.FC = () => {
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path || (item.path !== '/adminpanal/dashboard' && location.pathname.startsWith(item.path));
+            const count = getItemCount(item.path);
+
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-[#EAF2FF] text-[#2563EB]'
                     : 'text-[#4B5563] hover:bg-[#F8FAFD] hover:text-[#111827]'
                 }`}
               >
-                <item.icon className={`w-4 h-4 ${isActive ? 'text-[#2563EB]' : 'text-[#6B7280]'}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#2563EB]' : 'text-[#6B7280]'}`} />
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {count > 0 && (
+                  <span className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-black text-white bg-red-600 rounded-full shadow-sm leading-none">
+                      {count}
+                    </span>
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -217,17 +296,29 @@ export const AdminLayout: React.FC = () => {
             <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
               {menuItems.map((item) => {
                 const isActive = location.pathname === item.path || (item.path !== '/adminpanal/dashboard' && location.pathname.startsWith(item.path));
+                const count = getItemCount(item.path);
+
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold ${
                       isActive ? 'bg-[#EAF2FF] text-[#2563EB]' : 'text-[#4B5563] hover:bg-[#F8FAFD]'
                     }`}
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span>{item.label}</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </div>
+                    {count > 0 && (
+                      <span className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-black text-white bg-red-600 rounded-full shadow-sm leading-none">
+                          {count}
+                        </span>
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -267,6 +358,101 @@ export const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Notification Bell with Dot Badge & Quantity Count */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="relative p-2 text-[#4B5563] hover:text-[#111827] hover:bg-[#F8FAFD] rounded-lg border border-[#D9E4F2] transition-colors cursor-pointer"
+                title={`${notificationCounts.total} Pending Notifications`}
+              >
+                <Bell className="w-5 h-5" />
+                {notificationCounts.total > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-red-600 text-[10px] font-black text-white shadow ring-2 ring-white animate-pulse">
+                    {notificationCounts.total}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Popover Dropdown */}
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-[#D9E4F2] p-3 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#E5E7EB]">
+                    <span className="font-bold text-[#111827]">Pending Reviews & Submissions</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                      {notificationCounts.total} Pending
+                    </span>
+                  </div>
+
+                  <div className="py-2 space-y-1">
+                    <Link
+                      to="/adminpanal/submissions"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[#F8FAFD] text-[#374151] transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${notificationCounts.tasks > 0 ? 'bg-red-500 animate-pulse' : 'bg-slate-300'}`} />
+                        Task Submissions
+                      </span>
+                      <span className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                        notificationCounts.tasks > 0 ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {notificationCounts.tasks}
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/adminpanal/spin"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[#F8FAFD] text-[#374151] transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${notificationCounts.spins > 0 ? 'bg-purple-500 animate-pulse' : 'bg-slate-300'}`} />
+                        Spin Reviews & Claims
+                      </span>
+                      <span className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                        notificationCounts.spins > 0 ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {notificationCounts.spins}
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/adminpanal/deposits"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[#F8FAFD] text-[#374151] transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${notificationCounts.deposits > 0 ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`} />
+                        Deposit Requests
+                      </span>
+                      <span className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                        notificationCounts.deposits > 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {notificationCounts.deposits}
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/adminpanal/withdrawals"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-[#F8FAFD] text-[#374151] transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${notificationCounts.withdrawals > 0 ? 'bg-amber-500 animate-pulse' : 'bg-slate-300'}`} />
+                        Withdrawal Requests
+                      </span>
+                      <span className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                        notificationCounts.withdrawals > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {notificationCounts.withdrawals}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="hidden md:flex items-center gap-2 bg-[#F8FAFD] px-3 py-1.5 rounded-lg border border-[#D9E4F2] text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span className="font-semibold text-[#111827]">Live Synchronized</span>

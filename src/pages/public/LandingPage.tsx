@@ -38,7 +38,7 @@ export const LandingPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#FFD45A] bg-clip-text text-transparent">
-                EARN SHEET
+                EARN STREET
               </span>
               <span className="block text-[10px] text-[#22D3EE] font-bold tracking-widest uppercase">
                 Premier Rewards Platform
@@ -77,7 +77,7 @@ export const LandingPage: React.FC = () => {
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight mb-6">
             Ascend The Throne Of <br />
             <span className="bg-gradient-to-r from-[#FFD45A] via-amber-200 to-[#FFD45A] bg-clip-text text-transparent">
-              Earn Sheet
+              Earn Street
             </span>
           </h1>
 
@@ -244,7 +244,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Crown className="w-4 h-4 text-[#FFD45A]" />
-            <span className="font-bold text-slate-200">Earn Sheet Platform</span>
+            <span className="font-bold text-slate-200">Earn Street Platform</span>
             <span>© 2026. All rights reserved.</span>
           </div>
 

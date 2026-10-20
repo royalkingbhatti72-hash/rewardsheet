@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { api } from '../api/client';
 import { realtimeHub } from '../utils/realtimeHub';
 
@@ -60,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wallet, setWallet] = useState<Wallet | null>(initialWallet);
   // If we already have a cached user and token, don't show full-page loading spinner!
   const [loading, setLoading] = useState<boolean>(!token ? false : !initialUser);
+  const liveDebounceTimer = useRef<any>(null);
 
   const refreshUser = async () => {
     const currentToken = localStorage.getItem('royal_user_token');
@@ -109,28 +110,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Listen for realtime events across the app to silently update wallet/user without reloading
   useEffect(() => {
-    const handleLiveEvent = () => {
-      const currentToken = localStorage.getItem('royal_user_token');
-      if (currentToken) {
-        api
-          .getMe()
-          .then((res) => {
-            if (res?.user) {
-              setUser(res.user);
-              if (res.user.wallet) {
-                setWallet(res.user.wallet);
-                try {
-                  localStorage.setItem('royal_cached_wallet', JSON.stringify(res.user.wallet));
-                } catch {}
-              }
-            }
-          })
-          .catch(() => {});
+    const handleLiveEvent = (e: any) => {
+      const payload = e?.detail?.payload;
+
+      // 1. Instant local wallet update if payload contains wallet fields (0 network requests!)
+      if (payload && (payload.availableBalance !== undefined || payload.creditPoints !== undefined)) {
+        updateWallet({
+          ...(payload.availableBalance !== undefined ? { availableBalance: payload.availableBalance } : {}),
+          ...(payload.creditPoints !== undefined ? { creditPoints: payload.creditPoints } : {}),
+        });
+        return;
       }
+
+      // 2. Instant local user update if payload contains account status (0 network requests!)
+      if (payload && payload.accountStatus !== undefined) {
+        setUser((prev) => (prev ? { ...prev, accountStatus: payload.accountStatus } : prev));
+        return;
+      }
+
+      // 3. Debounce background refresh to avoid duplicate or rapid API calls
+      if (liveDebounceTimer.current) {
+        clearTimeout(liveDebounceTimer.current);
+      }
+      liveDebounceTimer.current = setTimeout(() => {
+        const currentToken = localStorage.getItem('royal_user_token');
+        if (currentToken) {
+          api
+            .getMe()
+            .then((res) => {
+              if (res?.user) {
+                setUser(res.user);
+                if (res.user.wallet) {
+                  setWallet(res.user.wallet);
+                  try {
+                    localStorage.setItem('royal_cached_wallet', JSON.stringify(res.user.wallet));
+                  } catch {}
+                }
+              }
+            })
+            .catch(() => {});
+        }
+      }, 400);
     };
 
     window.addEventListener('royal_live_update', handleLiveEvent);
-    return () => window.removeEventListener('royal_live_update', handleLiveEvent);
+    return () => {
+      if (liveDebounceTimer.current) {
+        clearTimeout(liveDebounceTimer.current);
+      }
+      window.removeEventListener('royal_live_update', handleLiveEvent);
+    };
   }, []);
 
   const updateWallet = (newWallet: Partial<Wallet> | null) => {

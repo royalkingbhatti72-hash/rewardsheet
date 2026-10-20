@@ -21,7 +21,7 @@ export const PrivacyPage: React.FC = () => {
           <div className="text-xs text-slate-300 space-y-4 leading-relaxed">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Data Collection & Protection</h2>
             <p>
-              Earn Sheet encrypts all user credentials using modern hashing algorithms. Mobile numbers are used solely for identity verification, withdrawal routing, and transactional security.
+              Earn Street encrypts all user credentials using modern hashing algorithms. Mobile numbers are used solely for identity verification, withdrawal routing, and transactional security.
             </p>
 
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">Financial Transaction Transparency</h2>

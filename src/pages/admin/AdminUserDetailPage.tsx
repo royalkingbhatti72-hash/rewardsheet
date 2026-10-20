@@ -30,6 +30,15 @@ export const AdminUserDetailPage: React.FC = () => {
   const [adjustPoints, setAdjustPoints] = useState('');
   const [pointsReason, setPointsReason] = useState('');
   const [pointsLoading, setPointsLoading] = useState(false);
+
+  // Edit User Profile Modal state (sends only changed fields to backend/Supabase)
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editStatus, setEditStatus] = useState<'ACTIVE' | 'SUSPENDED'>('ACTIVE');
+  const [editReason, setEditReason] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -40,6 +49,48 @@ export const AdminUserDetailPage: React.FC = () => {
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, [userId]);
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userData) return;
+
+    const changedFields: Record<string, any> = {};
+    if (editName.trim() && editName.trim() !== userData.name) {
+      changedFields.name = editName.trim();
+    }
+    if (editPhone.trim() && editPhone.trim() !== userData.phone) {
+      changedFields.phone = editPhone.trim();
+    }
+    if (editStatus && editStatus !== userData.accountStatus) {
+      changedFields.accountStatus = editStatus;
+    }
+    if (editReason.trim()) {
+      changedFields.reason = editReason.trim();
+    }
+
+    if (Object.keys(changedFields).filter((k) => k !== 'reason').length === 0) {
+      setActionMessage({ type: 'success', text: 'No fields were modified. User profile is unchanged.' });
+      setEditModalOpen(false);
+      return;
+    }
+
+    setEditLoading(true);
+    setActionMessage(null);
+    try {
+      const res = await api.updateUser(userData.id, changedFields);
+      // Update only this user's data instantly without reloading the page
+      setUserData((prev: any) => ({
+        ...prev,
+        ...res.user,
+      }));
+      setActionMessage({ type: 'success', text: res.message || 'User profile updated successfully!' });
+      setEditModalOpen(false);
+    } catch (err: any) {
+      setActionMessage({ type: 'error', text: err.message || 'Failed to update user profile.' });
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const handleAdjustPoints = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,19 +176,35 @@ export const AdminUserDetailPage: React.FC = () => {
         >
           <ArrowLeft className="w-4 h-4" /> Back to Members
         </Link>
-        <button
-          type="button"
-          onClick={() => {
-            setAdjustPoints('');
-            setPointsReason('');
-            setPointsActionType('ADD');
-            setPointsModalOpen(true);
-          }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 active:scale-95 text-white transition-all shadow-sm"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Edit Credit Points</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setEditName(userData.name);
+              setEditPhone(userData.phone);
+              setEditStatus(userData.accountStatus || 'ACTIVE');
+              setEditReason('');
+              setEditModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#2563EB] hover:bg-[#1D4ED8] active:scale-95 text-white transition-all shadow-sm"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Edit Profile</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAdjustPoints('');
+              setPointsReason('');
+              setPointsActionType('ADD');
+              setPointsModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 active:scale-95 text-white transition-all shadow-sm"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Edit Credit Points</span>
+          </button>
+        </div>
       </div>
 
       {actionMessage && (
@@ -450,6 +517,96 @@ export const AdminUserDetailPage: React.FC = () => {
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   {pointsLoading ? 'Updating CPs...' : 'Confirm Points Adjustment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Profile Modal (Only changed fields are sent to backend) */}
+      {editModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="admin-card p-6 w-full max-w-md bg-white space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D9E4F2]">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#2563EB]" /> Edit Member Profile: {userData.name}
+              </h2>
+              <button onClick={() => setEditModalOpen(false)} className="p-1 text-[#6B7280]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditUser} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter full name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 font-medium text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 03001234567"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 font-mono text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Account Status *
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as any)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 font-medium text-[#111827] focus:outline-none"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Audit Logging Reason (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Reason for profile update"
+                  value={editReason}
+                  onChange={(e) => setEditReason(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 border border-[#D9E4F2] rounded-lg text-[#4B5563] font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8] active:scale-95 flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+                >
+                  {editLoading ? 'Saving Changes...' : 'Save Profile Changes'}
                 </button>
               </div>
             </form>

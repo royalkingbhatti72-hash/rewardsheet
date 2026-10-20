@@ -187,7 +187,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base font-black tracking-tight text-white leading-none">
-                EARN SHEET
+                EARN STREET
               </h2>
               <span className="text-[10px] font-bold text-[#22D3EE] tracking-wider uppercase">
                 Premier Platform
@@ -503,7 +503,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
 
                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-                  Welcome to Earn Sheet!
+                  Welcome to Earn Street!
                 </h2>
 
                 <p className="text-xs sm:text-sm text-[#B7C6E4] leading-relaxed">

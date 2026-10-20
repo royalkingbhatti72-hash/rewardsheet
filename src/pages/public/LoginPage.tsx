@@ -44,7 +44,7 @@ export const LoginPage: React.FC = () => {
                 <Crown className="w-6 h-6 text-[#FFD45A]" />
               </div>
             </div>
-            <span className="text-2xl font-black tracking-tight text-white">EARN SHEET</span>
+            <span className="text-2xl font-black tracking-tight text-white">EARN STREET</span>
           </Link>
           <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
           <p className="text-xs text-slate-400 mt-1">

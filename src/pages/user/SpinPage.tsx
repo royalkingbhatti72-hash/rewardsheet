@@ -44,17 +44,17 @@ const getPrizeProductImage = (prize: any) => {
   const label = (prize.displayLabel || '').toLowerCase();
   const icon = (prize.icon || '').toLowerCase();
 
-  // Suzuki Alto Car (replaces 250)
+  // Real Car
   if (name.includes('alto') || label.includes('alto') || name.includes('car') || label.includes('car') || icon.includes('car') || label.includes('250')) {
-    return '/images/spin/product-car.svg';
+    return '/images/spin/product-car.jpg';
   }
-  // iPhone 15 Pro / Smartphone
+  // Real iPhone
   if (name.includes('iphone') || label.includes('iphone') || name.includes('phone') || label.includes('phone') || icon.includes('phone') || icon.includes('mobile')) {
-    return '/images/spin/product-smartphone.svg';
+    return '/images/spin/product-smartphone.jpg';
   }
-  // Expensive Watch
+  // Real Luxury Watch
   if (name.includes('watch') || label.includes('watch') || icon.includes('watch') || icon.includes('clock')) {
-    return '/images/spin/product-watch.svg';
+    return '/images/spin/product-watch.jpg';
   }
   // Cash jackpot
   if (type === 'CASH' || name.includes('pkr') || label.includes('pkr') || icon === 'coins') {
@@ -471,19 +471,41 @@ export const SpinPage: React.FC = () => {
                       strokeWidth="0.8"
                     />
 
-                    {/* Enlarged Product Image (12x12 instead of 7.5x7.5 for maximum visual impact) */}
+                    {/* Luxury Product Prize Medallion with Real Photorealistic Image */}
                     {productImg && (
-                      <image
-                        href={productImg}
-                        xlinkHref={productImg}
-                        x={ix - 6}
-                        y={iy - 6}
-                        width="12"
-                        height="12"
-                        preserveAspectRatio="xMidYMid meet"
-                        transform={`rotate(${midAngle}, ${ix}, ${iy})`}
-                        style={{ filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.95))' }}
-                      />
+                      <g transform={`rotate(${midAngle}, ${ix}, ${iy})`}>
+                        <defs>
+                          <clipPath id={`prize-clip-${p.id || idx}`}>
+                            <circle cx={ix} cy={iy} r="5.6" />
+                          </clipPath>
+                        </defs>
+                        {/* Golden Medallion Ring */}
+                        <circle
+                          cx={ix}
+                          cy={iy}
+                          r="6"
+                          fill="#FFD45A"
+                          stroke="#020B20"
+                          strokeWidth="0.4"
+                          style={{ filter: 'drop-shadow(0px 1.5px 3px rgba(0,0,0,0.9))' }}
+                        />
+                        <circle
+                          cx={ix}
+                          cy={iy}
+                          r="5.6"
+                          fill="#020B20"
+                        />
+                        <image
+                          href={productImg}
+                          xlinkHref={productImg}
+                          x={ix - 5.6}
+                          y={iy - 5.6}
+                          width="11.2"
+                          height="11.2"
+                          clipPath={`url(#prize-clip-${p.id || idx})`}
+                          preserveAspectRatio="xMidYMid slice"
+                        />
+                      </g>
                     )}
 
                     {/* Enlarged, Bold Wheel Prize Display Text */}
@@ -642,7 +664,7 @@ export const SpinPage: React.FC = () => {
             <div className="space-y-4 text-xs leading-relaxed text-slate-300 pr-1">
               {/* Introduction Paragraph */}
               <p className="text-[11.5px] text-slate-400 leading-relaxed border-b border-[#214B91]/40 pb-3">
-                Ye rasmi sharaait aur qawaneen Earn Sheet platform par Daily Fortune Wheel se jeete gaye cash inaamat aur physical bumper prizes ki taqseem, verification aur delivery ke nizam ko wazeh karte hain. Spin mein hissa lete waqt tamam arkaan in sharaait ke paband hain.
+                Ye rasmi sharaait aur qawaneen Earn Street platform par Daily Fortune Wheel se jeete gaye cash inaamat aur physical bumper prizes ki taqseem, verification aur delivery ke nizam ko wazeh karte hain. Spin mein hissa lete waqt tamam arkaan in sharaait ke paband hain.
               </p>
 
               {/* Clause 1: Instant Cash */}

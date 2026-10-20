@@ -147,8 +147,10 @@ async function request<T = any>(
     if (cached !== null) {
       return cached;
     }
+  }
 
-    // Deduplicate concurrent in-flight requests to the same endpoint
+  // Deduplicate all concurrent in-flight GET requests (both user and admin) to prevent duplicate API calls
+  if (isGet && !options.bypassCache) {
     if (inFlightRequests.has(endpoint)) {
       return inFlightRequests.get(endpoint)!;
     }
@@ -214,13 +216,13 @@ async function request<T = any>(
 
       return data as T;
     } finally {
-      if (isGet && !isAdmin) {
+      if (isGet) {
         inFlightRequests.delete(endpoint);
       }
     }
   })();
 
-  if (isGet && !isAdmin && !options.bypassCache) {
+  if (isGet && !options.bypassCache) {
     inFlightRequests.set(endpoint, fetchPromise);
   }
 
@@ -297,6 +299,7 @@ export const api = {
     localStorage.removeItem('royal_admin_token');
   },
   getAdminDashboard: () => request('/admin/dashboard', {}, true),
+  getAdminNotificationCounts: () => request('/admin/notifications/counts', {}, true),
   getTaskGrid: () => request('/admin/tasks/grid', {}, true),
 
   // Admin Users
@@ -309,6 +312,9 @@ export const api = {
     return request(`/admin/users?${q.toString()}`, {}, true);
   },
   getAdminUserDetail: (userId: string) => request(`/admin/users/${userId}`, {}, true),
+  getAdminUserSummary: (userId: string) => request(`/admin/users/${userId}/summary`, {}, true),
+  updateUser: (userId: string, data: { name?: string; phone?: string; accountStatus?: string; reason?: string }) =>
+    request(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify(data) }, true),
   updateUserStatus: (userId: string, status: string, reason?: string) =>
     request(`/admin/users/${userId}/status`, { method: 'PUT', body: JSON.stringify({ status, reason }) }, true),
   resetUserPassword: (userId: string, payload: any) =>

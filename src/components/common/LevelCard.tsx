@@ -82,24 +82,24 @@ export const LevelCard: React.FC<LevelCardProps> = ({
     if (!initialLevel || !initialTasks) {
       setLoading(true);
       Promise.all([
-        supabase.from('levels').select('*').eq('id', activeLevelId).single(),
+        supabase.from('Level').select('id, levelNumber, title, description, completionReward, isUnlocked, isCompleted').eq('id', activeLevelId).maybeSingle(),
         supabase
-          .from('tasks')
-          .select('*')
-          .eq('level_id', activeLevelId)
-          .order('task_number', { ascending: true }),
+          .from('Task')
+          .select('id, levelId, taskNumber, title, description, rewardAmount, status, isPaidTask, unlockFee, isPaidUnlocked')
+          .eq('levelId', activeLevelId)
+          .order('taskNumber', { ascending: true }),
       ])
         .then(([levelRes, tasksRes]) => {
           if (levelRes.error && !initialLevel) {
-            console.warn('Supabase levels query notice:', levelRes.error.message);
+            console.warn('Supabase Level query notice:', levelRes.error.message);
           } else if (levelRes.data) {
-            setLevel(levelRes.data as LevelData);
+            setLevel(levelRes.data as unknown as LevelData);
           }
 
           if (tasksRes.error && !initialTasks) {
-            console.warn('Supabase tasks query notice:', tasksRes.error.message);
+            console.warn('Supabase Task query notice:', tasksRes.error.message);
           } else if (tasksRes.data) {
-            setTasks(tasksRes.data as TaskData[]);
+            setTasks(tasksRes.data as unknown as TaskData[]);
           }
         })
         .catch((err) => {

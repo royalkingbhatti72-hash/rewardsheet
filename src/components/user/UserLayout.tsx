@@ -141,7 +141,7 @@ export const UserLayout: React.FC = () => {
             </div>
             <div>
               <span className="text-xs sm:text-sm font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-[#FFD45A] bg-clip-text text-transparent block leading-tight">
-                EARN SHEET
+                EARN STREET
               </span>
               <span className="block text-[8px] sm:text-[9px] text-[#22D3EE] font-bold tracking-wider uppercase leading-none">
                 {user?.phone || 'Official'}
@@ -256,7 +256,7 @@ export const UserLayout: React.FC = () => {
           <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-[#214B91]/50 flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <Crown className="w-6 h-6 text-[#FFD45A]" />
-              <span className="font-extrabold text-lg text-white">EARN SHEET</span>
+              <span className="font-extrabold text-lg text-white">EARN STREET</span>
             </div>
             <button
               onClick={() => setMobileMenuOpen(false)}

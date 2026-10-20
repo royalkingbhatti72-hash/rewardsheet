@@ -213,9 +213,86 @@ export const TasksPage: React.FC = () => {
     fetchLevels();
   }, []);
 
-  // Fetch tasks whenever selected level number changes
+// Helper to generate 10 locked tasks locally without hitting Supabase/backend
+const createLockedTasks = (lvlNum: number, lvlSummary?: any) => {
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: `locked-lvl-${lvlNum}-task-${i + 1}`,
+    taskNumber: i + 1,
+    title: `Task ${i + 1}`,
+    description: `Complete previous level tasks to unlock Level ${lvlNum}.`,
+    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
+    userStatus: 'LOCKED',
+    status: 'LOCKED',
+    isPaid: i === 4 || i === 9,
+    creditPoints: (i === 4 || i === 9) ? 30 : 5,
+    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
+    unlockFee: (i === 4 || i === 9) ? (lvlSummary?.requiredPrepaidAmount || 500) : 0,
+  }));
+};
+
+// Helper to generate 10 completed tasks locally without hitting Supabase/backend
+const createCompletedTasks = (lvlNum: number, lvlSummary?: any) => {
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: `completed-lvl-${lvlNum}-task-${i + 1}`,
+    taskNumber: i + 1,
+    title: `Task ${i + 1}`,
+    description: `Level ${lvlNum} assignment completed.`,
+    rewardAmount: lvlSummary?.rewardPerTask || (lvlNum === 1 ? 50 : lvlNum * 60),
+    userStatus: 'APPROVED',
+    status: 'APPROVED',
+    isPaid: i === 4 || i === 9,
+    creditPoints: (i === 4 || i === 9) ? 30 : 5,
+    levelId: lvlSummary?.id || `lvl-${lvlNum}`,
+    unlockFee: 0,
+  }));
+};
+
+  // Fetch tasks whenever selected level number changes (Zero-Supabase-Load Optimization Strategy)
   useEffect(() => {
     if (!activeLevelNumber) return;
+    setActionError(null);
+    setActionSuccess(null);
+
+    const targetLvl = levels.find((l) => l.levelNumber === activeLevelNumber);
+    const isLocked = targetLvl ? !targetLvl.isUnlocked : (activeLevelNumber > userCurrentLevelNumber);
+    const isCompleted = targetLvl?.isCompleted || (targetLvl?.approvedTaskCount === 10 && activeLevelNumber < userCurrentLevelNumber);
+
+    // 1. LOCKED LEVEL STRATEGY:
+    // If viewing a locked level, NEVER hit Supabase or backend API.
+    // Instant client-side locked tasks: zero network load, all 10 tasks locked.
+    if (isLocked) {
+      setCurrentLevelData({
+        level: targetLvl || { levelNumber: activeLevelNumber, title: `Level ${activeLevelNumber}` },
+        tasks: createLockedTasks(activeLevelNumber, targetLvl),
+        isLevelUnlocked: false,
+      });
+      setTasksLoading(false);
+      scrollToSelectedCard(activeLevelNumber);
+      return;
+    }
+
+    // 2. COMPLETED LEVEL STRATEGY:
+    // If client completed this level (e.g. Level 1 completed while at Level 2 Task 5),
+    // use cached data or synthesized completed tasks. Do NOT hit Supabase unnecessarily.
+    if (isCompleted) {
+      const cached = api.getCachedData<any>(`/tasks/levels/${activeLevelNumber}`);
+      if (cached && cached.tasks && cached.tasks.length > 0) {
+        setCurrentLevelData(cached);
+        setTasksLoading(false);
+      } else {
+        setCurrentLevelData({
+          level: targetLvl,
+          tasks: createCompletedTasks(activeLevelNumber, targetLvl),
+          isLevelUnlocked: true,
+        });
+        setTasksLoading(false);
+      }
+      scrollToSelectedCard(activeLevelNumber);
+      return;
+    }
+
+    // 3. ACTIVE IN-PROGRESS LEVEL STRATEGY:
+    // Only the user's current eligible level ever fetches live tasks from server
     const cached = api.getCachedData<any>(`/tasks/levels/${activeLevelNumber}`);
     if (cached) {
       setCurrentLevelData(cached);
@@ -223,8 +300,6 @@ export const TasksPage: React.FC = () => {
     } else {
       setTasksLoading(true);
     }
-    setActionError(null);
-    setActionSuccess(null);
 
     api
       .getLevelTasks(activeLevelNumber)
@@ -241,7 +316,7 @@ export const TasksPage: React.FC = () => {
 
     // Center selected card in carousel
     scrollToSelectedCard(activeLevelNumber);
-  }, [activeLevelNumber]);
+  }, [activeLevelNumber, userCurrentLevelNumber, levels]);
 
   // Realtime Live Update Listener (Zero Reload Strategy)
   useEffect(() => {
@@ -272,7 +347,8 @@ export const TasksPage: React.FC = () => {
         }
         api.invalidateCache('/tasks');
         fetchLevels(true);
-        if (activeLevelNumber) {
+        // Only fetch live tasks if currently viewing the active in-progress level
+        if (activeLevelNumber === userCurrentLevelNumber) {
           api
             .getLevelTasks(activeLevelNumber)
             .then((data) => setCurrentLevelData(data))
@@ -285,7 +361,7 @@ export const TasksPage: React.FC = () => {
     return () => {
       window.removeEventListener('royal_live_update', handleLiveEvent);
     };
-  }, [activeLevelNumber]);
+  }, [activeLevelNumber, userCurrentLevelNumber]);
 
   // Compute User's ACTUAL CURRENT ELIGIBLE / UNDER PROCESS Level (unlocked and in-progress)
   const userCurrentLevel = useMemo(() => {
@@ -328,13 +404,7 @@ export const TasksPage: React.FC = () => {
     setActiveLevelNumber(levelNumber);
     setSearchParams({ level: String(levelNumber) });
     scrollToSelectedCard(levelNumber, 'smooth');
-
-    const targetLvl = levels.find((l) => l.levelNumber === levelNumber);
-    if (targetLvl && !targetLvl.isUnlocked) {
-      setActionError(`🔒 Level ${levelNumber} is locked. Complete all tasks in Level ${levelNumber - 1} first.`);
-    } else {
-      setActionError(null);
-    }
+    setActionError(null);
   };
 
   const handlePrevLevel = () => {
@@ -363,7 +433,7 @@ export const TasksPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [activeLevelNumber, levels.length]);
 
-  // 5-second automatic return timer: if viewing another card, auto-push back to unlocked in-progress level
+  // 4-second automatic return timer: if viewing another level, auto-push back to unlocked in-progress level
   const autoReturnTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [returnCountdown, setReturnCountdown] = useState<number | null>(null);
@@ -380,8 +450,8 @@ export const TasksPage: React.FC = () => {
 
     // Only activate timer if user is browsing away from their unlocked under-process level
     if (userCurrentLevelNumber && activeLevelNumber !== userCurrentLevelNumber) {
-      setReturnCountdown(5);
-      let remaining = 5;
+      setReturnCountdown(4);
+      let remaining = 4;
       countdownIntervalRef.current = setInterval(() => {
         remaining -= 1;
         if (remaining > 0) {
@@ -399,7 +469,7 @@ export const TasksPage: React.FC = () => {
         handleSelectLevel(userCurrentLevelNumber);
         scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
         setReturnCountdown(null);
-      }, 5000);
+      }, 4000);
     } else {
       setReturnCountdown(null);
     }
@@ -409,35 +479,6 @@ export const TasksPage: React.FC = () => {
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
   }, [activeLevelNumber, userCurrentLevelNumber]);
-
-  // If user scrolls the carousel track manually, restart 5-second return timer
-  const handleCarouselScroll = () => {
-    if (activeLevelNumber !== userCurrentLevelNumber) {
-      if (autoReturnTimerRef.current) clearTimeout(autoReturnTimerRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-      setReturnCountdown(5);
-
-      let remaining = 5;
-      countdownIntervalRef.current = setInterval(() => {
-        remaining -= 1;
-        if (remaining > 0) {
-          setReturnCountdown(remaining);
-        } else {
-          setReturnCountdown(null);
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-          }
-        }
-      }, 1000);
-
-      autoReturnTimerRef.current = setTimeout(() => {
-        handleSelectLevel(userCurrentLevelNumber);
-        scrollToSelectedCard(userCurrentLevelNumber, 'smooth');
-        setReturnCountdown(null);
-      }, 5000);
-    }
-  };
 
   const scrollToTasksSection = () => {
     if (tasksSectionRef.current) {
@@ -569,11 +610,11 @@ export const TasksPage: React.FC = () => {
         {/* Horizontal Carousel Track */}
         <div
           ref={carouselRef}
-          onScroll={handleCarouselScroll}
-          className="flex items-center gap-3.5 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 scrollbar-none justify-start"
+          className="flex items-center gap-3.5 sm:gap-6 overflow-x-hidden scroll-smooth py-4 scrollbar-none justify-start select-none"
           style={{
             paddingLeft: 'max(1.5rem, calc(50% - 165px))',
             paddingRight: 'max(1.5rem, calc(50% - 165px))',
+            touchAction: 'pan-y',
           }}
         >
           {levels.map((lvl) => {
@@ -590,8 +631,8 @@ export const TasksPage: React.FC = () => {
               <div
                 id={`carousel-card-${lvl.levelNumber}`}
                 key={lvl.id}
-                onClick={() => handleSelectLevel(lvl.levelNumber)}
-                className={`flex-shrink-0 rounded-[28px] p-5 sm:p-6 transition-all duration-300 snap-center cursor-pointer flex flex-col items-center text-center relative overflow-hidden select-none backdrop-blur-xl ${
+                onClick={isSelected ? scrollToTasksSection : undefined}
+                className={`flex-shrink-0 rounded-[28px] p-5 sm:p-6 transition-all duration-300 flex flex-col items-center text-center relative overflow-hidden select-none backdrop-blur-xl ${
                   isSelected
                     ? isLocked
                       ? 'w-[260px] sm:w-[295px] md:w-[325px] bg-gradient-to-b from-[#0D2659]/95 via-[#081B3E]/95 to-[#030D1E]/95 border-2 border-[#F59E0B] shadow-[0_20px_50px_rgba(245,158,11,0.25)] ring-2 ring-[#FFD45A]/40 z-20 scale-100'
@@ -792,13 +833,12 @@ export const TasksPage: React.FC = () => {
         {/* Carousel Dot Indicators */}
         <div className="flex items-center justify-center gap-1.5 pt-2">
           {levels.map((lvl) => (
-            <button
+            <div
               key={lvl.id}
-              onClick={() => handleSelectLevel(lvl.levelNumber)}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
+              className={`transition-all duration-300 rounded-full ${
                 lvl.levelNumber === activeLevelNumber
                   ? 'w-7 h-2 bg-gradient-to-r from-[#22D3EE] to-[#FFD45A] shadow-md shadow-[#FFD45A]/40'
-                  : 'w-2 h-2 bg-[#173C73] hover:bg-[#8194B7]'
+                  : 'w-2 h-2 bg-[#173C73]'
               }`}
               title={`Level ${lvl.levelNumber}`}
             />
@@ -843,24 +883,7 @@ export const TasksPage: React.FC = () => {
             <div className="w-8 h-8 border-3 border-[#1264F5]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
             <p className="text-xs text-[#8194B7]">Evaluating task prerequisites...</p>
           </div>
-        ) : isSelectedLevelLocked ? (
-          <div className="p-8 text-center rounded-2xl bg-[#071B3A] border border-[#173C73] space-y-3">
-            <Lock className="w-10 h-10 text-[#F59E0B] mx-auto" />
-            <h4 className="text-sm sm:text-base font-bold text-white">
-              Level {activeLevelNumber} Tasks are Locked
-            </h4>
-            <p className="text-xs text-[#8194B7] max-w-md mx-auto">
-              This level's tasks are hidden until you unlock Level {activeLevelNumber}.
-            </p>
-            <button
-              onClick={() => handleSelectLevel(userCurrentLevelNumber)}
-              className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md mt-2"
-            >
-              <span>Back to Current Level {userCurrentLevelNumber}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : selectedLevelSummary && !isLevelUnlockedByUser(selectedLevelSummary) ? (
+        ) : selectedLevelSummary && !isSelectedLevelLocked && !isLevelUnlockedByUser(selectedLevelSummary) ? (
           /* ========================================================
              LEVEL UNLOCK GATEWAY (Ready to Unlock with Celebration)
              ======================================================== */

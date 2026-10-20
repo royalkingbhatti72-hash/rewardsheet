@@ -14,7 +14,7 @@ export const TermsPage: React.FC = () => {
             <Crown className="w-8 h-8 text-[#FFD45A]" />
             <div>
               <h1 className="text-2xl font-black text-white">Terms of Service</h1>
-              <p className="text-xs text-[#22D3EE]">Earn Sheet Platform Guidelines</p>
+              <p className="text-xs text-[#22D3EE]">Earn Street Platform Guidelines</p>
             </div>
           </div>
 

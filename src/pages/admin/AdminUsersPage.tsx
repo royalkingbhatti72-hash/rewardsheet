@@ -46,6 +46,14 @@ export const AdminUsersPage: React.FC = () => {
   const [pointsLoading, setPointsLoading] = useState(false);
   const [reloadingAll, setReloadingAll] = useState(false);
 
+  // Edit User Details Modal state (sends only changed fields to backend/Supabase)
+  const [editModalUser, setEditModalUser] = useState<any | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editStatus, setEditStatus] = useState<'ACTIVE' | 'SUSPENDED'>('ACTIVE');
+  const [editReason, setEditReason] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadUsers = (p = 1, isManualReload = false) => {
@@ -82,11 +90,29 @@ export const AdminUsersPage: React.FC = () => {
     loadUsers(1);
   };
 
+  // Treat each user as a separate entity: refresh ONLY this user's data
+  const handleRefreshSingleUser = async (userId: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const res = await api.getAdminUserSummary(userId);
+      if (res?.user) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, ...res.user } : u))
+        );
+        setMessage({ type: 'success', text: `Refreshed data for ${res.user.name}.` });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to refresh user' });
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   const handleToggleStatus = async (user: any) => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
     setUpdatingUserId(user.id);
     try {
-      await api.updateUserStatus(user.id, newStatus, `Admin manual status toggle to ${newStatus}`);
+      const res = await api.updateUserStatus(user.id, newStatus, `Admin manual status toggle to ${newStatus}`);
       // Update ONLY this single user in local state directly without reloading the entire table!
       setUsers((prev) =>
         prev.map((u) => (u.id === user.id ? { ...u, accountStatus: newStatus } : u))
@@ -99,9 +125,54 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
+  // Edit User details: send ONLY changed fields to backend/Supabase and update in place
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalUser) return;
+
+    // Diff against current user values: send ONLY changed fields!
+    const changedFields: Record<string, any> = {};
+    if (editName.trim() && editName.trim() !== editModalUser.name) {
+      changedFields.name = editName.trim();
+    }
+    if (editPhone.trim() && editPhone.trim() !== editModalUser.phone) {
+      changedFields.phone = editPhone.trim();
+    }
+    if (editStatus && editStatus !== editModalUser.accountStatus) {
+      changedFields.accountStatus = editStatus;
+    }
+    if (editReason.trim()) {
+      changedFields.reason = editReason.trim();
+    }
+
+    if (Object.keys(changedFields).filter((k) => k !== 'reason').length === 0) {
+      setMessage({ type: 'success', text: 'No fields were modified. User profile is unchanged.' });
+      setEditModalUser(null);
+      return;
+    }
+
+    setUpdatingUserId(editModalUser.id);
+    setEditLoading(true);
+    try {
+      const res = await api.updateUser(editModalUser.id, changedFields);
+      // Update that user's data instantly on the live page without reloading it
+      setUsers((prev) =>
+        prev.map((u) => (u.id === editModalUser.id ? { ...u, ...res.user } : u))
+      );
+      setMessage({ type: 'success', text: res.message || `Updated ${res.user?.name || editModalUser.name} successfully.` });
+      setEditModalUser(null);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update user' });
+    } finally {
+      setEditLoading(false);
+      setUpdatingUserId(null);
+    }
+  };
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetModalUser) return;
+    setUpdatingUserId(resetModalUser.id);
     setResetLoading(true);
     try {
       const res = await api.resetUserPassword(resetModalUser.id, {
@@ -115,6 +186,7 @@ export const AdminUsersPage: React.FC = () => {
       setMessage({ type: 'error', text: err.message || 'Reset failed' });
     } finally {
       setResetLoading(false);
+      setUpdatingUserId(null);
     }
   };
 
@@ -126,6 +198,7 @@ export const AdminUsersPage: React.FC = () => {
       setMessage({ type: 'error', text: 'Enter a valid positive adjustment amount' });
       return;
     }
+    setUpdatingUserId(balanceModalUser.id);
     setAdjustLoading(true);
     try {
       const res = await api.adjustUserBalance(balanceModalUser.id, {
@@ -146,6 +219,7 @@ export const AdminUsersPage: React.FC = () => {
       setMessage({ type: 'error', text: err.message || 'Balance adjustment failed' });
     } finally {
       setAdjustLoading(false);
+      setUpdatingUserId(null);
     }
   };
 
@@ -157,6 +231,7 @@ export const AdminUsersPage: React.FC = () => {
       setMessage({ type: 'error', text: 'Enter a valid positive number of credit points' });
       return;
     }
+    setUpdatingUserId(pointsModalUser.id);
     setPointsLoading(true);
     try {
       const res = await api.adjustUserCreditPoints(pointsModalUser.id, {
@@ -177,6 +252,7 @@ export const AdminUsersPage: React.FC = () => {
       setMessage({ type: 'error', text: err.message || 'Credit points adjustment failed' });
     } finally {
       setPointsLoading(false);
+      setUpdatingUserId(null);
     }
   };
 
@@ -316,66 +392,88 @@ export const AdminUsersPage: React.FC = () => {
                     </td>
                     <td className="text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          to={`/adminpanal/users/${u.id}`}
-                          className="p-1.5 rounded-md hover:bg-[#F8FAFD] text-[#4B5563] hover:text-[#2563EB]"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => {
-                            setAdjustPoints('');
-                            setPointsReason('');
-                            setPointsActionType('ADD');
-                            setPointsModalUser(u);
-                          }}
-                          className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center gap-1 font-semibold text-[11px] transition-all shadow-xs"
-                          title={`Edit / Adjust Credit Points for ${u.name}`}
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                          <span className="hidden xl:inline">CPs</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setAdjustAmount('');
-                            setAdjustReason('');
-                            setBalanceModalUser(u);
-                          }}
-                          className="p-1.5 rounded-md hover:bg-emerald-50 text-[#4B5563] hover:text-emerald-700"
-                          title="Adjust Balance"
-                        >
-                          <Wallet className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setTempPassword('');
-                            setResetReason('');
-                            setResetModalUser(u);
-                          }}
-                          className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
-                          title="Reset Password"
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(u)}
-                          disabled={updatingUserId === u.id}
-                          className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
-                            updatingUserId === u.id
-                              ? 'opacity-50 cursor-wait'
-                              : u.accountStatus === 'ACTIVE'
-                              ? 'text-red-600 hover:bg-red-50'
-                              : 'text-emerald-600 hover:bg-emerald-50'
-                          }`}
-                          title={u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Reactivate'}
-                        >
-                          {updatingUserId === u.id ? (
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Activate'
-                          )}
-                        </button>
+                        {updatingUserId === u.id ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                            <span>Updating...</span>
+                          </span>
+                        ) : (
+                          <>
+                            <Link
+                              to={`/adminpanal/users/${u.id}`}
+                              className="p-1.5 rounded-md hover:bg-[#F8FAFD] text-[#4B5563] hover:text-[#2563EB]"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <button
+                              onClick={() => {
+                                setEditModalUser(u);
+                                setEditName(u.name);
+                                setEditPhone(u.phone);
+                                setEditStatus(u.accountStatus || 'ACTIVE');
+                                setEditReason('');
+                              }}
+                              className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
+                              title={`Edit Details for ${u.name}`}
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAdjustPoints('');
+                                setPointsReason('');
+                                setPointsActionType('ADD');
+                                setPointsModalUser(u);
+                              }}
+                              className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center gap-1 font-semibold text-[11px] transition-all shadow-xs"
+                              title={`Edit / Adjust Credit Points for ${u.name}`}
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              <span className="hidden xl:inline">CPs</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAdjustAmount('');
+                                setAdjustReason('');
+                                setBalanceModalUser(u);
+                              }}
+                              className="p-1.5 rounded-md hover:bg-emerald-50 text-[#4B5563] hover:text-emerald-700"
+                              title="Adjust Balance"
+                            >
+                              <Wallet className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setTempPassword('');
+                                setResetReason('');
+                                setResetModalUser(u);
+                              }}
+                              className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
+                              title="Reset Password"
+                            >
+                              <KeyRound className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(u)}
+                              className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
+                                u.accountStatus === 'ACTIVE'
+                                  ? 'text-red-600 hover:bg-red-50'
+                                  : 'text-emerald-600 hover:bg-emerald-50'
+                              }`}
+                              title={u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Reactivate'}
+                            >
+                              {u.accountStatus === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                            </button>
+                            <button
+                              onClick={() => handleRefreshSingleUser(u.id)}
+                              className="p-1.5 rounded-md hover:bg-[#F8FAFD] text-[#6B7280] hover:text-[#2563EB]"
+                              title={`Refresh fresh data for ${u.name} only`}
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -672,6 +770,103 @@ export const AdminUsersPage: React.FC = () => {
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   {pointsLoading ? 'Updating CPs...' : 'Confirm Points Adjustment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Details Modal */}
+      {editModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="admin-card p-6 w-full max-w-md bg-white space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D9E4F2]">
+              <h2 className="text-sm font-bold text-[#111827] flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#2563EB]" /> Edit Member: {editModalUser.name}
+              </h2>
+              <button onClick={() => setEditModalUser(null)} className="p-1 text-[#6B7280]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditUser} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter full name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-medium text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Phone Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 03001234567"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-mono text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Account Status *
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as any)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 font-medium text-[#111827] focus:outline-none"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="SUSPENDED">SUSPENDED</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#374151] mb-1">
+                  Audit Logging Reason (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Reason for profile update"
+                  value={editReason}
+                  onChange={(e) => setEditReason(e.target.value)}
+                  className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditModalUser(null)}
+                  className="px-4 py-2 border border-[#D9E4F2] rounded-lg text-[#4B5563] font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8] flex items-center gap-1.5"
+                >
+                  {editLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </form>

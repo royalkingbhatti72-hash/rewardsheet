@@ -16,7 +16,7 @@ export const ForgotPasswordPage: React.FC = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-3">
             <Crown className="w-8 h-8 text-[#FFD45A]" />
-            <span className="text-2xl font-black text-white">EARN SHEET</span>
+            <span className="text-2xl font-black text-white">EARN STREET</span>
           </Link>
           <h1 className="text-2xl font-bold text-white">Account Recovery</h1>
         </div>

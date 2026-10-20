@@ -450,7 +450,7 @@ export const AdminSettingsPage: React.FC = () => {
                 rows={2}
                 value={formData.affiliate_share_template || ''}
                 onChange={(e) => handleChange('affiliate_share_template', e.target.value)}
-                placeholder="👑 Join Earn Sheet with code {CODE} and earn daily cash rewards! Register here: {LINK}"
+                placeholder="👑 Join Earn Street with code {CODE} and earn daily cash rewards! Register here: {LINK}"
                 className="w-full border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 text-xs text-[#111827] focus:outline-none font-mono"
               />
               <span className="text-[10px] text-[#6B7280] mt-1 block">

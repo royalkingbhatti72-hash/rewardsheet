@@ -36,7 +36,7 @@ export const AdminLoginPage: React.FC = () => {
           <div className="w-12 h-12 rounded-xl bg-[#2563EB] text-white flex items-center justify-center mx-auto mb-3 shadow-md shadow-[#2563EB]/25">
             <Shield className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-[#111827]">Earn Sheet Admin</h1>
+          <h1 className="text-2xl font-bold text-[#111827]">Earn Street Admin</h1>
           <p className="text-xs text-[#6B7280] mt-1">
             Secure Administrator Authentication Portal
           </p>
