@@ -13,6 +13,7 @@ import {
   Filter,
   Sparkles,
   RefreshCw,
+  Edit3,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -283,10 +284,21 @@ export const AdminUsersPage: React.FC = () => {
                       </span>
                     </td>
                     <td>
-                      <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded text-[11px] inline-flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-amber-500" />
-                        {u.creditPoints ?? 0} CPs
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdjustPoints('');
+                          setPointsReason('');
+                          setPointsActionType('ADD');
+                          setPointsModalUser(u);
+                        }}
+                        className="font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 hover:border-amber-400 px-2.5 py-1 rounded-md text-[11px] inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer group"
+                        title={`Click to edit / adjust Credit Points for ${u.name}`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
+                        <span>{(u.creditPoints ?? 0).toLocaleString()} CPs</span>
+                        <Edit3 className="w-2.5 h-2.5 text-amber-600/70 group-hover:text-amber-900 ml-0.5" />
+                      </button>
                     </td>
                     <td className="font-bold text-[#111827]">
                       PKR {u.walletBalance.toLocaleString()}
@@ -318,10 +330,11 @@ export const AdminUsersPage: React.FC = () => {
                             setPointsActionType('ADD');
                             setPointsModalUser(u);
                           }}
-                          className="p-1.5 rounded-md hover:bg-amber-50 text-[#4B5563] hover:text-amber-600"
-                          title="Add / Decrease Credit Points"
+                          className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center gap-1 font-semibold text-[11px] transition-all shadow-xs"
+                          title={`Edit / Adjust Credit Points for ${u.name}`}
                         >
-                          <Sparkles className="w-4 h-4 text-amber-600" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                          <span className="hidden xl:inline">CPs</span>
                         </button>
                         <button
                           onClick={() => {
