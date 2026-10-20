@@ -536,9 +536,6 @@ export const DashboardPage: React.FC = () => {
                   <span className="text-xs font-black text-[#FFD45A] uppercase tracking-wider bg-[#FFD45A]/15 border border-[#FFD45A]/30 px-2.5 py-0.5 rounded-full">
                     Level {currentLevelNumber} Progress
                   </span>
-                  <span className="text-xs font-semibold text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/20 px-2.5 py-0.5 rounded-full">
-                    {levelTitle}
-                  </span>
                   <span className="text-xs font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-2.5 py-0.5 rounded-full">
                     {eligibleWithdrawalPercent}% Withdrawal Quota Unlocked
                   </span>
