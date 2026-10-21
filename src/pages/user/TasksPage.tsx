@@ -486,23 +486,35 @@ export const TasksPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Bonus and Credit Points Pills */}
-          <div className="flex items-center gap-2.5 self-start sm:self-auto">
-            <div className="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-center">
-              <span className="text-[9px] text-[#A6BCD9] block font-bold uppercase">Bonus</span>
-              <span className="text-xs sm:text-sm font-black text-emerald-400">
-                PKR{' '}
-                {activeLevelNumber === 1
-                  ? '500'
-                  : level?.completionReward?.toLocaleString() || meta.bonus.toLocaleString()}
-              </span>
+          {/* Right: Bonus and Credit Points Reward Capsules */}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {/* Bonus Reward Pill */}
+            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md hover:border-emerald-500/40 transition-all">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                <Award className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="text-left leading-tight">
+                <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Bonus</span>
+                <span className="text-xs sm:text-sm font-black text-emerald-400">
+                  PKR{' '}
+                  {activeLevelNumber === 1
+                    ? '500'
+                    : level?.completionReward?.toLocaleString() || meta.bonus.toLocaleString()}
+                </span>
+              </div>
             </div>
 
-            <div className="px-3 py-1.5 rounded-xl bg-[#22D3EE]/15 border border-[#22D3EE]/35 text-center">
-              <span className="text-[9px] text-[#A6BCD9] block font-bold uppercase">Points</span>
-              <span className="text-xs sm:text-sm font-black text-[#22D3EE]">
-                +{level?.totalCreditPoints || meta.points} CPs
-              </span>
+            {/* Credit Points Pill */}
+            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md hover:border-[#22D3EE]/40 transition-all">
+              <div className="w-6 h-6 rounded-lg bg-[#22D3EE]/15 border border-[#22D3EE]/30 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-3.5 h-3.5 text-[#22D3EE]" />
+              </div>
+              <div className="text-left leading-tight">
+                <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Points</span>
+                <span className="text-xs sm:text-sm font-black text-[#22D3EE]">
+                  +{level?.totalCreditPoints || meta.points} CPs
+                </span>
+              </div>
             </div>
           </div>
         </div>
