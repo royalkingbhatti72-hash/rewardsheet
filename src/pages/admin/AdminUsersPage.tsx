@@ -151,20 +151,19 @@ export const AdminUsersPage: React.FC = () => {
       return;
     }
 
-    setUpdatingUserId(editModalUser.id);
-    setEditLoading(true);
+    const targetUser = editModalUser;
+    setEditModalUser(null);
+    setUpdatingUserId(targetUser.id);
     try {
-      const res = await api.updateUser(editModalUser.id, changedFields);
+      const res = await api.updateUser(targetUser.id, changedFields);
       // Update that user's data instantly on the live page without reloading it
       setUsers((prev) =>
-        prev.map((u) => (u.id === editModalUser.id ? { ...u, ...res.user } : u))
+        prev.map((u) => (u.id === targetUser.id ? { ...u, ...res.user } : u))
       );
-      setMessage({ type: 'success', text: res.message || `Updated ${res.user?.name || editModalUser.name} successfully.` });
-      setEditModalUser(null);
+      setMessage({ type: 'success', text: res.message || `Updated ${res.user?.name || targetUser.name} successfully.` });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to update user' });
     } finally {
-      setEditLoading(false);
       setUpdatingUserId(null);
     }
   };
@@ -172,20 +171,19 @@ export const AdminUsersPage: React.FC = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetModalUser) return;
-    setUpdatingUserId(resetModalUser.id);
-    setResetLoading(true);
+    const targetUser = resetModalUser;
+    setResetModalUser(null);
+    setUpdatingUserId(targetUser.id);
     try {
-      const res = await api.resetUserPassword(resetModalUser.id, {
+      const res = await api.resetUserPassword(targetUser.id, {
         temporaryPassword: tempPassword,
         requireChangeOnLogin: true,
         reason: resetReason,
       });
       setMessage({ type: 'success', text: res.message });
-      setResetModalUser(null);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Reset failed' });
     } finally {
-      setResetLoading(false);
       setUpdatingUserId(null);
     }
   };
@@ -193,32 +191,32 @@ export const AdminUsersPage: React.FC = () => {
   const handleAdjustBalance = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!balanceModalUser) return;
+    const targetUser = balanceModalUser;
     const numAmount = parseFloat(adjustAmount);
     if (isNaN(numAmount) || numAmount <= 0) {
       setMessage({ type: 'error', text: 'Enter a valid positive adjustment amount' });
       return;
     }
-    setUpdatingUserId(balanceModalUser.id);
-    setAdjustLoading(true);
+    // Immediately remove popup from screen & activate loading indicator on this specific user
+    setBalanceModalUser(null);
+    setUpdatingUserId(targetUser.id);
     try {
-      const res = await api.adjustUserBalance(balanceModalUser.id, {
+      const res = await api.adjustUserBalance(targetUser.id, {
         amount: numAmount,
         actionType: adjustType,
         reason: adjustReason?.trim() || 'Admin adjustment',
       });
       // Update ONLY this single user in local state directly without reloading the entire table!
       const newBalance = res.wallet?.availableBalance ?? (
-        balanceModalUser.walletBalance + (adjustType === 'CREDIT' ? numAmount : -numAmount)
+        targetUser.walletBalance + (adjustType === 'CREDIT' ? numAmount : -numAmount)
       );
       setUsers((prev) =>
-        prev.map((u) => (u.id === balanceModalUser.id ? { ...u, walletBalance: newBalance } : u))
+        prev.map((u) => (u.id === targetUser.id ? { ...u, walletBalance: newBalance } : u))
       );
       setMessage({ type: 'success', text: res.message });
-      setBalanceModalUser(null);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Balance adjustment failed' });
     } finally {
-      setAdjustLoading(false);
       setUpdatingUserId(null);
     }
   };
@@ -226,32 +224,32 @@ export const AdminUsersPage: React.FC = () => {
   const handleAdjustPoints = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pointsModalUser) return;
+    const targetUser = pointsModalUser;
     const numPoints = parseInt(adjustPoints, 10);
     if (isNaN(numPoints) || numPoints <= 0) {
       setMessage({ type: 'error', text: 'Enter a valid positive number of credit points' });
       return;
     }
-    setUpdatingUserId(pointsModalUser.id);
-    setPointsLoading(true);
+    // Immediately remove popup from screen & activate loading indicator on this specific user
+    setPointsModalUser(null);
+    setUpdatingUserId(targetUser.id);
     try {
-      const res = await api.adjustUserCreditPoints(pointsModalUser.id, {
+      const res = await api.adjustUserCreditPoints(targetUser.id, {
         points: numPoints,
         actionType: pointsActionType,
         reason: pointsReason,
       });
       // Update ONLY this single user in local state directly without reloading the entire table!
       const newPoints = res.creditPoints ?? (
-        (pointsModalUser.creditPoints ?? 0) + (pointsActionType === 'ADD' ? numPoints : -numPoints)
+        (targetUser.creditPoints ?? 0) + (pointsActionType === 'ADD' ? numPoints : -numPoints)
       );
       setUsers((prev) =>
-        prev.map((u) => (u.id === pointsModalUser.id ? { ...u, creditPoints: newPoints } : u))
+        prev.map((u) => (u.id === targetUser.id ? { ...u, creditPoints: newPoints } : u))
       );
       setMessage({ type: 'success', text: res.message });
-      setPointsModalUser(null);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Credit points adjustment failed' });
     } finally {
-      setPointsLoading(false);
       setUpdatingUserId(null);
     }
   };
@@ -361,7 +359,14 @@ export const AdminUsersPage: React.FC = () => {
                       </button>
                     </td>
                     <td className="font-bold text-[#111827]">
-                      PKR {u.walletBalance.toLocaleString()}
+                      {updatingUserId === u.id ? (
+                        <span className="inline-flex items-center gap-1 text-[#2563EB] text-xs font-semibold animate-pulse">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          <span>Updating...</span>
+                        </span>
+                      ) : (
+                        `PKR ${u.walletBalance.toLocaleString()}`
+                      )}
                     </td>
                     <td>
                       <span
@@ -545,10 +550,9 @@ export const AdminUsersPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={resetLoading}
                   className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8]"
                 >
-                  {resetLoading ? 'Resetting...' : 'Confirm Reset Password'}
+                  Confirm Reset Password
                 </button>
               </div>
             </form>
@@ -632,10 +636,9 @@ export const AdminUsersPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={adjustLoading}
                   className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8]"
                 >
-                  {adjustLoading ? 'Executing...' : 'Confirm Balance Adjustment'}
+                  Confirm Balance Adjustment
                 </button>
               </div>
             </form>
@@ -735,11 +738,10 @@ export const AdminUsersPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={pointsLoading}
                   className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 flex items-center gap-1.5"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  {pointsLoading ? 'Updating CPs...' : 'Confirm Points Adjustment'}
+                  <span>Confirm Points Adjustment</span>
                 </button>
               </div>
             </form>
@@ -826,17 +828,9 @@ export const AdminUsersPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={editLoading}
-                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8] flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8]"
                 >
-                  {editLoading ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Changes...</span>
-                    </>
-                  ) : (
-                    <span>Save Changes</span>
-                  )}
+                  Save Changes
                 </button>
               </div>
             </form>

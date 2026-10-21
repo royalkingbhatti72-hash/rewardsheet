@@ -9,6 +9,7 @@ import {
   XCircle,
   ExternalLink,
   ArrowLeft,
+  ArrowRight,
   AlertCircle,
   Send,
   Zap,
@@ -16,8 +17,35 @@ import {
   ShieldCheck,
   ArrowDownLeft,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+
+const triggerFireworks = () => {
+  const duration = 2.5 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 99999 };
+  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+  const interval: any = setInterval(() => {
+    const timeLeft = animationEnd - Date.now();
+    if (timeLeft <= 0) return clearInterval(interval);
+
+    const particleCount = 40 * (timeLeft / duration);
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 },
+      colors: ['#FFD45A', '#1459E8', '#22D3EE', '#10D6A0'],
+    });
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 },
+      colors: ['#FFD45A', '#1459E8', '#22D3EE', '#10D6A0'],
+    });
+  }, 250);
+};
 
 const cleanTaskTitle = (title: string) => {
   if (!title) return '';
@@ -78,7 +106,8 @@ export const TaskDetailPage: React.FC = () => {
     setSuccess(null);
 
     try {
-      const res = await api.unlockTask(taskId);
+      const targetId = task?.id || taskId;
+      const res = await api.unlockTask(targetId);
       setSuccess(res.message);
       if (res.task) {
         setTaskData((prev: any) => (prev ? { ...prev, task: { ...prev.task, ...res.task } } : prev));
@@ -105,22 +134,26 @@ export const TaskDetailPage: React.FC = () => {
     setSuccess(null);
 
     try {
-      const res = await api.submitTask(taskId, {
-        submissionNotes: 'Review My Task',
+      const targetId = task?.id || taskId;
+      const res = await api.submitTask(targetId, {
+        submissionNotes: 'Task completed',
       });
-      setSuccess(res.message);
+      setSuccess(res.message || 'Task completed successfully! Reward credited.');
       setTaskData((prev: any) => {
         if (!prev) return prev;
         return {
           ...prev,
           task: {
             ...prev.task,
-            userStatus: 'PENDING_VERIFICATION',
+            userStatus: res.userStatus || 'APPROVED',
             isPaidUnlocked: true,
           },
+          nextTaskId: res.nextTaskId,
           submissions: res.submission ? [res.submission, ...(prev.submissions || [])] : prev.submissions,
         };
       });
+      triggerFireworks();
+      api.invalidateCache('/tasks');
       refreshUser();
     } catch (err: any) {
       setError(err.message || 'Submission failed');
@@ -159,6 +192,8 @@ export const TaskDetailPage: React.FC = () => {
     (task?.unlockFee && task.unlockFee > 0) ||
     task?.taskNumber === 5 ||
     task?.taskNumber === 10 ||
+    task?.taskNumber === 15 ||
+    task?.taskNumber === 20 ||
     task?.taskType?.toLowerCase().includes('prepaid')
   );
   const taskCreditPoints = isPrepaid
@@ -363,7 +398,7 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Review / Submit Action Button */}
+          {/* Complete / Submit Action Button */}
           {(isAvailable || isRejected) && (
             <div className="pt-2">
               {task?.isPaid && !hasSufficientBalance ? (
@@ -372,7 +407,7 @@ export const TaskDetailPage: React.FC = () => {
                   className="w-full py-3 bg-gradient-to-r from-[#1264F5] to-[#168BFF] hover:from-[#168BFF] hover:to-[#1264F5] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <ArrowDownLeft className="w-4 h-4" />
-                  <span>Deposit PKR {remainingNeeded.toLocaleString()} to Submit Approval</span>
+                  <span>Deposit PKR {remainingNeeded.toLocaleString()} to Complete Task</span>
                 </Link>
               ) : (
                 <button
@@ -390,12 +425,12 @@ export const TaskDetailPage: React.FC = () => {
                   ) : task?.isPaid ? (
                     <>
                       <Zap className="w-4 h-4 text-[#020B20]" />
-                      <span>Submit Approval (+PKR {task?.rewardAmount?.toLocaleString() || 80} Reward)</span>
+                      <span>Complete Prepaid Task (+PKR {task?.rewardAmount?.toLocaleString() || 80} Reward)</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" />
-                      <span>Review My Task</span>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Complete Task & Claim PKR {task?.rewardAmount?.toLocaleString()}</span>
                     </>
                   )}
                 </button>
@@ -410,7 +445,7 @@ export const TaskDetailPage: React.FC = () => {
               <div>
                 <p className="text-xs font-bold text-blue-300">Task Under Review ⏳</p>
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Your task has been sent for admin verification. Once approved, the reward will be added to your balance and the next task will automatically open.
+                  Your task has been sent for verification. Once approved, the reward will be added to your balance and the next task will automatically open.
                 </p>
               </div>
             </div>
@@ -423,20 +458,39 @@ export const TaskDetailPage: React.FC = () => {
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 <p className="text-xs font-semibold text-emerald-300">
                   {task?.isPaid ? (
-                    <>Task Approved! +PKR {task?.rewardAmount?.toLocaleString() || 80} credited to your wallet and +30 CPs awarded.</>
+                    <>Task Completed & Approved! +PKR {task?.rewardAmount?.toLocaleString() || 80} credited to your wallet and +30 CPs awarded.</>
                   ) : (
-                    <>Task Verified & Approved! Reward and Credit Points credited.</>
+                    <>Task Verified & Completed! +PKR {task?.rewardAmount?.toLocaleString()} reward and +{taskCreditPoints} CPs credited.</>
                   )}
                 </p>
               </div>
-              <div>
-                <Link
-                  to={`/app/tasks?level=${level?.levelNumber}`}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs px-5 py-2.5 rounded-xl shadow-lg hover:scale-105 transition-all cursor-pointer"
-                >
-                  <span>Proceed to Next Task (Task {(task?.taskNumber || 0) + 1})</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </Link>
+              <div className="flex items-center gap-3 flex-wrap">
+                {taskData?.nextTaskId ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/app/tasks/${taskData.nextTaskId}`)}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs px-5 py-2.5 rounded-xl shadow-lg hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <span>Proceed to Next Task (Task {(task?.taskNumber || 0) + 1})</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                ) : (task?.taskNumber || 0) < (level?.requiredTaskCount || 10) ? (
+                  <Link
+                    to={`/app/tasks?level=${level?.levelNumber}`}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs px-5 py-2.5 rounded-xl shadow-lg hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <span>Proceed to Next Task (Task ${(task?.taskNumber || 0) + 1})</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    to={`/app/tasks?level=${(level?.levelNumber || 1) + 1}`}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#10D6A0] to-emerald-400 text-[#020B20] font-black text-xs px-5 py-2.5 rounded-xl shadow-lg hover:scale-105 transition-all cursor-pointer"
+                  >
+                    <span>Level {level?.levelNumber || 1} Complete! Proceed to Level {(level?.levelNumber || 1) + 1}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
             </div>
           )}

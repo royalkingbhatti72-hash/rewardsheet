@@ -271,10 +271,26 @@ export const api = {
   // Tasks & Levels
   getLevels: (opts?: RequestOptions) => request('/tasks/levels', opts),
   getLevelTasks: (levelNumber: number, opts?: RequestOptions) => request(`/tasks/levels/${levelNumber}`, opts),
-  getTaskDetails: (taskId: string, opts?: RequestOptions) => request(`/tasks/${taskId}`, opts),
-  unlockTask: (taskId: string) => request(`/tasks/${taskId}/unlock`, { method: 'POST' }),
-  submitTask: (taskId: string, payload: { submissionNotes: string; proofEvidence?: string }) =>
-    request(`/tasks/${taskId}/submit`, { method: 'POST', body: JSON.stringify(payload) }),
+  unlockLevel: async (levelNumber: number, opts?: RequestOptions) => {
+    api.invalidateCache('/tasks');
+    return request(`/tasks/levels/${levelNumber}`, { bypassCache: true, ...opts });
+  },
+  getTaskDetails: (taskId: string, opts?: RequestOptions) =>
+    request(`/tasks/${taskId}`, { bypassCache: true, ...opts }),
+  unlockTask: async (taskId: string) => {
+    const res = await request(`/tasks/${taskId}/unlock`, { method: 'POST' });
+    api.invalidateCache('/tasks');
+    api.invalidateCache('/wallet');
+    api.invalidateCache('/user/dashboard');
+    return res;
+  },
+  submitTask: async (taskId: string, payload: { submissionNotes: string; proofEvidence?: string }) => {
+    const res = await request(`/tasks/${taskId}/submit`, { method: 'POST', body: JSON.stringify(payload) });
+    api.invalidateCache('/tasks');
+    api.invalidateCache('/wallet');
+    api.invalidateCache('/user/dashboard');
+    return res;
+  },
 
   // Wallet
   getWallet: (opts?: RequestOptions) => request('/wallet', opts),

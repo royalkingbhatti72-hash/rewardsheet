@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Search, Plus, Minus, CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Wallet, Search, Plus, Minus, CheckCircle2, AlertCircle, X, RefreshCw } from 'lucide-react';
 import { api } from '../../api/client';
 
 export const AdminWalletsPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   // Balance Modal
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -13,7 +14,6 @@ export const AdminWalletsPage: React.FC = () => {
   const [actionType, setActionType] = useState<'CREDIT' | 'DEBIT'>('CREDIT');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
-  const [executing, setExecuting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadUsers = () => {
@@ -36,29 +36,36 @@ export const AdminWalletsPage: React.FC = () => {
   const handleAdjustBalance = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    const targetUser = selectedUser;
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       setMessage({ type: 'error', text: 'Enter a valid positive adjustment amount' });
       return;
     }
 
-    setExecuting(true);
+    // Immediately remove popup from screen & activate loading indicator on this specific user
+    setSelectedUser(null);
+    setUpdatingUserId(targetUser.id);
     setMessage(null);
 
     try {
-      const res = await api.adjustUserBalance(selectedUser.id, {
+      const res = await api.adjustUserBalance(targetUser.id, {
         amount: numAmount,
         actionType,
         reason: reason.trim(),
         notes: notes.trim() || undefined,
       });
+      const newBalance = res.wallet?.availableBalance ?? (
+        targetUser.walletBalance + (actionType === 'CREDIT' ? numAmount : -numAmount)
+      );
+      setUsers((prev) =>
+        prev.map((u) => (u.id === targetUser.id ? { ...u, walletBalance: newBalance } : u))
+      );
       setMessage({ type: 'success', text: res.message });
-      setSelectedUser(null);
-      loadUsers();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Balance adjustment failed' });
     } finally {
-      setExecuting(false);
+      setUpdatingUserId(null);
     }
   };
 
@@ -126,7 +133,16 @@ export const AdminWalletsPage: React.FC = () => {
                     <td className="font-semibold text-[#111827]">{u.name}</td>
                     <td className="font-mono text-[#4B5563]">{u.phone}</td>
                     <td className="font-mono text-[#2563EB] font-bold">{u.referralCode}</td>
-                    <td className="font-bold text-[#111827]">PKR {u.walletBalance.toLocaleString()}</td>
+                    <td className="font-bold text-[#111827]">
+                      {updatingUserId === u.id ? (
+                        <span className="inline-flex items-center gap-1 text-[#2563EB] text-xs font-semibold animate-pulse">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          <span>Updating...</span>
+                        </span>
+                      ) : (
+                        `PKR ${u.walletBalance.toLocaleString()}`
+                      )}
+                    </td>
                     <td>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -137,18 +153,25 @@ export const AdminWalletsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedUser(u);
-                          setAmount('');
-                          setReason('');
-                          setNotes('');
-                          setActionType('CREDIT');
-                        }}
-                        className="px-3 py-1 bg-[#2563EB] text-white font-semibold text-xs rounded-lg hover:bg-[#1D4ED8]"
-                      >
-                        Adjust Balance
-                      </button>
+                      {updatingUserId === u.id ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2563EB]/10 text-[#2563EB] font-semibold text-xs rounded-lg border border-[#2563EB]/20 animate-pulse">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                          <span>Updating...</span>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedUser(u);
+                            setAmount('');
+                            setReason('');
+                            setNotes('');
+                            setActionType('CREDIT');
+                          }}
+                          className="px-3 py-1 bg-[#2563EB] text-white font-semibold text-xs rounded-lg hover:bg-[#1D4ED8]"
+                        >
+                          Adjust Balance
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -242,10 +265,9 @@ export const AdminWalletsPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={executing}
                   className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8]"
                 >
-                  {executing ? 'Executing...' : 'Confirm Balance Adjustment'}
+                  Confirm Balance Adjustment
                 </button>
               </div>
             </form>
