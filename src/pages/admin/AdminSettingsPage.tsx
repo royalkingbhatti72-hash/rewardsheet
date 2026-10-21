@@ -38,9 +38,15 @@ export const AdminSettingsPage: React.FC = () => {
     setMessage(null);
 
     try {
-      const payload = Object.entries(formData).map(([key, value]) => ({ key, value }));
+      const payload = {
+        settings: Object.entries(formData).map(([key, value]) => ({
+          key,
+          value: value === null || value === undefined ? '' : String(value),
+        })),
+      };
       const res = await api.updateAdminSettings(payload);
       setMessage({ type: 'success', text: res.message });
+      api.invalidateCache('/settings');
       loadSettings();
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to update settings' });
