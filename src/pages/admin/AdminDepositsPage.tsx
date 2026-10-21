@@ -24,8 +24,7 @@ export const AdminDepositsPage: React.FC = () => {
   const [reviewingDep, setReviewingDep] = useState<any | null>(null);
   const [action, setAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
-  const [updatingDepId, setUpdatingDepId] = useState<string | null>(null);
-  const [updatingDepAction, setUpdatingDepAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
+  const [updatingDeps, setUpdatingDeps] = useState<Record<string, 'APPROVE' | 'REJECT'>>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadDeposits = (p = 1, isManual = false) => {
@@ -66,8 +65,7 @@ export const AdminDepositsPage: React.FC = () => {
 
     // Immediately close modal so user doesn't wait with popup open
     setReviewingDep(null);
-    setUpdatingDepId(targetDep.id);
-    setUpdatingDepAction(currentAction);
+    setUpdatingDeps((prev) => ({ ...prev, [targetDep.id]: currentAction }));
     setMessage(null);
 
     try {
@@ -84,7 +82,11 @@ export const AdminDepositsPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Deposit review failed' });
     } finally {
-      setUpdatingDepId(null);
+      setUpdatingDeps((prev) => {
+        const next = { ...prev };
+        delete next[targetDep.id];
+        return next;
+      });
     }
   };
 
@@ -172,10 +174,10 @@ export const AdminDepositsPage: React.FC = () => {
                     <td className="text-[#4B5563] text-[11px] max-w-xs truncate">{dep.proofEvidence || 'N/A'}</td>
                     <td className="font-bold text-[#111827] whitespace-nowrap">PKR {dep.amount.toLocaleString()}</td>
                     <td>
-                      {updatingDepId === dep.id ? (
+                      {updatingDeps[dep.id] ? (
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
                           <RefreshCw className="w-2.5 h-2.5 animate-spin text-[#2563EB]" />
-                          <span>{updatingDepAction === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
+                          <span>{updatingDeps[dep.id] === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
                         </span>
                       ) : (
                         <span
@@ -192,10 +194,10 @@ export const AdminDepositsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="text-right whitespace-nowrap">
-                      {updatingDepId === dep.id ? (
+                      {updatingDeps[dep.id] ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
                           <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
-                          <span>Updating...</span>
+                          <span>{updatingDeps[dep.id] === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
                         </span>
                       ) : dep.status === 'PENDING' ? (
                         <div className="flex items-center justify-end gap-1.5">

@@ -27,8 +27,7 @@ export const AdminSubmissionsPage: React.FC = () => {
   const [action, setAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
-  const [updatingSubAction, setUpdatingSubAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
+  const [updatingSubs, setUpdatingSubs] = useState<Record<string, 'APPROVE' | 'REJECT'>>({});
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadSubmissions = (p = 1, isManual = false) => {
@@ -76,8 +75,7 @@ export const AdminSubmissionsPage: React.FC = () => {
 
     // Close popup immediately so admin never waits inside popup
     setReviewingSub(null);
-    setUpdatingSubId(targetSub.id);
-    setUpdatingSubAction(reviewAction);
+    setUpdatingSubs((prev) => ({ ...prev, [targetSub.id]: reviewAction }));
     setMessage(null);
 
     try {
@@ -95,7 +93,11 @@ export const AdminSubmissionsPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Review execution failed' });
     } finally {
-      setUpdatingSubId(null);
+      setUpdatingSubs((prev) => {
+        const next = { ...prev };
+        delete next[targetSub.id];
+        return next;
+      });
     }
   };
 
@@ -208,10 +210,10 @@ export const AdminSubmissionsPage: React.FC = () => {
                       PKR {sub.task?.rewardAmount.toLocaleString()}
                     </td>
                     <td>
-                      {updatingSubId === sub.id ? (
+                      {updatingSubs[sub.id] ? (
                         <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
                           <RefreshCw className="w-2.5 h-2.5 animate-spin text-[#2563EB]" />
-                          <span>{updatingSubAction === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
+                          <span>{updatingSubs[sub.id] === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
                         </span>
                       ) : (
                         <span
@@ -228,10 +230,10 @@ export const AdminSubmissionsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="text-right whitespace-nowrap">
-                      {updatingSubId === sub.id ? (
+                      {updatingSubs[sub.id] ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
                           <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
-                          <span>Updating...</span>
+                          <span>{updatingSubs[sub.id] === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
                         </span>
                       ) : sub.status === 'PENDING' ? (
                         <div className="flex items-center justify-end gap-1.5">

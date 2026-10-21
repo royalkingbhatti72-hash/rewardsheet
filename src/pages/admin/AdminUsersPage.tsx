@@ -24,7 +24,7 @@ export const AdminUsersPage: React.FC = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [updatingUsers, setUpdatingUsers] = useState<Record<string, boolean>>({});
 
   // Modals state
   const [resetModalUser, setResetModalUser] = useState<any | null>(null);
@@ -92,7 +92,7 @@ export const AdminUsersPage: React.FC = () => {
 
   // Treat each user as a separate entity: refresh ONLY this user's data
   const handleRefreshSingleUser = async (userId: string) => {
-    setUpdatingUserId(userId);
+    setUpdatingUsers((prev) => ({ ...prev, [userId]: true }));
     try {
       const res = await api.getAdminUserSummary(userId);
       if (res?.user) {
@@ -104,13 +104,17 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to refresh user' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
     }
   };
 
   const handleToggleStatus = async (user: any) => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-    setUpdatingUserId(user.id);
+    setUpdatingUsers((prev) => ({ ...prev, [user.id]: true }));
     try {
       const res = await api.updateUserStatus(user.id, newStatus, `Admin manual status toggle to ${newStatus}`);
       // Update ONLY this single user in local state directly without reloading the entire table!
@@ -121,7 +125,11 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Status update failed' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[user.id];
+        return next;
+      });
     }
   };
 
@@ -153,7 +161,7 @@ export const AdminUsersPage: React.FC = () => {
 
     const targetUser = editModalUser;
     setEditModalUser(null);
-    setUpdatingUserId(targetUser.id);
+    setUpdatingUsers((prev) => ({ ...prev, [targetUser.id]: true }));
     try {
       const res = await api.updateUser(targetUser.id, changedFields);
       // Update that user's data instantly on the live page without reloading it
@@ -164,7 +172,11 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to update user' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[targetUser.id];
+        return next;
+      });
     }
   };
 
@@ -173,7 +185,7 @@ export const AdminUsersPage: React.FC = () => {
     if (!resetModalUser) return;
     const targetUser = resetModalUser;
     setResetModalUser(null);
-    setUpdatingUserId(targetUser.id);
+    setUpdatingUsers((prev) => ({ ...prev, [targetUser.id]: true }));
     try {
       const res = await api.resetUserPassword(targetUser.id, {
         temporaryPassword: tempPassword,
@@ -184,7 +196,11 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Reset failed' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[targetUser.id];
+        return next;
+      });
     }
   };
 
@@ -199,7 +215,7 @@ export const AdminUsersPage: React.FC = () => {
     }
     // Immediately remove popup from screen & activate loading indicator on this specific user
     setBalanceModalUser(null);
-    setUpdatingUserId(targetUser.id);
+    setUpdatingUsers((prev) => ({ ...prev, [targetUser.id]: true }));
     try {
       const res = await api.adjustUserBalance(targetUser.id, {
         amount: numAmount,
@@ -217,7 +233,11 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Balance adjustment failed' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[targetUser.id];
+        return next;
+      });
     }
   };
 
@@ -232,7 +252,7 @@ export const AdminUsersPage: React.FC = () => {
     }
     // Immediately remove popup from screen & activate loading indicator on this specific user
     setPointsModalUser(null);
-    setUpdatingUserId(targetUser.id);
+    setUpdatingUsers((prev) => ({ ...prev, [targetUser.id]: true }));
     try {
       const res = await api.adjustUserCreditPoints(targetUser.id, {
         points: numPoints,
@@ -250,7 +270,11 @@ export const AdminUsersPage: React.FC = () => {
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Credit points adjustment failed' });
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUsers((prev) => {
+        const next = { ...prev };
+        delete next[targetUser.id];
+        return next;
+      });
     }
   };
 
@@ -359,7 +383,7 @@ export const AdminUsersPage: React.FC = () => {
                       </button>
                     </td>
                     <td className="font-bold text-[#111827]">
-                      {updatingUserId === u.id ? (
+                      {updatingUsers[u.id] ? (
                         <span className="inline-flex items-center gap-1 text-[#2563EB] text-xs font-semibold animate-pulse">
                           <RefreshCw className="w-3 h-3 animate-spin" />
                           <span>Updating...</span>
@@ -381,7 +405,7 @@ export const AdminUsersPage: React.FC = () => {
                     </td>
                     <td className="text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
-                        {updatingUserId === u.id ? (
+                        {updatingUsers[u.id] ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
                             <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
                             <span>Updating...</span>
