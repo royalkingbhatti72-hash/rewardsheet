@@ -350,10 +350,10 @@ export const AdminUserDetailPage: React.FC = () => {
                 setPointsActionType('ADD');
                 setPointsModalOpen(true);
               }}
-              className="w-full mt-2 px-3 py-1.5 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+              className="w-full mt-2 px-3 py-1.5 text-xs font-semibold bg-white hover:bg-slate-50 text-[#374151] border border-[#D9E4F2] rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Edit / Adjust Credit Points</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#6B7280]" />
+              <span>Adjust Credit Points</span>
             </button>
           </div>
         </div>

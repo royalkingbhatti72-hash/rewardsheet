@@ -365,22 +365,8 @@ export const AdminUsersPage: React.FC = () => {
                         {u.approvedTasksCount} / 100
                       </span>
                     </td>
-                    <td>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAdjustPoints('');
-                          setPointsReason('');
-                          setPointsActionType('ADD');
-                          setPointsModalUser(u);
-                        }}
-                        className="font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 hover:border-amber-400 px-2.5 py-1 rounded-md text-[11px] inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer group"
-                        title={`Click to edit / adjust Credit Points for ${u.name}`}
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
-                        <span>{(u.creditPoints ?? 0).toLocaleString()} CPs</span>
-                        <Edit3 className="w-2.5 h-2.5 text-amber-600/70 group-hover:text-amber-900 ml-0.5" />
-                      </button>
+                    <td className="font-semibold text-[#111827]">
+                      <span>{(u.creditPoints ?? 0).toLocaleString()} <span className="text-[11px] text-[#6B7280] font-normal">CPs</span></span>
                     </td>
                     <td className="font-bold text-[#111827]">
                       {updatingUsers[u.id] ? (
@@ -439,11 +425,10 @@ export const AdminUsersPage: React.FC = () => {
                                 setPointsActionType('ADD');
                                 setPointsModalUser(u);
                               }}
-                              className="px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center gap-1 font-semibold text-[11px] transition-all shadow-xs"
+                              className="p-1.5 rounded-md hover:bg-slate-100 text-[#4B5563] hover:text-[#111827] transition-colors"
                               title={`Edit / Adjust Credit Points for ${u.name}`}
                             >
-                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                              <span className="hidden xl:inline">CPs</span>
+                              <Sparkles className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => {
