@@ -386,15 +386,25 @@ export const TaskDetailPage: React.FC = () => {
           {/* Open Task Assignment Link */}
           {task?.protectedUrl && (
             <div className="pt-1">
-              <a
-                href={task.protectedUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#1459E8] hover:bg-[#2478FF] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
-              >
-                <span>Open Task Assignment Link</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              {isPrepaid && !hasSufficientBalance ? (
+                <div
+                  className="inline-flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 text-slate-400 text-xs font-semibold px-4 py-2.5 rounded-xl cursor-not-allowed select-none"
+                  title={`Deposit PKR ${remainingNeeded.toLocaleString()} to access this assignment link`}
+                >
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Open Task Assignment Link (PKR {unlockFee.toLocaleString()} Balance Required)</span>
+                </div>
+              ) : (
+                <a
+                  href={task.protectedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#1459E8] hover:bg-[#2478FF] text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
+                >
+                  <span>Open Task Assignment Link</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
             </div>
           )}
 
