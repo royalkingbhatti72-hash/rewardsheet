@@ -677,10 +677,10 @@ export const TasksPage: React.FC = () => {
                           ? 'bg-emerald-500/20 text-emerald-400'
                           : isPending
                           ? 'bg-[#1264F5]/25 text-[#22D3EE]'
-                          : isPrepaid
-                          ? 'bg-[#FFD45A] text-slate-950 font-black'
                           : isTaskLocked
                           ? 'bg-slate-800 text-slate-500'
+                          : isPrepaid
+                          ? 'bg-[#FFD45A] text-slate-950 font-black'
                           : 'bg-[#1459E8]/30 text-white'
                       }`}
                     >
