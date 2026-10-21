@@ -375,6 +375,8 @@ export const api = {
   },
   reviewTaskSubmission: (submissionId: string, payload: any) =>
     request(`/admin/submissions/${submissionId}/review`, { method: 'PUT', body: JSON.stringify(payload) }, true),
+  batchReviewSubmissions: (payload: { submissionIds: string[]; action: 'APPROVE' | 'REJECT'; reviewNotes?: string; rejectionReason?: string }) =>
+    request(`/admin/submissions/batch-review`, { method: 'POST', body: JSON.stringify(payload) }, true),
 
   // Admin Deposits
   getAdminDeposits: (params?: { status?: string; page?: number; limit?: number }) => {

@@ -10,6 +10,7 @@ import {
   User,
   ShieldCheck,
   RefreshCw,
+  Check,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -28,6 +29,8 @@ export const AdminSubmissionsPage: React.FC = () => {
   const [reviewNotes, setReviewNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [updatingSubs, setUpdatingSubs] = useState<Record<string, 'APPROVE' | 'REJECT'>>({});
+  const [selectedSubIds, setSelectedSubIds] = useState<Set<string>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadSubmissions = (p = 1, isManual = false) => {
@@ -56,7 +59,34 @@ export const AdminSubmissionsPage: React.FC = () => {
 
   useEffect(() => {
     loadSubmissions(1);
+    setSelectedSubIds(new Set());
   }, [status, level]);
+
+  const pendingSubmissions = submissions.filter((s) => s.status === 'PENDING');
+  const allPendingSelected =
+    pendingSubmissions.length > 0 && pendingSubmissions.every((s) => selectedSubIds.has(s.id));
+
+  const handleToggleSelectAll = () => {
+    if (allPendingSelected) {
+      setSelectedSubIds(new Set());
+    } else {
+      const next = new Set<string>();
+      pendingSubmissions.forEach((s) => next.add(s.id));
+      setSelectedSubIds(next);
+    }
+  };
+
+  const handleToggleSelectOne = (id: string) => {
+    setSelectedSubIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const handleOpenReview = (sub: any, defaultAction: 'APPROVE' | 'REJECT') => {
     setReviewingSub(sub);
@@ -72,11 +102,18 @@ export const AdminSubmissionsPage: React.FC = () => {
     const reviewAction = action;
     const notes = reviewNotes.trim() || undefined;
     const reason = reviewAction === 'REJECT' ? rejectionReason : undefined;
+    const previousStatus = targetSub.status;
+    const newStatus = reviewAction === 'APPROVE' ? 'APPROVED' : 'REJECTED';
 
-    // Close popup immediately so admin never waits inside popup
+    // 1. Close popup immediately so admin never waits inside popup
     setReviewingSub(null);
-    setUpdatingSubs((prev) => ({ ...prev, [targetSub.id]: reviewAction }));
     setMessage(null);
+
+    // 2. Optimistic UI update: Instantly update table row to newStatus!
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === targetSub.id ? { ...s, status: newStatus, _isOptimistic: true } : s))
+    );
+    setUpdatingSubs((prev) => ({ ...prev, [targetSub.id]: reviewAction }));
 
     try {
       const res = await api.reviewTaskSubmission(targetSub.id, {
@@ -84,13 +121,16 @@ export const AdminSubmissionsPage: React.FC = () => {
         reviewNotes: notes,
         rejectionReason: reason,
       });
-      // Update only this submission directly without reloading the whole table!
-      const newStatus = reviewAction === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      // Confirmed by backend: clear optimistic flag
       setSubmissions((prev) =>
-        prev.map((s) => (s.id === targetSub.id ? { ...s, status: newStatus } : s))
+        prev.map((s) => (s.id === targetSub.id ? { ...s, status: newStatus, _isOptimistic: false } : s))
       );
       setMessage({ type: 'success', text: res.message || `Submission ${newStatus.toLowerCase()} successfully.` });
     } catch (err: any) {
+      // Revert optimistic update on failure!
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === targetSub.id ? { ...s, status: previousStatus, _isOptimistic: false } : s))
+      );
       setMessage({ type: 'error', text: err.message || 'Review execution failed' });
     } finally {
       setUpdatingSubs((prev) => {
@@ -98,6 +138,35 @@ export const AdminSubmissionsPage: React.FC = () => {
         delete next[targetSub.id];
         return next;
       });
+    }
+  };
+
+  const handleExecuteBatchReview = async (batchAction: 'APPROVE' | 'REJECT') => {
+    const ids = Array.from(selectedSubIds);
+    if (ids.length === 0) return;
+
+    setBatchLoading(true);
+    setMessage(null);
+
+    // Optimistically update all selected items immediately!
+    const newStatus = batchAction === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+    setSubmissions((prev) =>
+      prev.map((s) => (ids.includes(s.id) ? { ...s, status: newStatus } : s))
+    );
+    setSelectedSubIds(new Set());
+
+    try {
+      const res = await api.batchReviewSubmissions({
+        submissionIds: ids,
+        action: batchAction,
+        reviewNotes: 'Batch verified via verification desk',
+      });
+      setMessage({ type: 'success', text: res.message || `Batch processed successfully!` });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Batch review failed' });
+      loadSubmissions(page, true);
+    } finally {
+      setBatchLoading(false);
     }
   };
 
@@ -158,13 +227,48 @@ export const AdminSubmissionsPage: React.FC = () => {
           type="button"
           onClick={() => loadSubmissions(page, true)}
           disabled={reloading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4F2] bg-white hover:bg-[#F8FAFD] text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4F2] bg-white hover:bg-[#F8FAFD] text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 shadow-xs cursor-pointer"
           title="Reload task submissions from database"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${reloading ? 'animate-spin' : ''}`} />
           <span>{reloading ? 'Reloading...' : 'Reload Submissions'}</span>
         </button>
       </div>
+
+      {/* Batch Action Bar */}
+      {selectedSubIds.size > 0 && (
+        <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#1E3A8A]">
+              {selectedSubIds.size} submission{selectedSubIds.size > 1 ? 's' : ''} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleExecuteBatchReview('APPROVE')}
+              disabled={batchLoading}
+              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>{batchLoading ? 'Processing...' : `Approve Selected (${selectedSubIds.size})`}</span>
+            </button>
+            <button
+              onClick={() => handleExecuteBatchReview('REJECT')}
+              disabled={batchLoading}
+              className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Reject Selected</span>
+            </button>
+            <button
+              onClick={() => setSelectedSubIds(new Set())}
+              className="px-2.5 py-1.5 text-[#4B5563] hover:text-[#111827] font-semibold cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Submissions Table */}
       <div className="admin-card overflow-hidden">
@@ -175,6 +279,16 @@ export const AdminSubmissionsPage: React.FC = () => {
             <table className="w-full text-left text-xs admin-table">
               <thead>
                 <tr>
+                  <th className="w-10">
+                    <input
+                      type="checkbox"
+                      checked={allPendingSelected}
+                      onChange={handleToggleSelectAll}
+                      disabled={pendingSubmissions.length === 0}
+                      className="rounded border-[#D9E4F2] text-[#2563EB] focus:ring-0 cursor-pointer w-4 h-4"
+                      title="Select all pending submissions on this page"
+                    />
+                  </th>
                   <th>Submitted At</th>
                   <th>Member</th>
                   <th>Assignment</th>
@@ -186,7 +300,17 @@ export const AdminSubmissionsPage: React.FC = () => {
               </thead>
               <tbody>
                 {submissions.map((sub) => (
-                  <tr key={sub.id}>
+                  <tr key={sub.id} className={selectedSubIds.has(sub.id) ? 'bg-blue-50/50' : ''}>
+                    <td className="w-10">
+                      {sub.status === 'PENDING' ? (
+                        <input
+                          type="checkbox"
+                          checked={selectedSubIds.has(sub.id)}
+                          onChange={() => handleToggleSelectOne(sub.id)}
+                          className="rounded border-[#D9E4F2] text-[#2563EB] focus:ring-0 cursor-pointer w-4 h-4"
+                        />
+                      ) : null}
+                    </td>
                     <td className="text-[#6B7280] whitespace-nowrap">
                       {new Date(sub.createdAt).toLocaleDateString()} {new Date(sub.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
