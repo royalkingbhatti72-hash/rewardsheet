@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -14,8 +14,54 @@ import {
   Sparkles,
   RefreshCw,
   Edit3,
+  SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import { api } from '../../api/client';
+
+const COLUMN_KEYS = [
+  'name',
+  'phone',
+  'referralCode',
+  'approvedTasks',
+  'creditPoints',
+  'walletBalance',
+  'status',
+  'actions',
+] as const;
+
+type ColumnKey = (typeof COLUMN_KEYS)[number];
+
+interface ColumnMeta {
+  key: ColumnKey;
+  label: string;
+  defaultWidth: number;
+  minWidth: number;
+  maxWidth: number;
+  align?: 'left' | 'right';
+}
+
+const TABLE_COLUMNS: ColumnMeta[] = [
+  { key: 'name', label: 'Member Name', defaultWidth: 200, minWidth: 120, maxWidth: 500, align: 'left' },
+  { key: 'phone', label: 'Phone', defaultWidth: 135, minWidth: 90, maxWidth: 280, align: 'left' },
+  { key: 'referralCode', label: 'Referral Code', defaultWidth: 125, minWidth: 85, maxWidth: 240, align: 'left' },
+  { key: 'approvedTasks', label: 'Approved Tasks', defaultWidth: 130, minWidth: 90, maxWidth: 240, align: 'left' },
+  { key: 'creditPoints', label: 'Credit Points', defaultWidth: 130, minWidth: 90, maxWidth: 240, align: 'left' },
+  { key: 'walletBalance', label: 'Wallet Balance', defaultWidth: 140, minWidth: 95, maxWidth: 280, align: 'left' },
+  { key: 'status', label: 'Status', defaultWidth: 110, minWidth: 80, maxWidth: 200, align: 'left' },
+  { key: 'actions', label: 'Actions', defaultWidth: 240, minWidth: 160, maxWidth: 450, align: 'right' },
+];
+
+const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
+  name: 200,
+  phone: 135,
+  referralCode: 125,
+  approvedTasks: 130,
+  creditPoints: 130,
+  walletBalance: 140,
+  status: 110,
+  actions: 240,
+};
 
 export const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -278,6 +324,129 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
+  // Column Resizing & Sticky Table Header state
+  const [colWidths, setColWidths] = useState<Record<ColumnKey, number>>(() => {
+    try {
+      const saved = localStorage.getItem('royal_admin_users_col_widths');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_WIDTHS, ...parsed };
+      }
+    } catch {}
+    return DEFAULT_WIDTHS;
+  });
+  const [showColumnManager, setShowColumnManager] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizingColRef = useRef<{
+    key: ColumnKey;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('royal_admin_users_col_widths', JSON.stringify(colWidths));
+    } catch {}
+  }, [colWidths]);
+
+  const handleStartResize = (key: ColumnKey, clientX: number) => {
+    resizingColRef.current = {
+      key,
+      startX: clientX,
+      startWidth: colWidths[key] || DEFAULT_WIDTHS[key] || 150,
+    };
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizingColRef.current) return;
+      const { key, startX, startWidth } = resizingColRef.current;
+      const diff = e.clientX - startX;
+      const col = TABLE_COLUMNS.find((c) => c.key === key);
+      const min = col ? col.minWidth : 80;
+      const max = col ? col.maxWidth : 600;
+      const newWidth = Math.max(min, Math.min(max, startWidth + diff));
+      setColWidths((prev) => ({
+        ...prev,
+        [key]: Math.round(newWidth),
+      }));
+    };
+
+    const handleMouseUp = () => {
+      if (resizingColRef.current) {
+        resizingColRef.current = null;
+        setIsResizing(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!resizingColRef.current || !e.touches[0]) return;
+      const { key, startX, startWidth } = resizingColRef.current;
+      const diff = e.touches[0].clientX - startX;
+      const col = TABLE_COLUMNS.find((c) => c.key === key);
+      const min = col ? col.minWidth : 80;
+      const max = col ? col.maxWidth : 600;
+      const newWidth = Math.max(min, Math.min(max, startWidth + diff));
+      setColWidths((prev) => ({
+        ...prev,
+        [key]: Math.round(newWidth),
+      }));
+    };
+
+    const handleTouchEnd = () => {
+      if (resizingColRef.current) {
+        resizingColRef.current = null;
+        setIsResizing(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
+  const adjustColumnWidth = (key: ColumnKey, delta: number) => {
+    setColWidths((prev) => {
+      const current = prev[key] || DEFAULT_WIDTHS[key] || 150;
+      const col = TABLE_COLUMNS.find((c) => c.key === key);
+      const min = col ? col.minWidth : 80;
+      const max = col ? col.maxWidth : 600;
+      const updated = Math.max(min, Math.min(max, current + delta));
+      return { ...prev, [key]: Math.round(updated) };
+    });
+  };
+
+  const resetColumnWidth = (key: ColumnKey) => {
+    setColWidths((prev) => ({
+      ...prev,
+      [key]: DEFAULT_WIDTHS[key] || 150,
+    }));
+  };
+
+  const resetAllColumnWidths = () => {
+    setColWidths(DEFAULT_WIDTHS);
+    try {
+      localStorage.removeItem('royal_admin_users_col_widths');
+    } catch {}
+  };
+
+  const totalTableWidth = Object.values(colWidths).reduce((sum, w) => sum + w, 0);
+
   return (
     <div className="space-y-6">
       {/* Filter and Search Bar */}
@@ -314,6 +483,20 @@ export const AdminUsersPage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setShowColumnManager(!showColumnManager)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all h-9 whitespace-nowrap shadow-xs ${
+              showColumnManager
+                ? 'bg-[#2563EB] text-white border-[#2563EB]'
+                : 'bg-white border-[#D9E4F2] text-[#4B5563] hover:text-[#111827] hover:bg-[#F8FAFD]'
+            }`}
+            title="Manage and adjust table column widths"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <span>Column Sizes</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => loadUsers(page, true)}
             disabled={reloadingAll}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#2563EB] bg-[#2563EB]/5 hover:bg-[#2563EB]/10 text-[#2563EB] font-bold text-xs transition-all h-9 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap shadow-xs"
@@ -325,50 +508,248 @@ export const AdminUsersPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Column Sizes Controller Panel */}
+      {showColumnManager && (
+        <div className="admin-card p-4 bg-white border border-[#D9E4F2] shadow-md rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E2E8F0]">
+            <div>
+              <h3 className="text-xs font-bold text-[#111827] flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#2563EB]" />
+                Manage Field Sizes & Column Widths
+              </h3>
+              <p className="text-[11px] text-[#6B7280]">
+                Increase or decrease any field width using buttons, sliders, or by dragging column dividers directly in the table.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={resetAllColumnWidths}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold text-[#4B5563] bg-[#F1F5F9] hover:bg-[#E2E8F0] transition-colors"
+                title="Reset all column widths to default"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Reset Defaults
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowColumnManager(false)}
+                className="p-1 rounded text-[#6B7280] hover:text-[#111827] hover:bg-[#F1F5F9]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {TABLE_COLUMNS.map((col) => (
+              <div
+                key={col.key}
+                className="p-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFD] flex flex-col justify-between gap-2"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[#111827]">{col.label}</span>
+                  <span className="font-mono text-[11px] font-bold text-[#2563EB]">
+                    {colWidths[col.key]}px
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => adjustColumnWidth(col.key, -15)}
+                    className="w-6 h-6 rounded bg-white border border-[#D9E4F2] hover:bg-[#E2E8F0] font-bold text-xs flex items-center justify-center text-[#374151] transition-colors active:scale-95 shadow-2xs"
+                    title="Decrease width (-15px)"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="range"
+                    min={col.minWidth}
+                    max={col.maxWidth}
+                    value={colWidths[col.key]}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setColWidths((prev) => ({ ...prev, [col.key]: val }));
+                    }}
+                    className="flex-1 accent-[#2563EB] cursor-pointer h-1.5 bg-slate-200 rounded-lg appearance-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => adjustColumnWidth(col.key, 15)}
+                    className="w-6 h-6 rounded bg-white border border-[#D9E4F2] hover:bg-[#E2E8F0] font-bold text-xs flex items-center justify-center text-[#374151] transition-colors active:scale-95 shadow-2xs"
+                    title="Increase width (+15px)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Users Table */}
       <div className="admin-card overflow-hidden">
         {loading && users.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading users...</div>
         ) : users.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs admin-table">
-              <thead>
-                <tr>
-                  <th>Member Name</th>
-                  <th>Phone</th>
-                  <th>Referral Code</th>
-                  <th>Approved Tasks</th>
-                  <th>Credit Points</th>
-                  <th>Wallet Balance</th>
-                  <th>Status</th>
-                  <th className="text-right">Actions</th>
+          <div className="overflow-auto max-h-[calc(100vh-270px)] min-h-[380px] relative border-b border-[#D9E4F2]">
+            <table
+              className="text-left text-xs admin-table border-collapse"
+              style={{
+                tableLayout: 'fixed',
+                width: `${totalTableWidth}px`,
+                minWidth: '100%',
+              }}
+            >
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-[#F1F5F9]">
+                  {TABLE_COLUMNS.map((col) => (
+                    <th
+                      key={col.key}
+                      style={{
+                        width: `${colWidths[col.key]}px`,
+                        minWidth: `${colWidths[col.key]}px`,
+                        maxWidth: `${colWidths[col.key]}px`,
+                      }}
+                      className={`sticky top-0 z-20 bg-[#F1F5F9] text-[#334155] border-b-2 border-[#CBD5E1] shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3.5 py-3 font-bold text-[11px] uppercase tracking-wider relative select-none group transition-colors hover:bg-[#E2E8F0] ${
+                        col.align === 'right' ? 'text-right' : 'text-left'
+                      }`}
+                    >
+                      <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end pr-2' : 'justify-between pr-2'}`}>
+                        <span className="truncate" title={col.label}>
+                          {col.label}
+                        </span>
+                        {/* Micro +/- adjusters visible on hover */}
+                        <div className="hidden group-hover:inline-flex items-center gap-0.5 flex-shrink-0 bg-white/90 backdrop-blur rounded px-1 py-0.5 shadow-2xs border border-[#CBD5E1]">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              adjustColumnWidth(col.key, -15);
+                            }}
+                            title={`Decrease ${col.label} width (-15px)`}
+                            className="w-4 h-4 flex items-center justify-center rounded text-[10px] font-black text-slate-700 hover:bg-[#2563EB] hover:text-white transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="text-[9px] font-mono font-bold text-[#2563EB] px-0.5">
+                            {colWidths[col.key]}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              adjustColumnWidth(col.key, 15);
+                            }}
+                            title={`Increase ${col.label} width (+15px)`}
+                            className="w-4 h-4 flex items-center justify-center rounded text-[10px] font-black text-slate-700 hover:bg-[#2563EB] hover:text-white transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Interactive Drag Handle */}
+                      <div
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleStartResize(col.key, e.clientX);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          if (e.touches[0]) handleStartResize(col.key, e.touches[0].clientX);
+                        }}
+                        onDoubleClick={(e) => {
+                          e.stopPropagation();
+                          resetColumnWidth(col.key);
+                        }}
+                        title="Drag to resize column. Double click to reset width."
+                        className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize select-none flex items-center justify-center hover:bg-[#2563EB]/25 active:bg-[#2563EB] z-30 group/handle"
+                      >
+                        <div className="w-[2px] h-4 bg-slate-300 group-hover/handle:bg-[#2563EB] group-active/handle:bg-[#2563EB] rounded-full transition-colors" />
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id}>
-                    <td className="font-semibold text-[#111827]">
+                  <tr key={u.id} className="hover:bg-[#F8FAFD] transition-colors">
+                    <td
+                      style={{
+                        width: `${colWidths.name}px`,
+                        minWidth: `${colWidths.name}px`,
+                        maxWidth: `${colWidths.name}px`,
+                      }}
+                      className="font-semibold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden"
+                    >
                       <Link
                         to={`/adminpanal/users/${u.id}`}
-                        className="hover:text-[#2563EB] hover:underline"
+                        className="hover:text-[#2563EB] hover:underline block truncate"
+                        title={u.name}
                       >
                         {u.name}
                       </Link>
-                      <span className="block text-[10px] text-[#6B7280] font-mono">
+                      <span className="block text-[10px] text-[#6B7280] font-mono truncate">
                         ID: {u.id.slice(-6)}
                       </span>
                     </td>
-                    <td className="font-mono text-[#4B5563]">{u.phone}</td>
-                    <td className="font-mono font-bold text-[#2563EB]">{u.referralCode}</td>
-                    <td>
+                    <td
+                      style={{
+                        width: `${colWidths.phone}px`,
+                        minWidth: `${colWidths.phone}px`,
+                        maxWidth: `${colWidths.phone}px`,
+                      }}
+                      className="font-mono text-[#4B5563] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap"
+                      title={u.phone}
+                    >
+                      {u.phone}
+                    </td>
+                    <td
+                      style={{
+                        width: `${colWidths.referralCode}px`,
+                        minWidth: `${colWidths.referralCode}px`,
+                        maxWidth: `${colWidths.referralCode}px`,
+                      }}
+                      className="font-mono font-bold text-[#2563EB] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap"
+                      title={u.referralCode}
+                    >
+                      {u.referralCode}
+                    </td>
+                    <td
+                      style={{
+                        width: `${colWidths.approvedTasks}px`,
+                        minWidth: `${colWidths.approvedTasks}px`,
+                        maxWidth: `${colWidths.approvedTasks}px`,
+                      }}
+                      className="px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                    >
                       <span className="bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded text-[11px]">
                         {u.approvedTasksCount} / 100
                       </span>
                     </td>
-                    <td className="font-semibold text-[#111827]">
-                      <span>{(u.creditPoints ?? 0).toLocaleString()} <span className="text-[11px] text-[#6B7280] font-normal">CPs</span></span>
+                    <td
+                      style={{
+                        width: `${colWidths.creditPoints}px`,
+                        minWidth: `${colWidths.creditPoints}px`,
+                        maxWidth: `${colWidths.creditPoints}px`,
+                      }}
+                      className="font-semibold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                    >
+                      <span>
+                        {(u.creditPoints ?? 0).toLocaleString()}{' '}
+                        <span className="text-[11px] text-[#6B7280] font-normal">CPs</span>
+                      </span>
                     </td>
-                    <td className="font-bold text-[#111827]">
+                    <td
+                      style={{
+                        width: `${colWidths.walletBalance}px`,
+                        minWidth: `${colWidths.walletBalance}px`,
+                        maxWidth: `${colWidths.walletBalance}px`,
+                      }}
+                      className="font-bold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                    >
                       {updatingUsers[u.id] ? (
                         <span className="inline-flex items-center gap-1 text-[#2563EB] text-xs font-semibold animate-pulse">
                           <RefreshCw className="w-3 h-3 animate-spin" />
@@ -378,7 +759,14 @@ export const AdminUsersPage: React.FC = () => {
                         `PKR ${u.walletBalance.toLocaleString()}`
                       )}
                     </td>
-                    <td>
+                    <td
+                      style={{
+                        width: `${colWidths.status}px`,
+                        minWidth: `${colWidths.status}px`,
+                        maxWidth: `${colWidths.status}px`,
+                      }}
+                      className="px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                    >
                       <span
                         className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
                           u.accountStatus === 'ACTIVE'
@@ -389,7 +777,14 @@ export const AdminUsersPage: React.FC = () => {
                         {u.accountStatus}
                       </span>
                     </td>
-                    <td className="text-right whitespace-nowrap">
+                    <td
+                      style={{
+                        width: `${colWidths.actions}px`,
+                        minWidth: `${colWidths.actions}px`,
+                        maxWidth: `${colWidths.actions}px`,
+                      }}
+                      className="text-right px-3.5 py-3 border-b border-[#E2E8F0] whitespace-nowrap"
+                    >
                       <div className="flex items-center justify-end gap-1.5">
                         {updatingUsers[u.id] ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
