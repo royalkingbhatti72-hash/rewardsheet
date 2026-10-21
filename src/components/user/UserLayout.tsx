@@ -329,7 +329,9 @@ export const UserLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 pb-28 md:pb-16 max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <Outlet />
+        <div key={location.pathname} className="animate-page-enter">
+          <Outlet />
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
