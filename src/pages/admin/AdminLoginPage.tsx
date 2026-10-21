@@ -100,16 +100,6 @@ export const AdminLoginPage: React.FC = () => {
               )}
             </button>
           </form>
-
-          <div className="p-3 bg-[#F8FAFD] border border-[#D9E4F2] rounded-lg text-xs text-[#4B5563] space-y-1">
-            <span className="font-bold text-[#111827] block text-[11px] uppercase tracking-wider">
-              Default Super Admin Access:
-            </span>
-            <div className="flex justify-between font-mono text-[11px]">
-              <span>User: <strong className="text-[#2563EB]">admin</strong></span>
-              <span>Pass: <strong className="text-[#2563EB]">Admin@Royal2026!</strong></span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
