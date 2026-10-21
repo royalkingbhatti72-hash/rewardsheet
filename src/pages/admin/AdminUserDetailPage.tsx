@@ -904,12 +904,11 @@ export const AdminUserDetailPage: React.FC = () => {
 
               <div>
                 <label className="block font-semibold text-[#374151] mb-1">
-                  Audit Logging Reason (Strictly Required) *
+                  Audit Logging Reason (Optional)
                 </label>
                 <textarea
                   rows={2}
-                  required
-                  placeholder="Enter reason (e.g. Manual correction, task bonus reward, tier adjustment)"
+                  placeholder="Enter reason (e.g. Manual correction, task bonus reward, tier adjustment) - optional"
                   value={pointsReason}
                   onChange={(e) => setPointsReason(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 text-[#111827] focus:outline-none"
