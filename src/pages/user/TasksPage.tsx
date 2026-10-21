@@ -124,10 +124,21 @@ export const TasksPage: React.FC = () => {
   const tasksSectionRef = useRef<HTMLDivElement>(null);
   const tabsScrollRef = useRef<HTMLDivElement>(null);
 
+  // Clean up any stale mock level keys from legacy versions
+  useEffect(() => {
+    try {
+      for (let i = 1; i <= 10; i++) {
+        localStorage.removeItem(`royal_completed_lvl_${i}`);
+      }
+    } catch {}
+  }, []);
+
   // Compute User's Current Eligible Active Level
   const userCurrentLevelNumber = useMemo(() => {
     if (!levels || levels.length === 0) return 1;
-    const activeUnlocked = levels.find((l) => l.isUnlocked && !l.isCompleted);
+    const activeUnlocked = levels.find(
+      (l) => l.isUnlocked && (l.approvedTaskCount || 0) < (l.requiredTaskCount || 10)
+    );
     if (activeUnlocked) return activeUnlocked.levelNumber;
     const lastUnlocked = levels.filter((l) => l.isUnlocked).slice(-1)[0];
     return lastUnlocked ? lastUnlocked.levelNumber : 1;
@@ -136,7 +147,7 @@ export const TasksPage: React.FC = () => {
   const { level, tasks = [], isLevelUnlocked } = currentLevelData || {};
   const selectedLevelSummary = levels.find((l) => l.levelNumber === activeLevelNumber);
   const isSelectedLevelLocked = selectedLevelSummary
-    ? !selectedLevelSummary.isUnlocked
+    ? !selectedLevelSummary.isUnlocked && (selectedLevelSummary.approvedTaskCount || 0) < 10
     : !isLevelUnlocked;
 
   const liveApprovedTasksCount = useMemo(() => {
@@ -160,11 +171,10 @@ export const TasksPage: React.FC = () => {
 
   const isLevelUnlockedByUser = (lvl: any) => {
     if (!lvl) return false;
+    if (lvl.levelNumber === 1) return true;
+    if (lvl.isUnlocked) return true;
     if (lvl.levelNumber <= userCurrentLevelNumber) return true;
     if (unlockedLevels[lvl.levelNumber]) return true;
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`royal_unlocked_lvl_${lvl.levelNumber}`) === 'true';
-    }
     return false;
   };
 
@@ -310,13 +320,10 @@ export const TasksPage: React.FC = () => {
   const approvedTaskCount = Math.max(summaryApprovedCount, liveApprovedTasksCount);
   const progressPercent = Math.min(100, Math.round((approvedTaskCount / totalTasksCount) * 100));
 
-  const isSelectedLevelCompleted =
-    Boolean(selectedLevelSummary?.isCompleted) ||
-    Boolean(level?.isCompleted) ||
-    approvedTaskCount >= totalTasksCount ||
-    liveApprovedTasksCount >= totalTasksCount ||
-    summaryApprovedCount >= totalTasksCount ||
+  const isSelectedLevelCompleted = Boolean(
+    (approvedTaskCount >= totalTasksCount && totalTasksCount > 0) ||
     (tasks.length >= totalTasksCount &&
+      totalTasksCount > 0 &&
       tasks.every((t: any) => {
         const uStatus = String(t.userStatus || '').toUpperCase();
         const status = String(t.status || '').toUpperCase();
@@ -331,13 +338,8 @@ export const TasksPage: React.FC = () => {
           t.isCompleted === true ||
           t.completed === true
         );
-      })) ||
-    activeLevelNumber < userCurrentLevelNumber ||
-    Boolean(unlockedLevels[activeLevelNumber + 1]) ||
-    (typeof window !== 'undefined' &&
-      localStorage.getItem(`royal_unlocked_lvl_${activeLevelNumber + 1}`) === 'true') ||
-    (typeof window !== 'undefined' &&
-      localStorage.getItem(`royal_completed_lvl_${activeLevelNumber}`) === 'true');
+      }))
+  );
 
   const meta = TIER_METADATA[activeLevelNumber] || TIER_METADATA[1];
   const LevelIcon = LEVEL_ICONS[activeLevelNumber] || Crown;
@@ -394,12 +396,10 @@ export const TasksPage: React.FC = () => {
         >
           {levels.map((lvl) => {
             const isSelected = lvl.levelNumber === activeLevelNumber;
-            const isCompleted =
-              Boolean(lvl.isCompleted) ||
-              (lvl.approvedTaskCount || 0) >= (lvl.requiredTaskCount || 10) ||
-              lvl.levelNumber < userCurrentLevelNumber;
+            const lvlTotal = lvl.requiredTaskCount || 10;
+            const lvlApproved = lvl.approvedTaskCount || 0;
+            const isCompleted = lvlApproved >= lvlTotal;
             const isLocked = !lvl.isUnlocked && !isCompleted;
-            const isCurrent = lvl.levelNumber === userCurrentLevelNumber;
 
             return (
               <button
@@ -413,7 +413,7 @@ export const TasksPage: React.FC = () => {
                     ? 'bg-[#06242B] text-emerald-400 border border-emerald-500/30 hover:bg-[#08333D]'
                     : isLocked
                     ? 'bg-[#030E22]/60 text-slate-500 border border-[#102447]/60 hover:bg-[#051530]'
-                    : 'bg-[#071D42] text-slate-300 border border-[#173C73] hover:bg-[#0A275A]'
+                    : 'bg-[#071D42] text-amber-300 border border-amber-500/30 hover:bg-[#0A275A]'
                 }`}
               >
                 <div className="flex items-center gap-1 text-[11px] sm:text-xs">
@@ -421,19 +421,23 @@ export const TasksPage: React.FC = () => {
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
                   ) : isLocked ? (
                     <Lock className="w-3.5 h-3.5 text-slate-500" />
-                  ) : isCurrent ? (
-                    <span className="w-2 h-2 rounded-full bg-[#FFD45A] animate-ping" />
                   ) : (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE]" />
+                    <Clock className="w-3.5 h-3.5 text-amber-400" />
                   )}
                   <span>Lvl {lvl.levelNumber}</span>
                 </div>
                 <span
                   className={`text-[9px] font-semibold ${
-                    isSelected ? 'text-[#FFD45A]' : 'text-slate-400'
+                    isSelected
+                      ? 'text-[#FFD45A]'
+                      : isCompleted
+                      ? 'text-emerald-400/80'
+                      : isLocked
+                      ? 'text-slate-500'
+                      : 'text-amber-400/80'
                   }`}
                 >
-                  {isCompleted ? 'Done' : isLocked ? 'Locked' : isCurrent ? 'Active' : 'Ready'}
+                  {isCompleted ? 'Completed' : isLocked ? 'Locked' : 'Processing'}
                 </span>
               </button>
             );
@@ -466,14 +470,14 @@ export const TasksPage: React.FC = () => {
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/40'
                       : isSelectedLevelLocked
                       ? 'bg-slate-800 text-slate-400 border border-slate-700'
-                      : 'bg-[#1459E8]/25 text-[#22D3EE] border border-[#22D3EE]/40'
+                      : 'bg-amber-500/20 text-amber-400 border border-amber-400/40'
                   }`}
                 >
                   {isSelectedLevelCompleted
-                    ? 'Completed ✓'
+                    ? 'Completed'
                     : isSelectedLevelLocked
-                    ? 'Locked 🔒'
-                    : 'Active Tier'}
+                    ? 'Locked'
+                    : 'Processing'}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-white mt-0.5">
@@ -608,8 +612,6 @@ export const TasksPage: React.FC = () => {
               // Level completion check: past levels remain fully openable.
               // Task 1 of any unlocked level is always openable.
               const isPastCompletedLevel =
-                activeLevelNumber < userCurrentLevelNumber ||
-                Boolean(selectedLevelSummary?.isCompleted) ||
                 (selectedLevelSummary?.approvedTaskCount ?? 0) >= totalTasksCount;
               const isTaskLocked =
                 isSelectedLevelLocked ||

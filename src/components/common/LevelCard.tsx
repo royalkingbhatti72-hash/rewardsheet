@@ -11,6 +11,7 @@ import {
   Layers,
   AlertCircle,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 
@@ -238,6 +239,7 @@ export const LevelCard: React.FC<LevelCardProps> = ({
   );
   const progressPercent = totalTasks > 0 ? Math.round((approvedTasksCount / totalTasks) * 100) : 0;
   const isLevelCompleted = level?.status === 'completed' || (totalTasks > 0 && approvedTasksCount === totalTasks);
+  const isLevelLocked = level?.status === 'locked';
 
   if (loading) {
     return (
@@ -300,16 +302,22 @@ export const LevelCard: React.FC<LevelCardProps> = ({
               className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
                 isLevelCompleted
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  : 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+                  : isLevelLocked
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                  : 'bg-amber-500/20 text-amber-400 border border-amber-400/40'
               }`}
             >
               {isLevelCompleted ? (
                 <>
-                  <CheckCircle2 className="w-3 h-3" /> Level Completed
+                  <CheckCircle2 className="w-3 h-3" /> Completed
+                </>
+              ) : isLevelLocked ? (
+                <>
+                  <Lock className="w-3 h-3" /> Locked
                 </>
               ) : (
                 <>
-                  <Clock className="w-3 h-3" /> In Progress
+                  <Clock className="w-3 h-3" /> Processing
                 </>
               )}
             </span>
