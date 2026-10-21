@@ -75,17 +75,18 @@ export const AdminUserDetailPage: React.FC = () => {
       return;
     }
 
+    const payload = { ...changedFields };
+    setEditModalOpen(false);
     setEditLoading(true);
     setActionMessage(null);
     try {
-      const res = await api.updateUser(userData.id, changedFields);
+      const res = await api.updateUser(userData.id, payload);
       // Update only this user's data instantly without reloading the page
       setUserData((prev: any) => ({
         ...prev,
         ...res.user,
       }));
       setActionMessage({ type: 'success', text: res.message || 'User profile updated successfully!' });
-      setEditModalOpen(false);
     } catch (err: any) {
       setActionMessage({ type: 'error', text: err.message || 'Failed to update user profile.' });
     } finally {
@@ -110,17 +111,24 @@ export const AdminUserDetailPage: React.FC = () => {
       return;
     }
 
+    const payloadPoints = numPoints;
+    const payloadType = pointsActionType;
+    const payloadReason = pointsReason;
+
+    setPointsModalOpen(false);
+    setAdjustPoints('');
+    setPointsReason('');
     setPointsLoading(true);
     setActionMessage(null);
     try {
       const res = await api.adjustUserCreditPoints(userData.id, {
-        points: numPoints,
-        actionType: pointsActionType,
-        reason: pointsReason,
+        points: payloadPoints,
+        actionType: payloadType,
+        reason: payloadReason,
       });
 
       const updatedPoints = res.creditPoints ?? (
-        currentPoints + (pointsActionType === 'ADD' ? numPoints : -numPoints)
+        currentPoints + (payloadType === 'ADD' ? payloadPoints : -payloadPoints)
       );
 
       // Targeted state update: update ONLY this user's wallet without full-page reload
@@ -133,9 +141,6 @@ export const AdminUserDetailPage: React.FC = () => {
       }));
 
       setActionMessage({ type: 'success', text: res.message || 'Credit points updated successfully!' });
-      setPointsModalOpen(false);
-      setAdjustPoints('');
-      setPointsReason('');
     } catch (err: any) {
       setActionMessage({ type: 'error', text: err.message || 'Failed to adjust credit points.' });
     } finally {
@@ -921,11 +926,10 @@ export const AdminUserDetailPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={pointsLoading}
-                  className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 active:scale-95 flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 active:scale-95 flex items-center gap-1.5 transition-all shadow-xs"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  {pointsLoading ? 'Updating CPs...' : 'Confirm Points Adjustment'}
+                  Confirm Points Adjustment
                 </button>
               </div>
             </form>
@@ -1012,10 +1016,9 @@ export const AdminUserDetailPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={editLoading}
-                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8] active:scale-95 flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg hover:bg-[#1D4ED8] active:scale-95 flex items-center gap-1.5 transition-all shadow-xs"
                 >
-                  {editLoading ? 'Saving Changes...' : 'Save Profile Changes'}
+                  Save Profile Changes
                 </button>
               </div>
             </form>

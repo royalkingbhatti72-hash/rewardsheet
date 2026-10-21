@@ -24,7 +24,8 @@ export const AdminDepositsPage: React.FC = () => {
   const [reviewingDep, setReviewingDep] = useState<any | null>(null);
   const [action, setAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
+  const [updatingDepId, setUpdatingDepId] = useState<string | null>(null);
+  const [updatingDepAction, setUpdatingDepAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadDeposits = (p = 1, isManual = false) => {
@@ -59,25 +60,31 @@ export const AdminDepositsPage: React.FC = () => {
   const handleExecuteReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewingDep) return;
-    setSubmittingReview(true);
+    const targetDep = reviewingDep;
+    const currentAction = action;
+    const notes = reviewNotes.trim() || undefined;
+
+    // Immediately close modal so user doesn't wait with popup open
+    setReviewingDep(null);
+    setUpdatingDepId(targetDep.id);
+    setUpdatingDepAction(currentAction);
     setMessage(null);
 
     try {
-      const res = await api.reviewDeposit(reviewingDep.id, {
-        action,
-        reviewNotes: reviewNotes.trim() || undefined,
+      const res = await api.reviewDeposit(targetDep.id, {
+        action: currentAction,
+        reviewNotes: notes,
       });
       // Update only this deposit locally in state without full page refetch
-      const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      const newStatus = currentAction === 'APPROVE' ? 'APPROVED' : 'REJECTED';
       setDeposits((prev) =>
-        prev.map((d) => (d.id === reviewingDep.id ? { ...d, status: newStatus } : d))
+        prev.map((d) => (d.id === targetDep.id ? { ...d, status: newStatus } : d))
       );
-      setMessage({ type: 'success', text: res.message });
-      setReviewingDep(null);
+      setMessage({ type: 'success', text: res.message || `Deposit ${newStatus.toLowerCase()} successfully.` });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Deposit review failed' });
     } finally {
-      setSubmittingReview(false);
+      setUpdatingDepId(null);
     }
   };
 
@@ -165,20 +172,32 @@ export const AdminDepositsPage: React.FC = () => {
                     <td className="text-[#4B5563] text-[11px] max-w-xs truncate">{dep.proofEvidence || 'N/A'}</td>
                     <td className="font-bold text-[#111827] whitespace-nowrap">PKR {dep.amount.toLocaleString()}</td>
                     <td>
-                      <span
-                        className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
-                          dep.status === 'APPROVED'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : dep.status === 'PENDING'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                      >
-                        {dep.status}
-                      </span>
+                      {updatingDepId === dep.id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                          <RefreshCw className="w-2.5 h-2.5 animate-spin text-[#2563EB]" />
+                          <span>{updatingDepAction === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
+                            dep.status === 'APPROVED'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : dep.status === 'PENDING'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}
+                        >
+                          {dep.status}
+                        </span>
+                      )}
                     </td>
                     <td className="text-right whitespace-nowrap">
-                      {dep.status === 'PENDING' ? (
+                      {updatingDepId === dep.id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                          <span>Updating...</span>
+                        </span>
+                      ) : dep.status === 'PENDING' ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenReview(dep, 'APPROVE')}
@@ -310,18 +329,13 @@ export const AdminDepositsPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingReview}
                   className={`px-4 py-2 text-white font-semibold rounded-lg ${
                     action === 'APPROVE'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
-                  {submittingReview
-                    ? 'Processing...'
-                    : action === 'APPROVE'
-                    ? 'Confirm Credit Approval'
-                    : 'Confirm Rejection'}
+                  {action === 'APPROVE' ? 'Confirm Credit Approval' : 'Confirm Rejection'}
                 </button>
               </div>
             </form>

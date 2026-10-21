@@ -27,7 +27,8 @@ export const AdminSubmissionsPage: React.FC = () => {
   const [action, setAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [reviewNotes, setReviewNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
+  const [updatingSubId, setUpdatingSubId] = useState<string | null>(null);
+  const [updatingSubAction, setUpdatingSubAction] = useState<'APPROVE' | 'REJECT'>('APPROVE');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const loadSubmissions = (p = 1, isManual = false) => {
@@ -68,26 +69,33 @@ export const AdminSubmissionsPage: React.FC = () => {
   const handleExecuteReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewingSub) return;
-    setSubmittingReview(true);
+    const targetSub = reviewingSub;
+    const reviewAction = action;
+    const notes = reviewNotes.trim() || undefined;
+    const reason = reviewAction === 'REJECT' ? rejectionReason : undefined;
+
+    // Close popup immediately so admin never waits inside popup
+    setReviewingSub(null);
+    setUpdatingSubId(targetSub.id);
+    setUpdatingSubAction(reviewAction);
     setMessage(null);
 
     try {
-      const res = await api.reviewTaskSubmission(reviewingSub.id, {
-        action,
-        reviewNotes: reviewNotes.trim() || undefined,
-        rejectionReason: action === 'REJECT' ? rejectionReason : undefined,
+      const res = await api.reviewTaskSubmission(targetSub.id, {
+        action: reviewAction,
+        reviewNotes: notes,
+        rejectionReason: reason,
       });
       // Update only this submission directly without reloading the whole table!
-      const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+      const newStatus = reviewAction === 'APPROVE' ? 'APPROVED' : 'REJECTED';
       setSubmissions((prev) =>
-        prev.map((s) => (s.id === reviewingSub.id ? { ...s, status: newStatus } : s))
+        prev.map((s) => (s.id === targetSub.id ? { ...s, status: newStatus } : s))
       );
-      setMessage({ type: 'success', text: res.message });
-      setReviewingSub(null);
+      setMessage({ type: 'success', text: res.message || `Submission ${newStatus.toLowerCase()} successfully.` });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Review execution failed' });
     } finally {
-      setSubmittingReview(false);
+      setUpdatingSubId(null);
     }
   };
 
@@ -200,20 +208,32 @@ export const AdminSubmissionsPage: React.FC = () => {
                       PKR {sub.task?.rewardAmount.toLocaleString()}
                     </td>
                     <td>
-                      <span
-                        className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
-                          sub.status === 'APPROVED'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : sub.status === 'PENDING'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
-                        }`}
-                      >
-                        {sub.status}
-                      </span>
+                      {updatingSubId === sub.id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                          <RefreshCw className="w-2.5 h-2.5 animate-spin text-[#2563EB]" />
+                          <span>{updatingSubAction === 'APPROVE' ? 'Approving...' : 'Rejecting...'}</span>
+                        </span>
+                      ) : (
+                        <span
+                          className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
+                            sub.status === 'APPROVED'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : sub.status === 'PENDING'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-red-50 text-red-700 border border-red-200'
+                          }`}
+                        >
+                          {sub.status}
+                        </span>
+                      )}
                     </td>
                     <td className="text-right whitespace-nowrap">
-                      {sub.status === 'PENDING' ? (
+                      {updatingSubId === sub.id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                          <span>Updating...</span>
+                        </span>
+                      ) : sub.status === 'PENDING' ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenReview(sub, 'APPROVE')}
@@ -366,18 +386,13 @@ export const AdminSubmissionsPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingReview}
                   className={`px-4 py-2 text-white font-semibold rounded-lg ${
                     action === 'APPROVE'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
-                  {submittingReview
-                    ? 'Processing...'
-                    : action === 'APPROVE'
-                    ? 'Confirm Approval'
-                    : 'Confirm Rejection'}
+                  {action === 'APPROVE' ? 'Confirm Approval' : 'Confirm Rejection'}
                 </button>
               </div>
             </form>
