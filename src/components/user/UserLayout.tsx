@@ -128,12 +128,12 @@ export const UserLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#04132F] text-slate-100 flex flex-col selection:bg-[#1459E8] selection:text-white">
+    <div className="min-h-screen bg-[#04132F] text-slate-100 flex flex-col selection:bg-[#1459E8] selection:text-white w-full max-w-full overflow-x-hidden">
       {/* Main Header */}
-      <header className="sticky top-0 z-40 bg-[#020B20]/95 backdrop-blur-md border-b border-[#214B91]/50 px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-40 bg-[#020B20]/95 backdrop-blur-md border-b border-[#214B91]/50 px-2 sm:px-5 lg:px-6 py-2 sm:py-2.5 w-full max-w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2 w-full">
           {/* Logo & Brand */}
-          <Link to="/app" className="flex items-center gap-2 group flex-shrink-0">
+          <Link to="/app" className="flex items-center gap-1.5 sm:gap-2 group flex-shrink-0 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1459E8] to-[#FFD45A] p-0.5 shadow-md shadow-[#1459E8]/20 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#04132F] rounded-[6px] flex items-center justify-center">
                 <Crown className="w-4 h-4 text-[#FFD45A]" />
@@ -177,38 +177,28 @@ export const UserLayout: React.FC = () => {
 
           {/* Right Header Actions: CP Box, PKR Box, Notifications & Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* Credit Points (CP) Box - Compact & smaller text size */}
+            {/* Credit Points (CP) Box - Clean & compact */}
             <Link
               to="/app/tasks"
-              className="flex items-center gap-1.5 bg-[#061633] hover:bg-[#071B3A] border border-[#22D3EE]/30 hover:border-[#22D3EE]/60 rounded-lg px-2 sm:px-2.5 py-1 transition-all group shadow-2xs"
+              className="flex items-center gap-1 bg-[#061633] hover:bg-[#071B3A] border border-[#22D3EE]/30 hover:border-[#22D3EE]/60 rounded-lg px-1.5 sm:px-2.5 py-1 transition-all group shadow-2xs"
               title="Credit Points (CP)"
             >
-              <div className="w-4 h-4 rounded-md bg-[#22D3EE]/15 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-2.5 h-2.5 text-[#22D3EE]" />
-              </div>
-              <div className="flex items-center gap-1 leading-none text-left">
-                <span className="text-[8px] sm:text-[9px] text-[#A6C4FF] font-semibold uppercase">CP:</span>
-                <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE]">
-                  {(wallet?.creditPoints || 0).toLocaleString()}
-                </span>
-              </div>
+              <span className="text-[8px] sm:text-[9px] text-[#A6C4FF] font-semibold uppercase">CP:</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE]">
+                {(wallet?.creditPoints || 0).toLocaleString()}
+              </span>
             </Link>
 
-            {/* Wallet Balance (PKR) Box - Compact & smaller text size */}
+            {/* Wallet Balance (PKR) Box - Clean & compact */}
             <Link
               to="/app/wallet"
-              className="flex items-center gap-1.5 bg-[#061633] hover:bg-[#071B3A] border border-[#FFD45A]/30 hover:border-[#FFD45A]/60 rounded-lg px-2 sm:px-2.5 py-1 transition-all group shadow-2xs"
+              className="flex items-center gap-1 bg-[#061633] hover:bg-[#071B3A] border border-[#FFD45A]/30 hover:border-[#FFD45A]/60 rounded-lg px-1.5 sm:px-2.5 py-1 transition-all group shadow-2xs"
               title="PKR Available Balance"
             >
-              <div className="w-4 h-4 rounded-md bg-[#FFD45A]/15 flex items-center justify-center flex-shrink-0">
-                <Crown className="w-2.5 h-2.5 text-[#FFD45A]" />
-              </div>
-              <div className="flex items-center gap-1 leading-none text-left">
-                <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold uppercase">PKR:</span>
-                <span className="text-[10px] sm:text-xs font-bold text-[#FFD45A]">
-                  {(wallet?.availableBalance || 0).toLocaleString()}
-                </span>
-              </div>
+              <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold uppercase">PKR:</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#FFD45A]">
+                {(wallet?.availableBalance || 0).toLocaleString()}
+              </span>
             </Link>
 
             {/* Notification Bell */}
