@@ -49,7 +49,7 @@ const AdminRedirect: React.FC = () => {
     if (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
       window.location.href = `${window.location.protocol}//${window.location.hostname}:5050/adminpanal`;
     } else {
-      window.location.href = 'https://backend-two-lilac-79.vercel.app/';
+      window.location.href = 'https://www.retardedbackend.online/';
     }
   }, []);
   return (
