@@ -448,9 +448,9 @@ export const AdminUsersPage: React.FC = () => {
   const totalTableWidth = Object.values(colWidths).reduce((sum, w) => sum + w, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-[calc(100vh-4.25rem-2rem)] sm:h-[calc(100vh-4.5rem-3rem)] lg:h-[calc(100vh-4.5rem-4rem)] min-h-[550px] space-y-3">
       {/* Filter and Search Bar */}
-      <div className="admin-card p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="admin-card px-4 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3 flex-shrink-0">
         <form onSubmit={handleSearch} className="flex-1 w-full flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-2.5" />
@@ -510,7 +510,7 @@ export const AdminUsersPage: React.FC = () => {
 
       {/* Column Sizes Controller Panel */}
       {showColumnManager && (
-        <div className="admin-card p-4 bg-white border border-[#D9E4F2] shadow-md rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="admin-card p-4 bg-white border border-[#D9E4F2] shadow-md rounded-xl space-y-3 flex-shrink-0 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E2E8F0]">
             <div>
               <h3 className="text-xs font-bold text-[#111827] flex items-center gap-1.5">
@@ -589,11 +589,11 @@ export const AdminUsersPage: React.FC = () => {
       )}
 
       {/* Users Table */}
-      <div className="admin-card overflow-hidden">
+      <div className="admin-card flex-1 min-h-0 flex flex-col overflow-hidden">
         {loading && users.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#6B7280]">Loading users...</div>
         ) : users.length > 0 ? (
-          <div className="overflow-auto max-h-[calc(100vh-270px)] min-h-[380px] relative border-b border-[#D9E4F2]">
+          <div className="flex-1 min-h-0 overflow-auto relative">
             <table
               className="text-left text-xs admin-table border-collapse"
               style={{
@@ -612,16 +612,16 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths[col.key]}px`,
                         maxWidth: `${colWidths[col.key]}px`,
                       }}
-                      className={`sticky top-0 z-20 bg-[#F1F5F9] text-[#334155] border-b-2 border-[#CBD5E1] shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3.5 py-3 font-bold text-[11px] uppercase tracking-wider relative select-none group transition-colors hover:bg-[#E2E8F0] ${
+                      className={`sticky top-0 z-20 bg-[#F1F5F9] text-[#1E293B] border-b-2 border-[#CBD5E1] shadow-[0_2px_4px_rgba(0,0,0,0.05)] px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider relative select-none group transition-colors hover:bg-[#E2E8F0] ${
                         col.align === 'right' ? 'text-right' : 'text-left'
                       }`}
                     >
-                      <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end pr-2' : 'justify-between pr-2'}`}>
+                      <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end pr-3' : 'justify-between pr-3'}`}>
                         <span className="truncate" title={col.label}>
                           {col.label}
                         </span>
-                        {/* Micro +/- adjusters visible on hover */}
-                        <div className="hidden group-hover:inline-flex items-center gap-0.5 flex-shrink-0 bg-white/90 backdrop-blur rounded px-1 py-0.5 shadow-2xs border border-[#CBD5E1]">
+                        {/* Always-visible micro - / + adjusters directly on header bar */}
+                        <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/95 rounded px-1 py-0.5 border border-[#CBD5E1] shadow-2xs">
                           <button
                             type="button"
                             onClick={(e) => {
@@ -629,11 +629,11 @@ export const AdminUsersPage: React.FC = () => {
                               adjustColumnWidth(col.key, -15);
                             }}
                             title={`Decrease ${col.label} width (-15px)`}
-                            className="w-4 h-4 flex items-center justify-center rounded text-[10px] font-black text-slate-700 hover:bg-[#2563EB] hover:text-white transition-colors"
+                            className="w-4 h-4 rounded bg-slate-100 hover:bg-[#2563EB] hover:text-white active:scale-90 text-slate-700 flex items-center justify-center text-[11px] font-black transition-all cursor-pointer"
                           >
-                            -
+                            −
                           </button>
-                          <span className="text-[9px] font-mono font-bold text-[#2563EB] px-0.5">
+                          <span className="text-[9px] font-mono font-bold text-[#2563EB] px-0.5 select-none">
                             {colWidths[col.key]}
                           </span>
                           <button
@@ -643,14 +643,14 @@ export const AdminUsersPage: React.FC = () => {
                               adjustColumnWidth(col.key, 15);
                             }}
                             title={`Increase ${col.label} width (+15px)`}
-                            className="w-4 h-4 flex items-center justify-center rounded text-[10px] font-black text-slate-700 hover:bg-[#2563EB] hover:text-white transition-colors"
+                            className="w-4 h-4 rounded bg-slate-100 hover:bg-[#2563EB] hover:text-white active:scale-90 text-slate-700 flex items-center justify-center text-[11px] font-black transition-all cursor-pointer"
                           >
                             +
                           </button>
                         </div>
                       </div>
 
-                      {/* Interactive Drag Handle */}
+                      {/* Always-visible Drag-to-Resize Handle */}
                       <div
                         onMouseDown={(e) => {
                           e.stopPropagation();
@@ -664,10 +664,10 @@ export const AdminUsersPage: React.FC = () => {
                           e.stopPropagation();
                           resetColumnWidth(col.key);
                         }}
-                        title="Drag to resize column. Double click to reset width."
-                        className="absolute right-0 top-0 bottom-0 w-3 cursor-col-resize select-none flex items-center justify-center hover:bg-[#2563EB]/25 active:bg-[#2563EB] z-30 group/handle"
+                        title="Click and drag to resize column width. Double-click to reset."
+                        className="absolute right-0 top-0 bottom-0 w-3.5 cursor-col-resize select-none flex items-center justify-center hover:bg-[#2563EB]/20 active:bg-[#2563EB] z-30 group/divider"
                       >
-                        <div className="w-[2px] h-4 bg-slate-300 group-hover/handle:bg-[#2563EB] group-active/handle:bg-[#2563EB] rounded-full transition-colors" />
+                        <div className="w-[3px] h-5 bg-slate-400 group-hover/divider:bg-[#2563EB] group-active/divider:bg-[#2563EB] rounded-full transition-colors shadow-2xs" />
                       </div>
                     </th>
                   ))}
@@ -880,7 +880,7 @@ export const AdminUsersPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-[#D9E4F2] flex items-center justify-between text-xs text-[#4B5563]">
+          <div className="p-3.5 border-t border-[#D9E4F2] flex items-center justify-between text-xs text-[#4B5563] flex-shrink-0 bg-white">
             <button
               onClick={() => loadUsers(Math.max(1, page - 1))}
               disabled={page <= 1}
