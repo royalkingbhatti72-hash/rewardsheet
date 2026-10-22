@@ -1,5 +1,5 @@
 const rawApiUrl = import.meta.env.VITE_API_URL;
-const DEFAULT_PROD_URL = 'https://earnsheet-backend.vercel.app/api';
+const DEFAULT_PROD_URL = 'https://streetearn-backend.vercel.app/api';
 
 function resolveApiBase(): string {
   if (rawApiUrl && !rawApiUrl.includes('<')) {
