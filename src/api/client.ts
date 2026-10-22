@@ -427,6 +427,7 @@ export const api = {
   getAdminAnnouncements: () => request('/admin/announcements', {}, true),
   createAnnouncement: (payload: any) => request('/admin/announcements', { method: 'POST', body: JSON.stringify(payload) }, true),
   deleteAnnouncement: (id: string) => request(`/admin/announcements/${id}`, { method: 'DELETE' }, true),
+  getAdminSettings: () => request('/admin/settings', {}, true),
   updateAdminSettings: (payload: any) => {
     const body = Array.isArray(payload)
       ? { settings: payload }
