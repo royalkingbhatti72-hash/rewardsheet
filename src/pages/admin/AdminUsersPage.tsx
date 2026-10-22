@@ -22,8 +22,7 @@ import { api } from '../../api/client';
 const COLUMN_KEYS = [
   'name',
   'phone',
-  'referralCode',
-  'approvedTasks',
+  'levelRow',
   'creditPoints',
   'walletBalance',
   'status',
@@ -42,25 +41,23 @@ interface ColumnMeta {
 }
 
 const TABLE_COLUMNS: ColumnMeta[] = [
-  { key: 'name', label: 'Member Name', defaultWidth: 160, minWidth: 90, maxWidth: 400, align: 'left' },
+  { key: 'name', label: 'Member Name', defaultWidth: 175, minWidth: 100, maxWidth: 400, align: 'left' },
   { key: 'phone', label: 'Phone', defaultWidth: 110, minWidth: 75, maxWidth: 220, align: 'left' },
-  { key: 'referralCode', label: 'Referral Code', defaultWidth: 95, minWidth: 65, maxWidth: 180, align: 'left' },
-  { key: 'approvedTasks', label: 'Approved Tasks', defaultWidth: 95, minWidth: 70, maxWidth: 180, align: 'left' },
-  { key: 'creditPoints', label: 'Credit Points', defaultWidth: 95, minWidth: 70, maxWidth: 180, align: 'left' },
-  { key: 'walletBalance', label: 'Wallet Balance', defaultWidth: 105, minWidth: 75, maxWidth: 200, align: 'left' },
+  { key: 'levelRow', label: 'Level / Row', defaultWidth: 110, minWidth: 80, maxWidth: 200, align: 'left' },
+  { key: 'creditPoints', label: 'Credit Points', defaultWidth: 85, minWidth: 60, maxWidth: 160, align: 'left' },
+  { key: 'walletBalance', label: 'Wallet Balance', defaultWidth: 95, minWidth: 70, maxWidth: 180, align: 'left' },
   { key: 'status', label: 'Status', defaultWidth: 75, minWidth: 55, maxWidth: 150, align: 'left' },
-  { key: 'actions', label: 'Actions', defaultWidth: 190, minWidth: 130, maxWidth: 350, align: 'right' },
+  { key: 'actions', label: 'Actions', defaultWidth: 180, minWidth: 130, maxWidth: 350, align: 'right' },
 ];
 
 const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
-  name: 160,
+  name: 175,
   phone: 110,
-  referralCode: 95,
-  approvedTasks: 95,
-  creditPoints: 95,
-  walletBalance: 105,
+  levelRow: 110,
+  creditPoints: 85,
+  walletBalance: 95,
   status: 75,
-  actions: 190,
+  actions: 180,
 };
 
 export const AdminUsersPage: React.FC = () => {
@@ -327,7 +324,7 @@ export const AdminUsersPage: React.FC = () => {
   // Column Resizing & Sticky Table Header state
   const [colWidths, setColWidths] = useState<Record<ColumnKey, number>>(() => {
     try {
-      const saved = localStorage.getItem('royal_admin_users_col_widths_v2');
+      const saved = localStorage.getItem('royal_admin_users_col_widths_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
         return { ...DEFAULT_WIDTHS, ...parsed };
@@ -345,7 +342,7 @@ export const AdminUsersPage: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('royal_admin_users_col_widths_v2', JSON.stringify(colWidths));
+      localStorage.setItem('royal_admin_users_col_widths_v3', JSON.stringify(colWidths));
     } catch {}
   }, [colWidths]);
 
@@ -658,14 +655,18 @@ export const AdminUsersPage: React.FC = () => {
                     >
                       <Link
                         to={`/adminpanal/users/${u.id}`}
-                        className="hover:text-[#2563EB] hover:underline block truncate"
+                        className="hover:text-[#2563EB] hover:underline block truncate font-bold"
                         title={u.name}
                       >
                         {u.name}
                       </Link>
-                      <span className="block text-[9px] text-[#6B7280] font-mono truncate">
-                        ID: {u.id.slice(-6)}
-                      </span>
+                      <div className="flex items-center gap-1.5 text-[9px] font-mono truncate mt-0.5">
+                        <span className="text-[#6B7280]">ID: {u.id.slice(-6)}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-[#2563EB] font-bold" title={`Referral Code: ${u.referralCode}`}>
+                          Ref: {u.referralCode}
+                        </span>
+                      </div>
                     </td>
                     <td
                       style={{
@@ -680,26 +681,30 @@ export const AdminUsersPage: React.FC = () => {
                     </td>
                     <td
                       style={{
-                        width: `${colWidths.referralCode}px`,
-                        minWidth: `${colWidths.referralCode}px`,
-                        maxWidth: `${colWidths.referralCode}px`,
-                      }}
-                      className="font-mono font-bold text-[#2563EB] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px]"
-                      title={u.referralCode}
-                    >
-                      {u.referralCode}
-                    </td>
-                    <td
-                      style={{
-                        width: `${colWidths.approvedTasks}px`,
-                        minWidth: `${colWidths.approvedTasks}px`,
-                        maxWidth: `${colWidths.approvedTasks}px`,
+                        width: `${colWidths.levelRow}px`,
+                        minWidth: `${colWidths.levelRow}px`,
+                        maxWidth: `${colWidths.levelRow}px`,
                       }}
                       className="px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[10px]"
                     >
-                      <span className="bg-emerald-50 text-emerald-700 font-semibold px-1.5 py-0.5 rounded text-[10px]">
-                        {u.approvedTasksCount} / 100
-                      </span>
+                      {(() => {
+                        const approved = u.approvedTasksCount ?? 0;
+                        const levelNum = Math.min(10, Math.floor(approved / 10) + 1);
+                        const rowNum = approved >= 100 ? 10 : (approved % 10) + 1;
+                        return (
+                          <div
+                            className="flex items-center gap-1"
+                            title={`Level ${levelNum}, Row ${rowNum} (${approved}/100 tasks completed)`}
+                          >
+                            <span className="bg-blue-50 text-blue-700 border border-blue-200 font-bold px-1.5 py-0.5 rounded text-[9.5px]">
+                              Lvl {levelNum}
+                            </span>
+                            <span className="bg-amber-50 text-amber-800 border border-amber-200 font-bold px-1.5 py-0.5 rounded text-[9.5px]">
+                              Row {rowNum}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td
                       style={{
@@ -709,10 +714,7 @@ export const AdminUsersPage: React.FC = () => {
                       }}
                       className="font-semibold text-[#111827] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[10.5px]"
                     >
-                      <span>
-                        {(u.creditPoints ?? 0).toLocaleString()}{' '}
-                        <span className="text-[9.5px] text-[#6B7280] font-normal">CPs</span>
-                      </span>
+                      <span>{(u.creditPoints ?? 0).toLocaleString()}</span>
                     </td>
                     <td
                       style={{
@@ -728,7 +730,7 @@ export const AdminUsersPage: React.FC = () => {
                           <span>Updating...</span>
                         </span>
                       ) : (
-                        `PKR ${u.walletBalance.toLocaleString()}`
+                        u.walletBalance.toLocaleString()
                       )}
                     </td>
                     <td
