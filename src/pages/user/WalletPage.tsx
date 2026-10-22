@@ -74,9 +74,6 @@ export const WalletPage: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2.5">
             <Wallet className="w-7 h-7 text-[#FFD45A]" /> Wallet & Financial Ledger
           </h1>
-          <p className="text-xs text-slate-300 mt-1">
-            Complete database-backed ledger tracking all rewards, deposits, unlock fees, and payouts.
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5">
