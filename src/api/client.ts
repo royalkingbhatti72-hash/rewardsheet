@@ -117,7 +117,7 @@ export function invalidateCache(pattern?: string): void {
 }
 
 function getTtlForEndpoint(endpoint: string): number {
-  if (endpoint.startsWith('/settings/public')) return 10 * 60 * 1000; // 10 min
+  if (endpoint.startsWith('/settings/public')) return 15 * 1000; // 15 sec for instant maintenance response
   if (endpoint.startsWith('/notifications/announcements')) return 10 * 60 * 1000; // 10 min
   if (endpoint.startsWith('/tasks/levels')) return 3 * 60 * 1000; // 3 min
   if (endpoint.startsWith('/tasks/')) return 60 * 1000; // 1 min
@@ -186,6 +186,9 @@ async function request<T = any>(
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (res.status === 503 && data?.maintenance) {
+          window.dispatchEvent(new CustomEvent('royal_maintenance_triggered', { detail: data }));
+        }
         throw new Error(data.error || `Request failed with status ${res.status}`);
       }
 

@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { UserLayout } from './components/user/UserLayout';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { MaintenancePage } from './components/common/MaintenancePage';
+import { api } from './api/client';
 
 // Public pages
 import { LandingPage } from './pages/public/LandingPage';
@@ -63,6 +65,59 @@ const AdminRedirect: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  const [publicSettings, setPublicSettings] = React.useState<any>(null);
+  const [maintenanceTriggered, setMaintenanceTriggered] = React.useState(false);
+  const [maintenanceDetails, setMaintenanceDetails] = React.useState<any>(null);
+
+  const checkMaintenance = React.useCallback(() => {
+    if (window.location.pathname.startsWith('/adminpanal')) return;
+
+    api
+      .getPublicSettings({ bypassCache: true })
+      .then((settings) => {
+        setPublicSettings(settings);
+        if (settings?.maintenanceMode) {
+          setMaintenanceTriggered(true);
+        } else {
+          setMaintenanceTriggered(false);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  React.useEffect(() => {
+    checkMaintenance();
+
+    const interval = setInterval(checkMaintenance, 20000);
+
+    const handleMaintenanceEvent = (e: any) => {
+      setMaintenanceTriggered(true);
+      if (e?.detail) {
+        setMaintenanceDetails(e.detail);
+      }
+      checkMaintenance();
+    };
+
+    window.addEventListener('royal_maintenance_triggered', handleMaintenanceEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('royal_maintenance_triggered', handleMaintenanceEvent);
+    };
+  }, [checkMaintenance]);
+
+  const isAdminRoute = window.location.pathname.startsWith('/adminpanal');
+
+  if ((maintenanceTriggered || publicSettings?.maintenanceMode) && !isAdminRoute) {
+    const mergedSettings = {
+      ...publicSettings,
+      maintenanceTitle: maintenanceDetails?.title || publicSettings?.maintenanceTitle,
+      maintenanceMessage: maintenanceDetails?.message || publicSettings?.maintenanceMessage,
+      maintenanceExpectedEnd: maintenanceDetails?.expectedEnd || publicSettings?.maintenanceExpectedEnd,
+    };
+    return <MaintenancePage settings={mergedSettings} onRefresh={checkMaintenance} />;
+  }
+
   return (
     <ErrorBoundary>
       <Routes>
