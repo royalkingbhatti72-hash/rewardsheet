@@ -42,25 +42,25 @@ interface ColumnMeta {
 }
 
 const TABLE_COLUMNS: ColumnMeta[] = [
-  { key: 'name', label: 'Member Name', defaultWidth: 200, minWidth: 120, maxWidth: 500, align: 'left' },
-  { key: 'phone', label: 'Phone', defaultWidth: 135, minWidth: 90, maxWidth: 280, align: 'left' },
-  { key: 'referralCode', label: 'Referral Code', defaultWidth: 125, minWidth: 85, maxWidth: 240, align: 'left' },
-  { key: 'approvedTasks', label: 'Approved Tasks', defaultWidth: 130, minWidth: 90, maxWidth: 240, align: 'left' },
-  { key: 'creditPoints', label: 'Credit Points', defaultWidth: 130, minWidth: 90, maxWidth: 240, align: 'left' },
-  { key: 'walletBalance', label: 'Wallet Balance', defaultWidth: 140, minWidth: 95, maxWidth: 280, align: 'left' },
-  { key: 'status', label: 'Status', defaultWidth: 110, minWidth: 80, maxWidth: 200, align: 'left' },
-  { key: 'actions', label: 'Actions', defaultWidth: 240, minWidth: 160, maxWidth: 450, align: 'right' },
+  { key: 'name', label: 'Member Name', defaultWidth: 160, minWidth: 90, maxWidth: 400, align: 'left' },
+  { key: 'phone', label: 'Phone', defaultWidth: 110, minWidth: 75, maxWidth: 220, align: 'left' },
+  { key: 'referralCode', label: 'Referral Code', defaultWidth: 95, minWidth: 65, maxWidth: 180, align: 'left' },
+  { key: 'approvedTasks', label: 'Approved Tasks', defaultWidth: 95, minWidth: 70, maxWidth: 180, align: 'left' },
+  { key: 'creditPoints', label: 'Credit Points', defaultWidth: 95, minWidth: 70, maxWidth: 180, align: 'left' },
+  { key: 'walletBalance', label: 'Wallet Balance', defaultWidth: 105, minWidth: 75, maxWidth: 200, align: 'left' },
+  { key: 'status', label: 'Status', defaultWidth: 75, minWidth: 55, maxWidth: 150, align: 'left' },
+  { key: 'actions', label: 'Actions', defaultWidth: 190, minWidth: 130, maxWidth: 350, align: 'right' },
 ];
 
 const DEFAULT_WIDTHS: Record<ColumnKey, number> = {
-  name: 200,
-  phone: 135,
-  referralCode: 125,
-  approvedTasks: 130,
-  creditPoints: 130,
-  walletBalance: 140,
-  status: 110,
-  actions: 240,
+  name: 160,
+  phone: 110,
+  referralCode: 95,
+  approvedTasks: 95,
+  creditPoints: 95,
+  walletBalance: 105,
+  status: 75,
+  actions: 190,
 };
 
 export const AdminUsersPage: React.FC = () => {
@@ -327,7 +327,7 @@ export const AdminUsersPage: React.FC = () => {
   // Column Resizing & Sticky Table Header state
   const [colWidths, setColWidths] = useState<Record<ColumnKey, number>>(() => {
     try {
-      const saved = localStorage.getItem('royal_admin_users_col_widths');
+      const saved = localStorage.getItem('royal_admin_users_col_widths_v2');
       if (saved) {
         const parsed = JSON.parse(saved);
         return { ...DEFAULT_WIDTHS, ...parsed };
@@ -345,7 +345,7 @@ export const AdminUsersPage: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('royal_admin_users_col_widths', JSON.stringify(colWidths));
+      localStorage.setItem('royal_admin_users_col_widths_v2', JSON.stringify(colWidths));
     } catch {}
   }, [colWidths]);
 
@@ -441,7 +441,7 @@ export const AdminUsersPage: React.FC = () => {
   const resetAllColumnWidths = () => {
     setColWidths(DEFAULT_WIDTHS);
     try {
-      localStorage.removeItem('royal_admin_users_col_widths');
+      localStorage.removeItem('royal_admin_users_col_widths_v2');
     } catch {}
   };
 
@@ -612,45 +612,17 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths[col.key]}px`,
                         maxWidth: `${colWidths[col.key]}px`,
                       }}
-                      className={`sticky top-0 z-20 bg-[#F1F5F9] text-[#1E293B] border-b-2 border-[#CBD5E1] shadow-[0_2px_4px_rgba(0,0,0,0.05)] px-3 py-2.5 font-bold text-[11px] uppercase tracking-wider relative select-none group transition-colors hover:bg-[#E2E8F0] ${
+                      className={`sticky top-0 z-20 bg-[#F1F5F9] text-[#334155] border-b border-[#CBD5E1] shadow-[0_1px_2px_rgba(0,0,0,0.05)] px-2.5 py-2 font-bold text-[10px] uppercase tracking-wider relative select-none group transition-colors hover:bg-[#E2E8F0] ${
                         col.align === 'right' ? 'text-right' : 'text-left'
                       }`}
                     >
-                      <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end pr-3' : 'justify-between pr-3'}`}>
+                      <div className={`flex items-center gap-1 ${col.align === 'right' ? 'justify-end pr-2' : 'justify-between pr-2'}`}>
                         <span className="truncate" title={col.label}>
                           {col.label}
                         </span>
-                        {/* Always-visible micro - / + adjusters directly on header bar */}
-                        <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/95 rounded px-1 py-0.5 border border-[#CBD5E1] shadow-2xs">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adjustColumnWidth(col.key, -15);
-                            }}
-                            title={`Decrease ${col.label} width (-15px)`}
-                            className="w-4 h-4 rounded bg-slate-100 hover:bg-[#2563EB] hover:text-white active:scale-90 text-slate-700 flex items-center justify-center text-[11px] font-black transition-all cursor-pointer"
-                          >
-                            −
-                          </button>
-                          <span className="text-[9px] font-mono font-bold text-[#2563EB] px-0.5 select-none">
-                            {colWidths[col.key]}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              adjustColumnWidth(col.key, 15);
-                            }}
-                            title={`Increase ${col.label} width (+15px)`}
-                            className="w-4 h-4 rounded bg-slate-100 hover:bg-[#2563EB] hover:text-white active:scale-90 text-slate-700 flex items-center justify-center text-[11px] font-black transition-all cursor-pointer"
-                          >
-                            +
-                          </button>
-                        </div>
                       </div>
 
-                      {/* Always-visible Drag-to-Resize Handle */}
+                      {/* Resizing Divider Line */}
                       <div
                         onMouseDown={(e) => {
                           e.stopPropagation();
@@ -664,10 +636,10 @@ export const AdminUsersPage: React.FC = () => {
                           e.stopPropagation();
                           resetColumnWidth(col.key);
                         }}
-                        title="Click and drag to resize column width. Double-click to reset."
-                        className="absolute right-0 top-0 bottom-0 w-3.5 cursor-col-resize select-none flex items-center justify-center hover:bg-[#2563EB]/20 active:bg-[#2563EB] z-30 group/divider"
+                        title={`Drag line to resize ${col.label} width (${colWidths[col.key]}px). Double-click to reset.`}
+                        className="absolute right-0 top-0 bottom-0 w-2.5 cursor-col-resize select-none flex items-center justify-end hover:bg-blue-500/15 active:bg-blue-500/30 z-30 group/line"
                       >
-                        <div className="w-[3px] h-5 bg-slate-400 group-hover/divider:bg-[#2563EB] group-active/divider:bg-[#2563EB] rounded-full transition-colors shadow-2xs" />
+                        <div className="w-[1.5px] h-full bg-[#CBD5E1] group-hover/line:bg-[#2563EB] group-hover/line:w-[2px] transition-all" />
                       </div>
                     </th>
                   ))}
@@ -682,7 +654,7 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.name}px`,
                         maxWidth: `${colWidths.name}px`,
                       }}
-                      className="font-semibold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden"
+                      className="font-semibold text-[#111827] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden text-[11px]"
                     >
                       <Link
                         to={`/adminpanal/users/${u.id}`}
@@ -691,7 +663,7 @@ export const AdminUsersPage: React.FC = () => {
                       >
                         {u.name}
                       </Link>
-                      <span className="block text-[10px] text-[#6B7280] font-mono truncate">
+                      <span className="block text-[9px] text-[#6B7280] font-mono truncate">
                         ID: {u.id.slice(-6)}
                       </span>
                     </td>
@@ -701,7 +673,7 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.phone}px`,
                         maxWidth: `${colWidths.phone}px`,
                       }}
-                      className="font-mono text-[#4B5563] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap"
+                      className="font-mono text-[#4B5563] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px]"
                       title={u.phone}
                     >
                       {u.phone}
@@ -712,7 +684,7 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.referralCode}px`,
                         maxWidth: `${colWidths.referralCode}px`,
                       }}
-                      className="font-mono font-bold text-[#2563EB] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap"
+                      className="font-mono font-bold text-[#2563EB] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden text-ellipsis whitespace-nowrap text-[10.5px]"
                       title={u.referralCode}
                     >
                       {u.referralCode}
@@ -723,9 +695,9 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.approvedTasks}px`,
                         maxWidth: `${colWidths.approvedTasks}px`,
                       }}
-                      className="px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                      className="px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[10px]"
                     >
-                      <span className="bg-emerald-50 text-emerald-700 font-semibold px-2 py-0.5 rounded text-[11px]">
+                      <span className="bg-emerald-50 text-emerald-700 font-semibold px-1.5 py-0.5 rounded text-[10px]">
                         {u.approvedTasksCount} / 100
                       </span>
                     </td>
@@ -735,11 +707,11 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.creditPoints}px`,
                         maxWidth: `${colWidths.creditPoints}px`,
                       }}
-                      className="font-semibold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                      className="font-semibold text-[#111827] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[10.5px]"
                     >
                       <span>
                         {(u.creditPoints ?? 0).toLocaleString()}{' '}
-                        <span className="text-[11px] text-[#6B7280] font-normal">CPs</span>
+                        <span className="text-[9.5px] text-[#6B7280] font-normal">CPs</span>
                       </span>
                     </td>
                     <td
@@ -748,10 +720,10 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.walletBalance}px`,
                         maxWidth: `${colWidths.walletBalance}px`,
                       }}
-                      className="font-bold text-[#111827] px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                      className="font-bold text-[#111827] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[11px]"
                     >
                       {updatingUsers[u.id] ? (
-                        <span className="inline-flex items-center gap-1 text-[#2563EB] text-xs font-semibold animate-pulse">
+                        <span className="inline-flex items-center gap-1 text-[#2563EB] text-[10.5px] font-semibold animate-pulse">
                           <RefreshCw className="w-3 h-3 animate-spin" />
                           <span>Updating...</span>
                         </span>
@@ -765,10 +737,10 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.status}px`,
                         maxWidth: `${colWidths.status}px`,
                       }}
-                      className="px-3.5 py-3 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap"
+                      className="px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[9px]"
                     >
                       <span
-                        className={`font-semibold text-[10px] px-2 py-0.5 rounded-full ${
+                        className={`font-semibold text-[9px] px-1.5 py-0.5 rounded-full ${
                           u.accountStatus === 'ACTIVE'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : 'bg-red-50 text-red-700 border border-red-200'
@@ -783,22 +755,22 @@ export const AdminUsersPage: React.FC = () => {
                         minWidth: `${colWidths.actions}px`,
                         maxWidth: `${colWidths.actions}px`,
                       }}
-                      className="text-right px-3.5 py-3 border-b border-[#E2E8F0] whitespace-nowrap"
+                      className="text-right px-2 py-1.5 border-b border-[#E2E8F0] whitespace-nowrap"
                     >
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1">
                         {updatingUsers[u.id] ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20 animate-pulse">
+                            <RefreshCw className="w-3 h-3 animate-spin text-[#2563EB]" />
                             <span>Updating...</span>
                           </span>
                         ) : (
                           <>
                             <Link
                               to={`/adminpanal/users/${u.id}`}
-                              className="p-1.5 rounded-md hover:bg-[#F8FAFD] text-[#4B5563] hover:text-[#2563EB]"
+                              className="p-1 rounded hover:bg-[#F8FAFD] text-[#4B5563] hover:text-[#2563EB]"
                               title="View Details"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5" />
                             </Link>
                             <button
                               onClick={() => {
@@ -808,10 +780,10 @@ export const AdminUsersPage: React.FC = () => {
                                 setEditStatus(u.accountStatus || 'ACTIVE');
                                 setEditReason('');
                               }}
-                              className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
+                              className="p-1 rounded hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
                               title={`Edit Details for ${u.name}`}
                             >
-                              <Edit3 className="w-4 h-4" />
+                              <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => {
@@ -820,10 +792,10 @@ export const AdminUsersPage: React.FC = () => {
                                 setPointsActionType('ADD');
                                 setPointsModalUser(u);
                               }}
-                              className="p-1.5 rounded-md hover:bg-slate-100 text-[#4B5563] hover:text-[#111827] transition-colors"
+                              className="p-1 rounded hover:bg-slate-100 text-[#4B5563] hover:text-[#111827] transition-colors"
                               title={`Edit / Adjust Credit Points for ${u.name}`}
                             >
-                              <Sparkles className="w-4 h-4" />
+                              <Sparkles className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => {
@@ -831,10 +803,10 @@ export const AdminUsersPage: React.FC = () => {
                                 setAdjustReason('');
                                 setBalanceModalUser(u);
                               }}
-                              className="p-1.5 rounded-md hover:bg-emerald-50 text-[#4B5563] hover:text-emerald-700"
+                              className="p-1 rounded hover:bg-emerald-50 text-[#4B5563] hover:text-emerald-700"
                               title="Adjust Balance"
                             >
-                              <Wallet className="w-4 h-4" />
+                              <Wallet className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => {
@@ -842,14 +814,14 @@ export const AdminUsersPage: React.FC = () => {
                                 setResetReason('');
                                 setResetModalUser(u);
                               }}
-                              className="p-1.5 rounded-md hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
+                              className="p-1 rounded hover:bg-blue-50 text-[#4B5563] hover:text-[#2563EB]"
                               title="Reset Password"
                             >
-                              <KeyRound className="w-4 h-4" />
+                              <KeyRound className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleToggleStatus(u)}
-                              className={`p-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1 transition-all ${
                                 u.accountStatus === 'ACTIVE'
                                   ? 'text-red-600 hover:bg-red-50'
                                   : 'text-emerald-600 hover:bg-emerald-50'
@@ -860,10 +832,10 @@ export const AdminUsersPage: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleRefreshSingleUser(u.id)}
-                              className="p-1.5 rounded-md hover:bg-[#F8FAFD] text-[#6B7280] hover:text-[#2563EB]"
+                              className="p-1 rounded hover:bg-[#F8FAFD] text-[#6B7280] hover:text-[#2563EB]"
                               title={`Refresh fresh data for ${u.name} only`}
                             >
-                              <RefreshCw className="w-3.5 h-3.5" />
+                              <RefreshCw className="w-3 h-3" />
                             </button>
                           </>
                         )}
