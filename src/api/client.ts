@@ -1,5 +1,5 @@
 const rawApiUrl = import.meta.env.VITE_API_URL;
-const DEFAULT_PROD_URL = 'https://www.retardedbackend.online/api';
+const DEFAULT_PROD_URL = 'https://earnsheet-backend.vercel.app/api';
 
 function resolveApiBase(): string {
   if (rawApiUrl && !rawApiUrl.includes('<')) {
