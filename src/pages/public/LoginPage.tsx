@@ -116,16 +116,6 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Seed demo account hint */}
-          <div className="mt-4 p-3 bg-[#020B20]/60 border border-[#214B91]/40 rounded-xl text-left">
-            <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mb-1">
-              Test Account Credentials
-            </span>
-            <div className="flex justify-between items-center text-xs text-slate-300">
-              <span>Phone: <code className="text-[#FFD45A]">03001234567</code></span>
-              <span>Pass: <code className="text-[#FFD45A]">Password123!</code></span>
-            </div>
-          </div>
 
           <div className="mt-6 pt-6 border-t border-[#214B91]/50 text-center text-xs text-slate-400">
             Don't have an account yet?{' '}
