@@ -627,7 +627,7 @@ export const TasksPage: React.FC = () => {
                 (selectedLevelSummary?.approvedTaskCount ?? 0) >= totalTasksCount;
               const isTaskLocked =
                 isSelectedLevelLocked ||
-                (task.userStatus === 'LOCKED' && !isPastCompletedLevel && task.taskNumber !== 1);
+                (task.userStatus === 'LOCKED' && !isPastCompletedLevel);
               const isApproved =
                 !isSelectedLevelLocked &&
                 (task.userStatus === 'APPROVED' || isPastCompletedLevel);
@@ -653,13 +653,11 @@ export const TasksPage: React.FC = () => {
                   id={`task-row-${task.taskNumber}`}
                   key={task.id}
                   onClick={() => {
-                    if (!isTaskLocked) {
-                      navigate(`/app/tasks/${task.id}`);
-                    }
+                    navigate(`/app/tasks/${task.id}`);
                   }}
                   className={`flex items-center justify-between gap-3 p-2.5 sm:px-4 sm:py-3 rounded-xl border transition-all duration-150 ${
                     isTaskLocked
-                      ? 'bg-[#040E24]/60 border-[#142C56]/40 opacity-60 cursor-not-allowed'
+                      ? 'bg-[#040E24]/60 border-[#142C56]/40 opacity-75 hover:border-amber-500/40 cursor-pointer'
                       : isApproved
                       ? 'bg-[#06242B]/75 border-emerald-500/35 hover:border-emerald-400 cursor-pointer'
                       : isPending
@@ -669,7 +667,7 @@ export const TasksPage: React.FC = () => {
                       : 'bg-[#071E44]/80 border-[#1A4580]/70 hover:border-[#22D3EE] cursor-pointer'
                   }`}
                 >
-                  {/* Left: Task Number & Task Name (Locked tasks NEVER display actual task name) */}
+                  {/* Left: Task Number & Task Name (Always appearable!) */}
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <span
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0 ${
@@ -678,7 +676,7 @@ export const TasksPage: React.FC = () => {
                           : isPending
                           ? 'bg-[#1264F5]/25 text-[#22D3EE]'
                           : isTaskLocked
-                          ? 'bg-slate-800 text-slate-500'
+                          ? 'bg-slate-800 text-slate-400'
                           : isPrepaid
                           ? 'bg-[#FFD45A] text-slate-950 font-black'
                           : 'bg-[#1459E8]/30 text-white'
@@ -687,14 +685,12 @@ export const TasksPage: React.FC = () => {
                       #{task.taskNumber < 10 ? `0${task.taskNumber}` : task.taskNumber}
                     </span>
 
-                    <div className="min-w-0 flex items-center gap-2">
+                    <div className="min-w-0 flex items-center gap-2 flex-wrap">
                       <h4 className="text-xs sm:text-sm font-bold text-white truncate">
-                        {isTaskLocked
-                          ? `Task #${task.taskNumber}`
-                          : cleanTaskTitle(task.title)}
+                        {cleanTaskTitle(task.title)}
                       </h4>
 
-                      {isPrepaid && !isTaskLocked && (
+                      {isPrepaid && (
                         <span className="hidden sm:inline-flex text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 rounded flex-shrink-0">
                           Prepaid (PKR {unlockFee.toLocaleString()})
                         </span>
@@ -714,13 +710,20 @@ export const TasksPage: React.FC = () => {
                       PKR {task.rewardAmount?.toLocaleString()}
                     </span>
 
-                    {/* Option to Open Only */}
+                    {/* Option to Open / View */}
                     <div className="flex-shrink-0">
                       {isTaskLocked ? (
-                        <span className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-500 text-xs font-semibold flex items-center gap-1 cursor-not-allowed">
-                          <Lock className="w-3 h-3" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/app/tasks/${task.id}`);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-400 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          <Lock className="w-3 h-3 text-amber-400" />
                           <span className="hidden sm:inline">Locked</span>
-                        </span>
+                        </button>
                       ) : (
                         <button
                           type="button"

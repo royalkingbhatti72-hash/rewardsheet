@@ -224,85 +224,65 @@ export const TaskDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Locked Task Message */}
-      {isLocked && (
-        <div className="royal-card p-6 sm:p-8 rounded-2xl text-center space-y-3.5 border border-[#F59E0B]/30 bg-[#071B3A]/90 shadow-xl">
-          <div className="w-12 h-12 rounded-xl bg-[#061633] border border-[#173C73] flex items-center justify-center mx-auto text-[#FFD45A]">
-            <Lock className="w-6 h-6 text-[#FFD45A]" />
+      {/* Main Clean Unified Task Card (Always appearable!) */}
+      <div className="royal-card p-5 sm:p-7 rounded-2xl space-y-5">
+        {/* Header & Badges */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-[#FFD45A]">
+              Level {level?.levelNumber}: {level?.title}
+            </span>
+            <span className="text-slate-500">•</span>
+            <span className="text-xs font-semibold text-[#22D3EE]">
+              Task #{task?.taskNumber}
+            </span>
+            {task?.taskType && (
+              <>
+                <span className="text-slate-500">•</span>
+                <span className="text-xs text-slate-300 font-medium">
+                  {task?.taskType}
+                </span>
+              </>
+            )}
+            {task?.isPaid && (
+              <>
+                <span className="text-slate-500">•</span>
+                <span className="text-xs font-bold text-[#FFD45A] flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-[#FFD45A]" /> Prepaid
+                </span>
+              </>
+            )}
           </div>
-          <div className="space-y-1 max-w-md mx-auto">
-            <h2 className="text-base sm:text-lg font-bold text-white">This Task is Locked</h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. You must complete and get approval for the previous task first before viewing instructions or details.`}
-            </p>
-          </div>
-          <div className="pt-2">
-            <Link
-              to="/app/tasks"
-              className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Current Active Task</span>
-            </Link>
+
+          {/* Status Indicator */}
+          <div>
+            {isLocked && (
+              <span className="bg-amber-500/15 border border-amber-500/40 text-amber-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
+                <Lock className="w-3.5 h-3.5" /> Locked
+              </span>
+            )}
+            {isApproved && (
+              <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Approved
+              </span>
+            )}
+            {isPending && (
+              <span className="bg-blue-500/15 border border-blue-500/40 text-blue-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
+                <Clock className="w-3.5 h-3.5" /> Pending Verification
+              </span>
+            )}
+            {isRejected && (
+              <span className="bg-red-500/15 border border-red-500/40 text-red-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
+                <XCircle className="w-3.5 h-3.5" /> Rejected
+              </span>
+            )}
+            {isAvailable && (
+              <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
+                <Unlock className="w-3.5 h-3.5" /> Ready for Completion
+              </span>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Main Clean Unified Task Card (No extra boxes) */}
-      {!isLocked && (
-        <div className="royal-card p-5 sm:p-7 rounded-2xl space-y-5">
-          {/* Header & Badges */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-[#FFD45A]">
-                Level {level?.levelNumber}: {level?.title}
-              </span>
-              <span className="text-slate-500">•</span>
-              <span className="text-xs font-semibold text-[#22D3EE]">
-                Task #{task?.taskNumber}
-              </span>
-              {task?.taskType && (
-                <>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-xs text-slate-300 font-medium">
-                    {task?.taskType}
-                  </span>
-                </>
-              )}
-              {task?.isPaid && (
-                <>
-                  <span className="text-slate-500">•</span>
-                  <span className="text-xs font-bold text-[#FFD45A] flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-[#FFD45A]" /> Prepaid
-                  </span>
-                </>
-              )}
-            </div>
-
-            {/* Status Indicator */}
-            <div>
-              {isApproved && (
-                <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-                </span>
-              )}
-              {isPending && (
-                <span className="bg-blue-500/15 border border-blue-500/40 text-blue-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
-                  <Clock className="w-3.5 h-3.5" /> Pending Verification
-                </span>
-              )}
-              {isRejected && (
-                <span className="bg-red-500/15 border border-red-500/40 text-red-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
-                  <XCircle className="w-3.5 h-3.5" /> Rejected
-                </span>
-              )}
-              {isAvailable && (
-                <span className="bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-xs">
-                  <Unlock className="w-3.5 h-3.5" /> Ready for Completion
-                </span>
-              )}
-            </div>
-          </div>
 
           {/* Title & Description */}
           <div className="space-y-1.5">
@@ -343,6 +323,32 @@ export const TaskDetailPage: React.FC = () => {
               </>
             )}
           </div>
+
+          {/* Locked Notice (if task is locked) */}
+          {isLocked && (
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <div className="p-6 rounded-2xl border border-amber-500/30 bg-[#071B3A]/90 text-center space-y-3 shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-[#061633] border border-[#173C73] flex items-center justify-center mx-auto text-[#FFD45A]">
+                  <Lock className="w-6 h-6 text-[#FFD45A]" />
+                </div>
+                <div className="space-y-1 max-w-md mx-auto">
+                  <h3 className="text-base font-bold text-white">This Task is Locked</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. Complete the previous task first in proper sequence.`}
+                  </p>
+                </div>
+                <div className="pt-1">
+                  <Link
+                    to="/app/tasks"
+                    className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow transition-all"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Tasks & Levels</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Prepaid Task Balance Requirement (Clean inline row if applicable) */}
           {task?.isPaid && isAvailable && (
@@ -544,7 +550,6 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           )}
         </div>
-      )}
     </div>
   );
 };
