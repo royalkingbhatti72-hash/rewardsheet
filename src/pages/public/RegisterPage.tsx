@@ -167,10 +167,10 @@ export const RegisterPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Referral Code *
+                  Official Referral Code *
                 </label>
                 <span className="text-[10px] font-bold text-[#FFD45A] bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                  Invite Required
+                  Admin Code Required
                 </span>
               </div>
               <div className="relative">
@@ -179,14 +179,14 @@ export const RegisterPage: React.FC = () => {
                   type="text"
                   name="referralCode"
                   required
-                  placeholder="Enter inviter's referral code (Required)"
+                  placeholder="e.g. ROYAL-VIP-001"
                   value={formData.referralCode}
                   onChange={handleChange}
                   className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#FFD45A] font-semibold uppercase placeholder-slate-500 focus:outline-none transition-colors"
                 />
               </div>
               <p className="text-[11px] text-slate-400 mt-1.5">
-                Earn Street is strictly invite-only. You must provide a valid referral code from an existing member to create an account.
+                Exclusive access: Registrations strictly require an official admin-issued referral code. Each code is one-time use and provided directly by administration.
               </p>
             </div>
 

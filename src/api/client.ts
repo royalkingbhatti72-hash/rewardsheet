@@ -415,6 +415,12 @@ export const api = {
 
   // Admin Referrals & Transactions
   getAdminReferrals: () => request('/admin/referrals', {}, true),
+  getAdminReferralCodes: () => request('/admin/referral-codes', {}, true),
+  generateAdminReferralCodes: (payload?: { count?: number; prefix?: string }) =>
+    request('/admin/referral-codes/generate', { method: 'POST', body: JSON.stringify(payload || {}) }, true),
+  createAdminReferralCode: (payload: { code: string; notes?: string }) =>
+    request('/admin/referral-codes/create', { method: 'POST', body: JSON.stringify(payload) }, true),
+  validateReferralCode: (code: string) => request(`/auth/validate-referral/${encodeURIComponent(code)}`),
   getAdminTransactions: (params?: { type?: string; page?: number; limit?: number }) => {
     const q = new URLSearchParams();
     if (params?.type) q.append('type', params.type);

@@ -10,6 +10,8 @@ import {
   FileText,
   X,
   Check,
+  ShieldCheck,
+  Ticket,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useBodyScrollLock } from '../../utils/useBodyScrollLock';
@@ -88,26 +90,24 @@ export const ReferralsPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Copy Link & Code */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleCopyCode}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#061633] border border-[#173C73] hover:border-[#22D3EE]/50 text-xs text-white rounded-lg transition-all cursor-pointer"
-              title="Copy Referral Code"
-            >
-              <span className="text-slate-400">Code:</span>
-              <strong className="font-mono text-[#FFD45A]">{referralCode}</strong>
-              {copiedCode ? <Check className="w-3.5 h-3.5 text-[#10D6A0]" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-            </button>
-
-            <button
-              onClick={handleCopyLink}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#1459E8] hover:bg-[#2478FF] active:scale-95 text-xs font-semibold text-white rounded-lg shadow-sm transition-all cursor-pointer"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>{copiedLink ? 'Copied Link!' : 'Copy Invite Link'}</span>
-            </button>
+          {/* Official Invitation Policy Badge */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/30 text-xs text-[#FFD45A] font-semibold rounded-xl">
+              <ShieldCheck className="w-4 h-4 text-[#FFD45A]" />
+              <span>Admin Referral Code System</span>
+            </span>
           </div>
+        </div>
+
+        {/* Notice Strip */}
+        <div className="p-3.5 bg-gradient-to-r from-blue-900/40 via-[#0B2248] to-[#04132F] border border-[#2478FF]/30 rounded-xl text-xs text-slate-300 space-y-1">
+          <div className="flex items-center gap-2 text-white font-bold text-xs">
+            <Ticket className="w-4 h-4 text-[#FFD45A]" />
+            <span>Exclusive Admin Referral Invitation Only</span>
+          </div>
+          <p className="text-[11.5px] leading-relaxed text-slate-300">
+            Personal member invitation links are disabled. New member registrations strictly require an official invitation code provided directly by administration.
+          </p>
         </div>
 
         {/* Spin Condition Status Strip */}

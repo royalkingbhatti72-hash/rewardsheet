@@ -22,6 +22,7 @@ import {
   Shield,
   ChevronRight,
   Bell,
+  Ticket,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useAdminAuth } from '../../context/AdminAuthContext';
@@ -67,6 +68,10 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/adminpanal/referrals': {
     title: 'Referral Program Management',
     subtitle: 'Track affiliate trees, referral earnings, and reward tiers.',
+  },
+  '/adminpanal/referral-codes': {
+    title: 'Exclusive Referral Codes',
+    subtitle: 'Manage official registration invitation codes. When an official code is used, it moves from Available to Used.',
   },
   '/adminpanal/transactions': {
     title: 'Financial Transactions Ledger',
@@ -209,6 +214,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Withdrawals', path: '/adminpanal/withdrawals', icon: ArrowUpRight },
     { label: 'Balance Adjustments', path: '/adminpanal/wallets', icon: Wallet },
     { label: 'Referrals', path: '/adminpanal/referrals', icon: Share2 },
+    { label: 'Exclusive Codes', path: '/adminpanal/referral-codes', icon: Ticket },
     { label: 'Transactions', path: '/adminpanal/transactions', icon: Receipt },
     { label: 'Announcements', path: '/adminpanal/announcements', icon: Megaphone },
     { label: 'Reports', path: '/adminpanal/reports', icon: BarChart3 },
