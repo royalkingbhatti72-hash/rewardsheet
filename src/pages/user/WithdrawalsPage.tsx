@@ -132,7 +132,7 @@ export const WithdrawalsPage: React.FC = () => {
             </span>
           </div>
           <p className="text-[11px] text-[#A6C4FF] mt-2 leading-relaxed">
-            💡 Completing each level unlocks 10% of your total account balance for withdrawal (e.g. PKR 10 on PKR 100 balance, or PKR 100 on PKR 1,000 balance). Withdrawals must be requested for the exact 10% withdrawable amount.
+            💡 Completing Level 1 allows you to withdraw the full PKR 150 Level 1 reward! Subsequent completed levels unlock progressive withdrawal quotas from your total account balance.
           </p>
         </div>
       </div>
