@@ -92,8 +92,8 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl text-xs">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Referral Code</span>
-            <span className="font-bold text-[#FFD45A] font-mono text-sm mt-0.5 block">{user?.referralCode}</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-semibold">VIP Status</span>
+            <span className="font-bold text-[#FFD45A] text-sm mt-0.5 block">Official Member</span>
           </div>
 
           <div className="p-3.5 bg-[#020B20] border border-[#214B91] rounded-2xl text-xs">

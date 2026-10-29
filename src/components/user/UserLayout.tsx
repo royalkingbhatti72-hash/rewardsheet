@@ -114,7 +114,6 @@ export const UserLayout: React.FC = () => {
     { label: 'Wallet', path: '/app/wallet', icon: Wallet },
     { label: 'Deposit', path: '/app/deposits', icon: ArrowDownLeft },
     { label: 'Withdraw', path: '/app/withdrawals', icon: ArrowUpRight },
-    { label: 'Referrals', path: '/app/referrals', icon: Users },
     { label: 'Notifications', path: '/app/notifications', icon: Bell, badgeCount: unreadCount },
     { label: 'Profile', path: '/app/profile', icon: UserIcon },
   ];

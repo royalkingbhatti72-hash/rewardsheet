@@ -138,7 +138,7 @@ export const App: React.FC = () => {
           <Route path="wallet" element={<WalletPage />} />
           <Route path="deposits" element={<DepositsPage />} />
           <Route path="withdrawals" element={<WithdrawalsPage />} />
-          <Route path="referrals" element={<ReferralsPage />} />
+          <Route path="referrals" element={<Navigate to="/app" replace />} />
           <Route path="activity" element={<Navigate to="/app/wallet" replace />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="profile" element={<ProfilePage />} />

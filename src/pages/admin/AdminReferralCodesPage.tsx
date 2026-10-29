@@ -131,11 +131,11 @@ export const AdminReferralCodesPage: React.FC = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#111827] flex items-center gap-2.5">
             <Ticket className="w-6 h-6 text-[#2563EB]" />
-            <span>Exclusive Referral Codes</span>
+            <span>100 Official Invitation Codes</span>
           </h1>
           <p className="text-xs text-[#6B7280] mt-1">
-            Registration is strictly invite-only. Regular member invitations are disabled.
-            When an official code is used by a registrant, it automatically moves from Available to Used.
+            Client self-invites are disabled. Invitation codes are provided exclusively by admin.
+            Every code is strictly single-use; once used by a client, it is permanently moved from Available Codes to Used Codes.
           </p>
         </div>
 

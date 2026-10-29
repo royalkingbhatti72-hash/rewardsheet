@@ -120,14 +120,6 @@ export const DashboardPage: React.FC = () => {
     };
   }, []);
 
-  const handleCopyReferral = () => {
-    if (!user?.referralCode) return;
-    const link = `${window.location.origin}/register?ref=${user.referralCode}`;
-    navigator.clipboard.writeText(link);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
   const {
     levelProgress,
     recentTransactions = [],
@@ -159,18 +151,9 @@ export const DashboardPage: React.FC = () => {
 
   // Member ID formatting
   const memberId = user?.id ? `RR${user.id.slice(-8).toUpperCase()}` : 'RR00000000';
-  const referralLink = `${window.location.origin}/register?ref=${user?.referralCode || ''}`;
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Toast Notification for Copied Link */}
-      {copiedLink && (
-        <div className="fixed top-5 right-5 z-50 bg-[#10D6A0] text-[#020B20] px-4 py-2.5 rounded-2xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <Check className="w-4 h-4 stroke-[3]" />
-          <span>Referral Link Copied to Clipboard!</span>
-        </div>
-      )}
-
       {/* Main Container Layout: Left Sidebar (Desktop) + Right Dashboard Area */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* ========================================================
@@ -250,15 +233,6 @@ export const DashboardPage: React.FC = () => {
               <HelpCircle className="w-4 h-4 text-[#10D6A0] group-hover:scale-110 transition-transform" />
               <span>Help Center</span>
             </button>
-
-            {/* 7. Invite Friends */}
-            <Link
-              to="/app/referrals"
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[#B7C6E4] hover:text-white hover:bg-[#071B3A] font-semibold text-xs border border-transparent hover:border-[#173C73] transition-all group"
-            >
-              <Users className="w-4 h-4 text-[#FFD45A] group-hover:scale-110 transition-transform" />
-              <span>Invite Friends</span>
-            </Link>
           </nav>
 
           {/* Sidebar Mini Promo Card */}
@@ -706,50 +680,48 @@ export const DashboardPage: React.FC = () => {
               )}
             </div>
 
-            {/* I. Invite Friends Card */}
+            {/* I. VIP Task Milestone & Progression Card */}
             <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-[#0B2248] via-[#071B3A] to-[#04132F] border border-[#173C73] shadow-xl space-y-4 relative overflow-hidden flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#FFD45A] to-[#F59E0B] p-0.5 shadow-md flex items-center justify-center">
                     <div className="w-full h-full bg-[#020B20] rounded-[14px] flex items-center justify-center text-[#FFD45A]">
-                      <Gift className="w-5 h-5" />
+                      <Crown className="w-5 h-5" />
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-[#22D3EE] bg-[#22D3EE]/15 border border-[#22D3EE]/30 px-2.5 py-1 rounded-full flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#22D3EE]" /> Active Program
+                  <span className="text-[10px] font-bold text-[#10D6A0] bg-[#10D6A0]/15 border border-[#10D6A0]/30 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-[#10D6A0]" /> VIP Progression
                   </span>
                 </div>
 
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">
-                    Referral Link
+                    Task Milestone Rewards
                   </h3>
+                  <p className="text-xs text-[#8194B7] leading-relaxed">
+                    Complete your sequential level tasks to claim verified milestone rewards and unlock royal wheel spins!
+                  </p>
                 </div>
 
-                {/* Referral Link Box with Copy Action */}
-                <div className="p-3 rounded-2xl bg-[#061633] border border-[#173C73] flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-[#22D3EE] font-mono truncate select-all flex-1">
-                    {referralLink}
+                <div className="p-3.5 rounded-2xl bg-[#061633] border border-[#173C73] flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-semibold uppercase">Current Progression</span>
+                    <span className="text-xs font-bold text-[#FFD45A] mt-0.5 block">Level {currentLevelNumber} Active</span>
+                  </div>
+                  <span className="text-xs font-bold text-white bg-[#1264F5]/30 border border-[#1264F5]/40 px-2.5 py-1 rounded-xl">
+                    {approvedTasksCount} / 10 Tasks Done
                   </span>
-                  <button
-                    onClick={handleCopyReferral}
-                    className="p-1.5 rounded-xl bg-[#1264F5] hover:bg-[#315BFF] text-white transition-all flex items-center gap-1 text-[11px] font-bold px-2.5 flex-shrink-0"
-                    title="Copy Link"
-                  >
-                    {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedLink ? 'Copied' : 'Copy'}</span>
-                  </button>
                 </div>
               </div>
 
-              {/* Bottom Invite CTA */}
+              {/* Bottom Tasks CTA */}
               <div className="pt-2">
                 <Link
-                  to="/app/referrals"
-                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#FFD45A] to-[#F59E0B] hover:from-[#F59E0B] hover:to-[#FFD45A] text-[#020B20] text-xs font-black shadow-lg shadow-[#FFD45A]/20 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01]"
+                  to="/app/tasks"
+                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#1264F5] to-[#315BFF] hover:from-[#315BFF] hover:to-[#1264F5] text-white text-xs font-bold shadow-lg shadow-[#1264F5]/25 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.01]"
                 >
-                  <Users className="w-4 h-4" />
-                  <span>Invite 3 Friends (Extra Spin)</span>
+                  <CheckSquare className="w-4 h-4" />
+                  <span>Continue Level Tasks</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

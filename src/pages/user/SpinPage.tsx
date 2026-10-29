@@ -638,7 +638,7 @@ export const SpinPage: React.FC = () => {
             ) : (
               <div className="px-8 py-4 bg-[#0B2248]/80 border border-[#1459E8]/40 text-slate-300 rounded-2xl text-xs font-semibold max-w-md mx-auto shadow-lg flex items-center justify-center gap-2 text-center">
                 <Lock className="w-4 h-4 text-[#FFD45A] flex-shrink-0" />
-                <span>Har level complete karne par 1 Free Spin milta hai. Azafi spin hasil karne ke liye 24 hours mein 3 friends invite karein.</span>
+                <span>Har level complete karne par 1 Free Spin milta hai jo admin review aur approval ke baad unlock hota hai.</span>
               </div>
             )}
           </div>
@@ -750,10 +750,10 @@ export const SpinPage: React.FC = () => {
               <div className="space-y-1">
                 <h4 className="font-bold text-white text-[13px] flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#2478FF]/20 text-[#22D3EE] text-[10px] font-black flex items-center justify-center flex-shrink-0">3</span>
-                  <span>Daily Spin Allocation &amp; Referral Program</span>
+                  <span>Level Completion Royal Spin Allocation</span>
                 </h4>
                 <p className="text-slate-300 pl-7 leading-relaxed">
-                  Har registered member ko har tier level mukammal karne par <strong>1 Free Spin</strong> faraham kiya jata hai. Is ke ilawa, arkaan 24 ghante ke doran apne referral code se 3 active doston ko invite karwa kar azafi bonus spins hasil kar sakte hain. Task milestone assignments complete hone par admin approval ke baad special spins foran live unlock ho jaate hain.
+                  Har registered member ko har tier level mukammal karne par <strong>1 Free Spin</strong> faraham kiya jata hai. Level assignments complete hone par admin approval ke baad special spins foran live unlock ho jaate hain.
                 </p>
               </div>
 
