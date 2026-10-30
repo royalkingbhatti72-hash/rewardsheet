@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Mail,
   Shield,
+  ShieldCheck,
   Lock,
 } from 'lucide-react';
 import { api } from '../../api/client';
