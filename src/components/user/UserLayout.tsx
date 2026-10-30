@@ -178,13 +178,13 @@ export const UserLayout: React.FC = () => {
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* Credit Points (CP) Box - Clean & compact */}
             <Link
-              to="/app/tasks"
+              to="/app"
               className="flex items-center gap-1 bg-[#061633] hover:bg-[#071B3A] border border-[#22D3EE]/30 hover:border-[#22D3EE]/60 rounded-lg px-1.5 sm:px-2.5 py-1 transition-all group shadow-2xs"
               title="Credit Points (CP)"
             >
               <span className="text-[8px] sm:text-[9px] text-[#A6C4FF] font-semibold uppercase">CP:</span>
               <span className="text-[10px] sm:text-xs font-bold text-[#22D3EE]">
-                {(wallet?.creditPoints || 0).toLocaleString()}
+                {(wallet?.creditPoints ?? 100).toLocaleString()}
               </span>
             </Link>
 

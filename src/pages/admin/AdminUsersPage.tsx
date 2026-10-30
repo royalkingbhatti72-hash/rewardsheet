@@ -304,7 +304,7 @@ export const AdminUsersPage: React.FC = () => {
       });
       // Update ONLY this single user in local state directly without reloading the entire table!
       const newPoints = res.creditPoints ?? (
-        (targetUser.creditPoints ?? 0) + (pointsActionType === 'ADD' ? numPoints : -numPoints)
+        (targetUser.creditPoints ?? 100) + (pointsActionType === 'ADD' ? numPoints : -numPoints)
       );
       setUsers((prev) =>
         prev.map((u) => (u.id === targetUser.id ? { ...u, creditPoints: newPoints } : u))
@@ -714,7 +714,7 @@ export const AdminUsersPage: React.FC = () => {
                       }}
                       className="font-semibold text-[#111827] px-2.5 py-1.5 border-b border-[#E2E8F0] overflow-hidden whitespace-nowrap text-[10.5px]"
                     >
-                      <span>{(u.creditPoints ?? 0).toLocaleString()}</span>
+                      <span>{(u.creditPoints ?? 100).toLocaleString()}</span>
                     </td>
                     <td
                       style={{
@@ -1040,7 +1040,7 @@ export const AdminUsersPage: React.FC = () => {
               <span className="text-amber-900 font-medium">Current Credit Points Balance:</span>
               <strong className="text-amber-800 font-black text-sm flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                {(pointsModalUser.creditPoints ?? 0).toLocaleString()} CPs
+                {(pointsModalUser.creditPoints ?? 100).toLocaleString()} CPs
               </strong>
             </div>
 
@@ -1097,7 +1097,7 @@ export const AdminUsersPage: React.FC = () => {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Enter reason (e.g. Task reward manual correction, bonus reward points) - optional"
+                  placeholder="Enter reason (e.g. Manual adjustment, bonus points, penalty deduction) - optional"
                   value={pointsReason}
                   onChange={(e) => setPointsReason(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2 text-[#111827] focus:outline-none"

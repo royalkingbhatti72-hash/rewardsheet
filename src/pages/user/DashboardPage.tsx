@@ -41,7 +41,7 @@ export const DashboardPage: React.FC = () => {
       availableBalance: 0,
       pendingBalance: 0,
       totalEarned: 0,
-      creditPoints: 0,
+      creditPoints: 100,
     },
     levelProgress: {
       currentLevelNumber: 1,
@@ -136,7 +136,7 @@ export const DashboardPage: React.FC = () => {
   // Available balance & Credit points - single source of truth across TopNav and Dashboard
   const currentWallet = data?.wallet || authWallet;
   const availableBalance = currentWallet?.availableBalance ?? (authWallet?.availableBalance || 0);
-  const creditPoints = currentWallet?.creditPoints ?? (authWallet?.creditPoints || 0);
+  const creditPoints = currentWallet?.creditPoints ?? (authWallet?.creditPoints ?? 100);
 
   // Withdrawal Eligibility & Level Quota (10% of total balance on every level completion)
   const completedLevelsCount =
@@ -361,18 +361,14 @@ export const DashboardPage: React.FC = () => {
                   {creditPoints.toLocaleString()} <span className="text-base font-bold text-[#22D3EE]">Pts</span>
                 </h3>
                 <p className="text-xs font-semibold text-[#10D6A0]">
-                  100 pts per complete level
+                  100 CPs awarded upon joining
                 </p>
               </div>
 
               <div className="pt-3 mt-3 border-t border-[#173C73]/40 flex items-center justify-between text-xs">
-                <Link
-                  to="/app/tasks"
-                  className="font-bold text-[#22D3EE] hover:text-white transition-colors flex items-center gap-1"
-                >
-                  <span>Earn More Points</span>
-                  <ChevronRight className="w-3 h-3" />
-                </Link>
+                <span className="font-bold text-[#22D3EE]">
+                  Account Standing Score
+                </span>
                 <span className="text-[11px] text-[#8194B7] font-medium">Rank Tier {currentLevelNumber}</span>
               </div>
             </div>

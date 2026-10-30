@@ -196,9 +196,6 @@ export const TaskDetailPage: React.FC = () => {
     task?.taskNumber === 20 ||
     task?.taskType?.toLowerCase().includes('prepaid')
   );
-  const taskCreditPoints = isPrepaid
-    ? (task?.creditPoints && task.creditPoints > 5 ? task.creditPoints : 30)
-    : (task?.creditPoints && task.creditPoints > 0 ? task.creditPoints : 5);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
@@ -302,13 +299,6 @@ export const TaskDetailPage: React.FC = () => {
             <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Commission</span>
             <span className="text-sm sm:text-base font-black text-[#10D6A0]">
               PKR {task?.rewardAmount?.toLocaleString()}
-            </span>
-          </div>
-          <div className="h-6 w-px bg-white/10 hidden sm:block" />
-          <div>
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Credit Points</span>
-            <span className="text-sm sm:text-base font-black text-[#22D3EE]">
-              +{taskCreditPoints} CPs
             </span>
           </div>
           {level?.completionReward > 0 && (
@@ -474,9 +464,9 @@ export const TaskDetailPage: React.FC = () => {
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 <p className="text-xs font-semibold text-emerald-300">
                   {task?.isPaid ? (
-                    <>Task Completed & Approved! +PKR {task?.rewardAmount?.toLocaleString() || 80} credited to your wallet and +30 CPs awarded.</>
+                    <>Task Completed & Approved! +PKR {task?.rewardAmount?.toLocaleString() || 80} credited to your wallet.</>
                   ) : (
-                    <>Task Verified & Completed! +PKR {task?.rewardAmount?.toLocaleString()} reward and +{taskCreditPoints} CPs credited.</>
+                    <>Task Verified & Completed! +PKR {task?.rewardAmount?.toLocaleString()} reward credited to your wallet.</>
                   )}
                 </p>
               </div>

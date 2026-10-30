@@ -486,7 +486,7 @@ export const TasksPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Bonus and Credit Points Reward Capsules */}
+          {/* Right: Bonus Reward Capsule */}
           <div className="flex items-center gap-2 self-start sm:self-auto">
             {/* Bonus Reward Pill */}
             <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md hover:border-emerald-500/40 transition-all">
@@ -500,19 +500,6 @@ export const TasksPage: React.FC = () => {
                   {activeLevelNumber === 1
                     ? '500'
                     : level?.completionReward?.toLocaleString() || meta.bonus.toLocaleString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Credit Points Pill */}
-            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md hover:border-[#22D3EE]/40 transition-all">
-              <div className="w-6 h-6 rounded-lg bg-[#22D3EE]/15 border border-[#22D3EE]/30 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-3.5 h-3.5 text-[#22D3EE]" />
-              </div>
-              <div className="text-left leading-tight">
-                <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Points</span>
-                <span className="text-xs sm:text-sm font-black text-[#22D3EE]">
-                  +{level?.totalCreditPoints || meta.points} CPs
                 </span>
               </div>
             </div>
@@ -596,7 +583,6 @@ export const TasksPage: React.FC = () => {
         <div className="hidden sm:flex items-center justify-between px-4 py-1 text-[11px] font-bold uppercase tracking-wider text-[#7E96BF]/80">
           <div className="flex-1">Task Assignment</div>
           <div className="flex items-center gap-5">
-            <span className="w-16 text-center">Points</span>
             <span className="w-24 text-right">Reward</span>
             <span className="w-20 text-center">Action</span>
           </div>
@@ -639,14 +625,6 @@ export const TasksPage: React.FC = () => {
                 !isSelectedLevelLocked &&
                 !isPastCompletedLevel &&
                 task.userStatus === 'REJECTED';
-
-              const taskCPs = isPrepaid
-                ? task.creditPoints && task.creditPoints > 5
-                  ? task.creditPoints
-                  : 30
-                : task.creditPoints && task.creditPoints > 0
-                ? task.creditPoints
-                : 5;
 
               return (
                 <div
@@ -698,13 +676,8 @@ export const TasksPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right: Credit Points, PKR Reward, Option to Open */}
+                  {/* Right: PKR Reward, Option to Open */}
                   <div className="flex items-center gap-2.5 sm:gap-5 flex-shrink-0">
-                    {/* Credit Points */}
-                    <span className="text-[10px] sm:text-xs font-black text-[#22D3EE] bg-[#22D3EE]/10 border border-[#22D3EE]/20 px-2 py-1 rounded-md whitespace-nowrap">
-                      +{taskCPs} CPs
-                    </span>
-
                     {/* PKR Reward */}
                     <span className="text-xs sm:text-sm font-black text-[#FFD45A] whitespace-nowrap min-w-[65px] sm:min-w-[75px] text-right">
                       PKR {task.rewardAmount?.toLocaleString()}

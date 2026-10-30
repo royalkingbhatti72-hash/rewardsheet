@@ -102,7 +102,7 @@ export const AdminUserDetailPage: React.FC = () => {
       setActionMessage({ type: 'error', text: 'Credit points must be a positive integer.' });
       return;
     }
-    const currentPoints = userData.wallet?.creditPoints || 0;
+    const currentPoints = userData.wallet?.creditPoints ?? 100;
     if (pointsActionType === 'DEDUCT' && currentPoints < numPoints) {
       setActionMessage({
         type: 'error',
@@ -263,7 +263,7 @@ export const AdminUserDetailPage: React.FC = () => {
                 <span className="text-[10px] text-amber-800 block font-bold uppercase tracking-wider">Credit Points</span>
                 <span className="text-lg font-black text-amber-700 flex items-center justify-end gap-1">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  {(userData.wallet?.creditPoints || 0).toLocaleString()} CPs
+                  {(userData.wallet?.creditPoints ?? 100).toLocaleString()} CPs
                 </span>
               </div>
               <button
@@ -336,10 +336,10 @@ export const AdminUserDetailPage: React.FC = () => {
           </div>
           <div className="admin-card p-4 space-y-2 flex flex-col justify-between">
             <div>
-              <span className="text-[11px] font-semibold text-[#6B7280] block">Earned Credit Points</span>
+              <span className="text-[11px] font-semibold text-[#6B7280] block">Credit Points</span>
               <span className="text-base font-bold text-amber-600 flex items-center gap-1 mt-0.5">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                {(userData.wallet?.creditPoints || 0).toLocaleString()} CPs
+                {(userData.wallet?.creditPoints ?? 100).toLocaleString()} CPs
               </span>
             </div>
             <button
@@ -851,7 +851,7 @@ export const AdminUserDetailPage: React.FC = () => {
               <span className="text-amber-900 font-medium">Current Credit Points:</span>
               <strong className="text-amber-800 font-black text-sm flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                {(userData.wallet?.creditPoints || 0).toLocaleString()} CPs
+                {(userData.wallet?.creditPoints ?? 100).toLocaleString()} CPs
               </strong>
             </div>
 
@@ -908,7 +908,7 @@ export const AdminUserDetailPage: React.FC = () => {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Enter reason (e.g. Manual correction, task bonus reward, tier adjustment) - optional"
+                  placeholder="Enter reason (e.g. Manual adjustment, bonus points, penalty deduction) - optional"
                   value={pointsReason}
                   onChange={(e) => setPointsReason(e.target.value)}
                   className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg p-2.5 text-[#111827] focus:outline-none"
