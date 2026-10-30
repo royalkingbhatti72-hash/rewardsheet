@@ -284,71 +284,71 @@ export const TaskDetailPage: React.FC = () => {
           </div>
         </div>
 
-          {/* Title & Description */}
-          <div className="space-y-1.5">
-            <h1 className="text-lg sm:text-xl font-bold text-white">
-              {cleanTaskTitle(task?.title)}
-            </h1>
-            {task?.description && (
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                {task?.description}
-              </p>
-            )}
-          </div>
+        {/* Title & Description */}
+        <div className="space-y-1.5">
+          <h1 className="text-lg sm:text-xl font-bold text-white">
+            {cleanTaskTitle(task?.title)}
+          </h1>
+          {task?.description && (
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              {task?.description}
+            </p>
+          )}
+        </div>
 
-          {/* Simple Inline Rewards Strip (No boxes) */}
-          <div className="flex items-center gap-5 sm:gap-8 flex-wrap pt-1 pb-1">
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Commission</span>
-              <span className="text-sm sm:text-base font-black text-[#10D6A0]">
-                PKR {task?.rewardAmount?.toLocaleString()}
-              </span>
-            </div>
-            <div className="h-6 w-px bg-white/10 hidden sm:block" />
-            <div>
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Credit Points</span>
-              <span className="text-sm sm:text-base font-black text-[#22D3EE]">
-                +{taskCreditPoints} CPs
-              </span>
-            </div>
-            {level?.completionReward > 0 && (
-              <>
-                <div className="h-6 w-px bg-white/10 hidden sm:block" />
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Level Reward</span>
-                  <span className="text-sm sm:text-base font-black text-[#FFD45A]">
-                    PKR {level?.levelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)}
-                  </span>
-                </div>
-              </>
-            )}
+        {/* Simple Inline Rewards Strip (No boxes) */}
+        <div className="flex items-center gap-5 sm:gap-8 flex-wrap pt-1 pb-1">
+          <div>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Commission</span>
+            <span className="text-sm sm:text-base font-black text-[#10D6A0]">
+              PKR {task?.rewardAmount?.toLocaleString()}
+            </span>
           </div>
+          <div className="h-6 w-px bg-white/10 hidden sm:block" />
+          <div>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Credit Points</span>
+            <span className="text-sm sm:text-base font-black text-[#22D3EE]">
+              +{taskCreditPoints} CPs
+            </span>
+          </div>
+          {level?.completionReward > 0 && (
+            <>
+              <div className="h-6 w-px bg-white/10 hidden sm:block" />
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Level Reward</span>
+                <span className="text-sm sm:text-base font-black text-[#FFD45A]">
+                  PKR {level?.levelNumber === 1 ? '500' : (level?.completionReward?.toLocaleString() || 0)}
+                </span>
+              </div>
+            </>
+          )}
+        </div>
 
-          {/* Locked Notice (if task is locked) */}
-          {isLocked && (
-            <div className="pt-4 border-t border-white/10 space-y-3">
-              <div className="p-6 rounded-2xl border border-amber-500/30 bg-[#071B3A]/90 text-center space-y-3 shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[#061633] border border-[#173C73] flex items-center justify-center mx-auto text-[#FFD45A]">
-                  <Lock className="w-6 h-6 text-[#FFD45A]" />
-                </div>
-                <div className="space-y-1 max-w-md mx-auto">
-                  <h3 className="text-base font-bold text-white">This Task is Locked</h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. Complete the previous task first in proper sequence.`}
-                  </p>
-                </div>
-                <div className="pt-1">
-                  <Link
-                    to="/app/tasks"
-                    className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow transition-all"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Back to Tasks & Levels</span>
-                  </Link>
-                </div>
+        {/* Locked Notice (if task is locked) */}
+        {isLocked && (
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <div className="p-6 rounded-2xl border border-amber-500/30 bg-[#071B3A]/90 text-center space-y-3 shadow-md">
+              <div className="w-12 h-12 rounded-xl bg-[#061633] border border-[#173C73] flex items-center justify-center mx-auto text-[#FFD45A]">
+                <Lock className="w-6 h-6 text-[#FFD45A]" />
+              </div>
+              <div className="space-y-1 max-w-md mx-auto">
+                <h3 className="text-base font-bold text-white">This Task is Locked</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. Complete the previous task first in proper sequence.`}
+                </p>
+              </div>
+              <div className="pt-1">
+                <Link
+                  to="/app/tasks"
+                  className="inline-flex items-center gap-1.5 bg-[#1264F5] hover:bg-[#168BFF] text-white text-xs font-semibold px-4 py-2 rounded-lg shadow transition-all"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Tasks & Levels</span>
+                </Link>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           {/* Prepaid Task Balance Requirement (Clean inline row if applicable) */}
           {task?.isPaid && isAvailable && (
