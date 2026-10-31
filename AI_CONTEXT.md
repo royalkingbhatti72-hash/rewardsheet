@@ -65,7 +65,17 @@ The workspace (`/Users/mmaazfalak/antigravity/Project55`) contains **two indepen
   - **Case-Insensitive**: Registration and validation accept lowercase, uppercase, or mixed case (`lbhyfr`, `LBHYFR`, `Lbhyfr`) via `LOWER("code") = LOWER($1)`.
   - **Single-Use + Auto-Replenishment**: When a code is used during `/api/auth/register`, its status changes to `'USED'` (recording `usedById`, `usedByName`, `usedByPhone`, `usedAt`), and `replenishAvailableCodesTo100()` immediately generates **1 new 6-letter code** so available codes stay at **100**.
 
-### C. Per-User Isolation & Zero-Reload Updates
+### D. Telegram Invitation Code Bot (`/api/telegram/*`)
+- **Bot Token**: `9207587440:AAHXQL1Krzbj8zRMqFXJypFiH-N_ePPghgk`
+- **Access Password**: `9989GHYRT89`
+- **Workflow**:
+  - Client starts bot: bot sends welcome message and asks for password.
+  - When client sends `9989GHYRT89`: bot grants access and provides a quick reply button for `code`.
+  - When client sends `"code"`: bot randomly selects an available 6-letter code from `"AdminReferralCode"`, tags it with client's Telegram `chatId`, and replies with the code.
+  - When that code is used on the website: bot automatically sends a real-time notification to the client's Telegram with user details and registration time.
+- **Webhook Endpoint**: `/api/telegram/webhook` (Auto-setup via `GET /api/telegram/setup`).
+
+### E. Per-User Isolation & Zero-Reload Updates
 - Every user has independent `Wallet`, `UserLevelProgress` (10 rows per user), and `UserTaskProgress` (100 rows per user).
 - Admin and user actions update only the affected user's state in memory without full-page reloads.
 
