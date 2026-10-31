@@ -68,12 +68,18 @@ The workspace (`/Users/mmaazfalak/antigravity/Project55`) contains **two indepen
 ### D. Telegram Invitation Code Bot (`/api/telegram/*`)
 - **Bot Token**: `9207587440:AAHXQL1Krzbj8zRMqFXJypFiH-N_ePPghgk`
 - **Access Password**: `9989GHYRT89`
-- **Workflow**:
-  - Client starts bot: bot sends welcome message and asks for password.
-  - When client sends `9989GHYRT89`: bot grants access and provides a quick reply button for `code`.
-  - When client sends `"code"`: bot randomly selects an available 6-letter code from `"AdminReferralCode"`, tags it with client's Telegram `chatId`, and replies with the code.
-  - When that code is used on the website: bot automatically sends a real-time notification to the client's Telegram with user details and registration time.
-- **Webhook Endpoint**: `/api/telegram/webhook` (Auto-setup via `GET /api/telegram/setup`).
+- **Database Table**: `"TelegramUser"` (`id`, `chatId`, `username`, `firstName`, `status`, `totalQuota`, `codesGenerated`, `remainingQuota`).
+- **Initial Quota**: New clients receive **10 codes** upon entering the password.
+- **Admin Quota Grant**: Admins can view all registered Telegram clients in `/adminpanal/referral-codes` under the "Telegram Clients & Quota" tab and grant additional codes (+10, +20, etc.).
+- **Sub-Second Webhook Speed**: Webhook returns the message directly in the Telegram HTTP webhook response payload (0 extra roundtrips, instant reply).
+- **Registration Flow**:
+  - Unregistered client starts bot $\rightarrow$ asks for password.
+  - When client sends `9989GHYRT89` $\rightarrow$ registers user with 10 codes quota and unlocks keyboard button `[code]`.
+  - Registered client sends `/start` $\rightarrow$ immediately responds *"You have already registered!"* with remaining quota.
+  - Registered client sends `"code"` $\rightarrow$ generates a random 6-letter available code, decrements remaining quota, and displays remaining quota.
+  - When remaining quota reaches 0 $\rightarrow$ prompts client to contact administration for more codes.
+- **Simple Used-Code Notification**: When a new user registers on the website with that code, the bot sends a simple, direct message to the client:
+  `"This invitation code <code> is used to create the account with the name of <name>."`
 
 ### E. Per-User Isolation & Zero-Reload Updates
 - Every user has independent `Wallet`, `UserLevelProgress` (10 rows per user), and `UserTaskProgress` (100 rows per user).

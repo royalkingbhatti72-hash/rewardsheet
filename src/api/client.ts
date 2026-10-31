@@ -416,6 +416,9 @@ export const api = {
   // Admin Referrals & Transactions
   getAdminReferrals: () => request('/admin/referrals', {}, true),
   getAdminReferralCodes: () => request('/admin/referral-codes', {}, true),
+  getAdminTelegramUsers: () => request('/admin/telegram-users', {}, true),
+  grantTelegramUserCodes: (chatId: string, amount: number) =>
+    request(`/admin/telegram-users/${chatId}/grant`, { method: 'POST', body: JSON.stringify({ amount }) }, true),
   generateAdminReferralCodes: (payload?: { count?: number; prefix?: string }) =>
     request('/admin/referral-codes/generate', { method: 'POST', body: JSON.stringify(payload || {}) }, true),
   createAdminReferralCode: (payload: { code: string; notes?: string }) =>
