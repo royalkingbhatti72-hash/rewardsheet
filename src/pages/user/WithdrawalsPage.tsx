@@ -132,7 +132,7 @@ export const WithdrawalsPage: React.FC = () => {
             </span>
           </div>
           <p className="text-[11px] text-[#A6C4FF] mt-2 leading-relaxed">
-            💡 Completing Level 1 allows you to withdraw the full PKR 150 Level 1 reward! Subsequent completed levels unlock progressive withdrawal quotas from your total account balance.
+            💡 {withdrawalQuota?.withdrawalNotice || 'Complete Level 1 to unlock the withdrawal panel for the withdrawal'}
           </p>
         </div>
       </div>

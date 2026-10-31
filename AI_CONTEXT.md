@@ -48,7 +48,15 @@ The workspace (`/Users/mmaazfalak/antigravity/Project55`) contains **two indepen
   - When a user unlocks a prepaid task, `unlockFee` is deducted from `Wallet.availableBalance`.
   - When the task is completed/approved, the user receives `unlockFee + rewardAmount` (principal + 40% commission) back into `Wallet.availableBalance`, and `Wallet.totalEarned` increments by `rewardAmount`.
 
-### B. Referral / Invitation System (Admin-Only 100 Single-Use 6-Letter Codes)
+### B. Level-Specific Withdrawal Requirement Notices (Manageable in Admin Panel)
+- **Database Column**: `"Level"."withdrawalNotice"` (TEXT).
+- **Admin Panel (`/adminpanal/levels`)**:
+  - Contains two views: **Level Cards** and a dedicated **Withdrawal Notices (10 Levels)** quick editor.
+  - Admin can customize the exact notice displayed to users for each level individually (e.g. Level 1: *"Complete Level 1 to unlock the withdrawal panel for the withdrawal"*, Level 4: *"Complete any of the tasks from Level 4 to unlock the withdrawal panel for Level 4 reward"*).
+- **User Withdrawal Panel (`/app/withdrawals`)**:
+  - Dynamically fetches and renders the withdrawal requirement notice corresponding to the user's current level (`withdrawalQuota.withdrawalNotice`).
+
+### C. Referral / Invitation System (Admin-Only 100 Single-Use 6-Letter Codes)
 - **User Self-Referral Deleted**: Clients **cannot** invite anyone. There is no user referral page, no invite link, and no personal referral code displayed in the User App or Admin User tables.
 - **100 Official Admin Referral Codes (`/adminpanal/referral-codes` & `/adminpanal/referrals`)**:
   - Stored in PostgreSQL table `"AdminReferralCode"`.
