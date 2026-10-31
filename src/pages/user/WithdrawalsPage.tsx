@@ -188,7 +188,6 @@ export const WithdrawalsPage: React.FC = () => {
             <input
               type="text"
               required
-              placeholder="e.g. Shahid Khan (Must match account title)"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
               className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none"
@@ -202,7 +201,6 @@ export const WithdrawalsPage: React.FC = () => {
             <input
               type="text"
               required
-              placeholder={method === 'BANK_TRANSFER' ? 'e.g. Meezan Bank PK12MEZN000...' : 'e.g. 03001234567'}
               value={recipientAccount}
               onChange={(e) => setRecipientAccount(e.target.value)}
               className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none font-mono"
