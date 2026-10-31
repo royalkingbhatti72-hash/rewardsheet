@@ -165,14 +165,9 @@ export const WithdrawalsPage: React.FC = () => {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
-                Withdrawal Amount in PKR (Exact Available Balance) *
-              </label>
-              <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
-                Exact Available Only
-              </span>
-            </div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Withdrawal Amount in PKR (Exact Available Balance) *
+            </label>
             <div className="relative">
               <input
                 type="text"
