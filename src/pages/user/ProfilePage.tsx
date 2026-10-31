@@ -57,7 +57,7 @@ export const ProfilePage: React.FC = () => {
           <User className="w-7 h-7 text-[#FFD45A]" /> Member Profile & Security
         </h1>
         <p className="text-xs text-slate-300 mt-1">
-          Review your account credentials, referral identity, and security preferences.
+          Review your account credentials, membership details, and security preferences.
         </p>
       </div>
 

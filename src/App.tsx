@@ -26,6 +26,9 @@ import { ReferralsPage } from './pages/user/ReferralsPage';
 import { NotificationsPage } from './pages/user/NotificationsPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 
+// Admin Panel App
+import { AdminApp } from './AdminApp';
+
 // User Protected Route Guard
 const ProtectedUserRoute: React.FC = () => {
   const { user, loading } = useAuth();
@@ -46,23 +49,6 @@ const ProtectedUserRoute: React.FC = () => {
   return <UserLayout />;
 };
 
-const AdminRedirect: React.FC = () => {
-  React.useEffect(() => {
-    if (window.location.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
-      window.location.href = `${window.location.protocol}//${window.location.hostname}:5050/adminpanal`;
-    } else {
-      window.location.href = 'https://streetearn-backend.vercel.app/';
-    }
-  }, []);
-  return (
-    <div className="min-h-screen bg-[#020712] flex items-center justify-center text-slate-200">
-      <div className="text-center space-y-3">
-        <div className="w-10 h-10 border-4 border-[#1459E8]/30 border-t-[#FFD45A] rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-300 font-semibold tracking-wide">Connecting to Royal Admin Control Panel...</p>
-      </div>
-    </div>
-  );
-};
 
 export const App: React.FC = () => {
   const [publicSettings, setPublicSettings] = React.useState<any>(null);
@@ -144,9 +130,9 @@ export const App: React.FC = () => {
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
-        {/* Admin Panel relocation handler */}
-        <Route path="/adminpanal/*" element={<AdminRedirect />} />
-        <Route path="/adminpanal" element={<AdminRedirect />} />
+        {/* Admin Panel Native Routes */}
+        <Route path="/adminpanal/*" element={<AdminApp />} />
+        <Route path="/adminpanal" element={<AdminApp />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Crown, Lock, Phone, User, Share2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Crown, Lock, Phone, User, Ticket, ArrowRight, AlertCircle } from 'lucide-react';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
@@ -37,7 +37,7 @@ export const RegisterPage: React.FC = () => {
     setError(null);
 
     if (!formData.referralCode.trim()) {
-      setError('Referral code is required. Registration is strictly invite-only.');
+      setError('Invitation code is required. Registration is strictly invite-only with an official admin invitation code.');
       return;
     }
 
@@ -167,14 +167,14 @@ export const RegisterPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Official Referral Code *
+                  Official Invitation Code *
                 </label>
                 <span className="text-[10px] font-bold text-[#FFD45A] bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                  Admin Code Required
+                  Admin Provided Only
                 </span>
               </div>
               <div className="relative">
-                <Share2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Ticket className="w-4 h-4 text-[#FFD45A] absolute left-3.5 top-3.5" />
                 <input
                   type="text"
                   name="referralCode"
@@ -185,8 +185,8 @@ export const RegisterPage: React.FC = () => {
                   className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#FFD45A] font-semibold uppercase placeholder-slate-500 focus:outline-none transition-colors"
                 />
               </div>
-              <p className="text-[11px] text-slate-400 mt-1.5">
-                Exclusive access: Registrations strictly require an official admin-issued referral code. Each code is one-time use and provided directly by administration.
+              <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                Exclusive VIP Access: Client self-invites are disabled. Registration strictly requires an official invitation code provided exclusively by administration. Every invitation code can only be used once.
               </p>
             </div>
 
