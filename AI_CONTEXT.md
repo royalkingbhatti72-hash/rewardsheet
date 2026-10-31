@@ -66,7 +66,7 @@ The workspace (`/Users/mmaazfalak/antigravity/Project55`) contains **two indepen
   - **Single-Use + Auto-Replenishment**: When a code is used during `/api/auth/register`, its status changes to `'USED'` (recording `usedById`, `usedByName`, `usedByPhone`, `usedAt`), and `replenishAvailableCodesTo100()` immediately generates **1 new 6-letter code** so available codes stay at **100**.
 
 ### D. Telegram Invitation Code Bot (`/api/telegram/*`)
-- **Bot Token**: `9207587440:AAHXQL1Krzbj8zRMqFXJypFiH-N_ePPghgk`
+- **Bot Token**: `9295985286:AAHb0EQFD-OMsd5bfrNgaPMTfkUDm4-Gph8`
 - **Access Password**: `9989GHYRT89`
 - **Database Table**: `"TelegramUser"` (`id`, `chatId`, `username`, `firstName`, `status`, `totalQuota`, `codesGenerated`, `remainingQuota`).
 - **Initial Quota**: New clients receive **10 codes** upon entering the password.

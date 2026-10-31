@@ -26,12 +26,14 @@ export const AdminReferralCodesPage: React.FC = () => {
   const [telegramUsers, setTelegramUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTg, setLoadingTg] = useState(false);
-  const [activeTab, setActiveTab] = useState<'available' | 'used' | 'telegram'>('available');
+  const [activeTab, setActiveTab] = useState<'telegram' | 'available' | 'used'>('telegram');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedChatId, setCopiedChatId] = useState<string | null>(null);
   const [quickCopied, setQuickCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [grantingChatId, setGrantingChatId] = useState<string | null>(null);
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const loadCodes = (silent = false) => {
@@ -73,6 +75,12 @@ export const AdminReferralCodesPage: React.FC = () => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleCopyChatId = (chatId: string) => {
+    navigator.clipboard.writeText(String(chatId));
+    setCopiedChatId(String(chatId));
+    setTimeout(() => setCopiedChatId(null), 2000);
   };
 
   const handleQuickCopyNext = () => {
@@ -162,10 +170,10 @@ export const AdminReferralCodesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">
-            Official Admin Referral Codes &amp; Telegram Bot
+            100 Invitation Codes &amp; Telegram Bot Clients
           </h1>
           <p className="text-xs text-[#6B7280] mt-0.5">
-            Admin-only single-use 6-letter referral codes. Automatically replenished to maintain 100 codes. Clients generate codes via Telegram Bot.
+            Admin-only single-use 6-letter referral codes (auto-replenished to 100 codes). View every registered Telegram client and grant referral code quotas.
           </p>
         </div>
 
@@ -198,13 +206,13 @@ export const AdminReferralCodesPage: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="admin-card p-4 sm:p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold">
-            <Ticket className="w-6 h-6" />
+        <div className="admin-card p-4 sm:p-5 flex items-center gap-4 border-l-4 border-l-sky-500">
+          <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+            <Send className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-[#111827]">{data?.stats?.total || 0}</div>
-            <div className="text-xs text-[#6B7280]">Total Code Pool</div>
+            <div className="text-2xl font-black text-sky-700">{telegramUsers.length}</div>
+            <div className="text-xs text-[#6B7280]">Registered Telegram Clients</div>
           </div>
         </div>
 
@@ -228,13 +236,13 @@ export const AdminReferralCodesPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="admin-card p-4 sm:p-5 flex items-center gap-4 border-l-4 border-l-sky-500">
-          <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
-            <Send className="w-6 h-6" />
+        <div className="admin-card p-4 sm:p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] flex items-center justify-center font-bold">
+            <Ticket className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-sky-700">{telegramUsers.length}</div>
-            <div className="text-xs text-[#6B7280]">Telegram Bot Clients</div>
+            <div className="text-2xl font-black text-[#111827]">{data?.stats?.total || 0}</div>
+            <div className="text-xs text-[#6B7280]">Total Code Pool</div>
           </div>
         </div>
       </div>
@@ -242,7 +250,29 @@ export const AdminReferralCodesPage: React.FC = () => {
       {/* Tabs & Search Controls */}
       <div className="admin-card p-4 sm:p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D9E4F2] pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => {
+                setActiveTab('telegram');
+                loadTelegramUsers();
+              }}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                activeTab === 'telegram'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'text-[#4B5563] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Registered Telegram Clients</span>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  activeTab === 'telegram' ? 'bg-white/20 text-white' : 'bg-[#E5E7EB] text-[#4B5563]'
+                }`}
+              >
+                {telegramUsers.length}
+              </span>
+            </button>
+
             <button
               onClick={() => setActiveTab('available')}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
@@ -251,7 +281,7 @@ export const AdminReferralCodesPage: React.FC = () => {
                   : 'text-[#4B5563] hover:bg-[#F3F4F6]'
               }`}
             >
-              <span>Available Codes</span>
+              <span>Available 100 Codes</span>
               <span
                 className={`px-1.5 py-0.5 rounded-full text-[10px] ${
                   activeTab === 'available' ? 'bg-white/20 text-white' : 'bg-[#E5E7EB] text-[#4B5563]'
@@ -278,28 +308,6 @@ export const AdminReferralCodesPage: React.FC = () => {
                 {data?.stats?.used || 0}
               </span>
             </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('telegram');
-                loadTelegramUsers();
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                activeTab === 'telegram'
-                  ? 'bg-sky-600 text-white shadow-sm'
-                  : 'text-[#4B5563] hover:bg-[#F3F4F6]'
-              }`}
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>Telegram Clients &amp; Quota</span>
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  activeTab === 'telegram' ? 'bg-white/20 text-white' : 'bg-[#E5E7EB] text-[#4B5563]'
-                }`}
-              >
-                {telegramUsers.length}
-              </span>
-            </button>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -307,11 +315,11 @@ export const AdminReferralCodesPage: React.FC = () => {
             <input
               type="text"
               placeholder={
-                activeTab === 'available'
+                activeTab === 'telegram'
+                  ? 'Search telegram name, @username, or chat ID...'
+                  : activeTab === 'available'
                   ? 'Search available 6-letter codes...'
-                  : activeTab === 'used'
-                  ? 'Search code, name or phone...'
-                  : 'Search telegram client name, @username, or chat ID...'
+                  : 'Search code, name or phone...'
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -496,9 +504,22 @@ export const AdminReferralCodesPage: React.FC = () => {
                             )}
                           </td>
                           <td>
-                            <span className="font-mono text-xs text-[#374151] bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                              {client.chatId}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs text-[#374151] bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                {client.chatId}
+                              </span>
+                              <button
+                                onClick={() => handleCopyChatId(client.chatId)}
+                                className="p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                                title="Copy Chat ID"
+                              >
+                                {copiedChatId === String(client.chatId) ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
                           </td>
                           <td>
                             <span className="font-bold text-[#111827]">
@@ -510,7 +531,7 @@ export const AdminReferralCodesPage: React.FC = () => {
                             {isExhausted ? (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
                                 <AlertCircle className="w-3 h-3 text-amber-600" />
-                                <span>0 Left (Quota Full)</span>
+                                <span>0 Left (Quota Exhausted)</span>
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -526,24 +547,70 @@ export const AdminReferralCodesPage: React.FC = () => {
                             </div>
                           </td>
                           <td className="text-right">
-                            <div className="inline-flex items-center gap-1.5">
+                            <div className="inline-flex items-center gap-1.5 flex-wrap justify-end">
                               <button
                                 disabled={isGranting}
                                 onClick={() => handleGrantCodes(client.chatId, 10)}
-                                className="px-2.5 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1"
-                                title="Add 10 more codes"
+                                className="px-2 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1"
+                                title="Grant 10 more codes"
                               >
                                 {isGranting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
-                                <span>+10 Codes</span>
+                                <span>+10</span>
                               </button>
                               <button
                                 disabled={isGranting}
                                 onClick={() => handleGrantCodes(client.chatId, 20)}
                                 className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[#111827] text-[11px] font-bold rounded border border-slate-300 disabled:opacity-50 transition-all cursor-pointer"
-                                title="Add 20 more codes"
+                                title="Grant 20 more codes"
                               >
                                 +20
                               </button>
+                              <button
+                                disabled={isGranting}
+                                onClick={() => handleGrantCodes(client.chatId, 50)}
+                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[#111827] text-[11px] font-bold rounded border border-slate-300 disabled:opacity-50 transition-all cursor-pointer"
+                                title="Grant 50 more codes"
+                              >
+                                +50
+                              </button>
+
+                              <div className="inline-flex items-center gap-1 pl-1 border-l border-slate-200">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="1000"
+                                  placeholder="Qty"
+                                  value={customAmounts[String(client.chatId)] || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setCustomAmounts((prev) => ({
+                                      ...prev,
+                                      [String(client.chatId)]: val,
+                                    }));
+                                  }}
+                                  className="w-14 px-1.5 py-1 bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded text-xs text-center font-bold text-[#111827] focus:outline-none"
+                                />
+                                <button
+                                  disabled={
+                                    isGranting ||
+                                    !parseInt(customAmounts[String(client.chatId)] || '0', 10)
+                                  }
+                                  onClick={() => {
+                                    const qty = parseInt(customAmounts[String(client.chatId)] || '0', 10);
+                                    if (qty > 0) {
+                                      handleGrantCodes(client.chatId, qty);
+                                      setCustomAmounts((prev) => ({
+                                        ...prev,
+                                        [String(client.chatId)]: '',
+                                      }));
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded shadow-sm disabled:opacity-40 transition-all cursor-pointer"
+                                  title="Grant custom amount of codes"
+                                >
+                                  Grant
+                                </button>
+                              </div>
                             </div>
                           </td>
                         </tr>
