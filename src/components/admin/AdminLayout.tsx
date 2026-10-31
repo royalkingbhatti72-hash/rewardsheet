@@ -66,12 +66,12 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
     subtitle: 'Manual balance and credit point adjustments with audit logging.',
   },
   '/adminpanal/referrals': {
-    title: 'Referral Program Management',
-    subtitle: 'Track affiliate trees, referral earnings, and reward tiers.',
+    title: '100 Official Referral Codes',
+    subtitle: 'Manage 6-letter single-use registration codes. When 1 code is used, it moves to Used Codes and 1 new code is generated.',
   },
   '/adminpanal/referral-codes': {
-    title: 'Exclusive Referral Codes',
-    subtitle: 'Manage official registration invitation codes. When an official code is used, it moves from Available to Used.',
+    title: '100 Official Referral Codes',
+    subtitle: 'Manage 6-letter single-use registration codes. When 1 code is used, it moves to Used Codes and 1 new code is generated.',
   },
   '/adminpanal/transactions': {
     title: 'Financial Transactions Ledger',
@@ -213,7 +213,7 @@ export const AdminLayout: React.FC = () => {
     { label: 'Deposits', path: '/adminpanal/deposits', icon: ArrowDownLeft },
     { label: 'Withdrawals', path: '/adminpanal/withdrawals', icon: ArrowUpRight },
     { label: 'Balance Adjustments', path: '/adminpanal/wallets', icon: Wallet },
-    { label: '100 Invitation Codes', path: '/adminpanal/referral-codes', icon: Ticket },
+    { label: '100 Referral Codes', path: '/adminpanal/referral-codes', icon: Ticket },
     { label: 'Transactions', path: '/adminpanal/transactions', icon: Receipt },
     { label: 'Announcements', path: '/adminpanal/announcements', icon: Megaphone },
     { label: 'Reports', path: '/adminpanal/reports', icon: BarChart3 },

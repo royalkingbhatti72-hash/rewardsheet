@@ -253,7 +253,7 @@ export const AdminUserDetailPage: React.FC = () => {
             </div>
             <h1 className="text-xl font-bold text-[#111827]">{userData.name}</h1>
             <p className="text-xs text-[#6B7280] font-mono mt-0.5">
-              Phone: {userData.phone} • Referral Code: {userData.referralCode}
+              Phone: {userData.phone}
             </p>
           </div>
 
@@ -323,9 +323,9 @@ export const AdminUserDetailPage: React.FC = () => {
             </span>
           </div>
           <div className="admin-card p-4 space-y-1">
-            <span className="text-[11px] font-semibold text-[#6B7280] block">Referred By</span>
+            <span className="text-[11px] font-semibold text-[#6B7280] block">Registration Access</span>
             <span className="text-sm font-bold text-[#111827]">
-              {userData.referredBy?.name ? `${userData.referredBy.name} (${userData.referredBy.phone})` : 'Direct Registration'}
+              Official Admin Invitation
             </span>
           </div>
           <div className="admin-card p-4 space-y-1">

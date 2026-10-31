@@ -8,10 +8,8 @@ import {
   RefreshCw,
   CheckCircle2,
   Users,
-  ShieldCheck,
   AlertCircle,
   Clock,
-  Sparkles,
 } from 'lucide-react';
 import { api } from '../../api/client';
 
@@ -28,8 +26,6 @@ export const AdminReferralCodesPage: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [quickCopied, setQuickCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [customCode, setCustomCode] = useState('');
-  const [showCustomModal, setShowCustomModal] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const loadCodes = (silent = false) => {
@@ -62,7 +58,7 @@ export const AdminReferralCodesPage: React.FC = () => {
     const nextCode = data.availableCodes[0].code;
     navigator.clipboard.writeText(nextCode);
     setQuickCopied(true);
-    setActionNotice(`Copied available code "${nextCode}" to clipboard!`);
+    setActionNotice(`Copied available 6-letter code "${nextCode}" to clipboard!`);
     setTimeout(() => {
       setQuickCopied(false);
       setActionNotice(null);
@@ -74,29 +70,13 @@ export const AdminReferralCodesPage: React.FC = () => {
     try {
       const res: any = await api.generateAdminReferralCodes({ count });
       setData(res);
-      setActionNotice(`Successfully generated ${count} additional exclusive invitation codes!`);
+      setActionNotice(`Successfully generated ${count} additional 6-letter referral codes!`);
       setTimeout(() => setActionNotice(null), 4000);
     } catch (err: any) {
       console.error(err);
       alert(err.message || 'Failed to generate codes');
     } finally {
       setGenerating(false);
-    }
-  };
-
-  const handleCreateCustom = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customCode.trim()) return;
-
-    try {
-      const res: any = await api.createAdminReferralCode({ code: customCode.trim() });
-      setData(res);
-      setCustomCode('');
-      setShowCustomModal(false);
-      setActionNotice(`Custom code created successfully!`);
-      setTimeout(() => setActionNotice(null), 3000);
-    } catch (err: any) {
-      alert(err.message || 'Failed to create code');
     }
   };
 
@@ -119,7 +99,7 @@ export const AdminReferralCodesPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-3">
         <div className="w-10 h-10 border-4 border-[#2563EB]/20 border-t-[#2563EB] rounded-full animate-spin" />
-        <p className="text-xs text-[#6B7280]">Loading official invitation codes...</p>
+        <p className="text-xs text-[#6B7280]">Loading 100 official 6-letter referral codes...</p>
       </div>
     );
   }
@@ -131,11 +111,10 @@ export const AdminReferralCodesPage: React.FC = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#111827] flex items-center gap-2.5">
             <Ticket className="w-6 h-6 text-[#2563EB]" />
-            <span>100 Official Invitation Codes</span>
+            <span>100 Official Referral Codes</span>
           </h1>
           <p className="text-xs text-[#6B7280] mt-1">
-            Client self-invites are disabled. Invitation codes are provided exclusively by admin.
-            Every code is strictly single-use; once used by a client, it is permanently moved from Available Codes to Used Codes.
+            Client self-invites are completely removed. Every code consists of 6 alphabetical letters (e.g. <span className="font-mono font-bold text-[#111827]">lbhyfr</span>) and works in uppercase, lowercase, or mixed case (<span className="font-mono">LBHYFR</span> / <span className="font-mono">Lbhyfr</span>). When 1 code is used, it moves to Used Codes and 1 new code is automatically generated to keep 100 available.
           </p>
         </div>
 
@@ -191,7 +170,7 @@ export const AdminReferralCodesPage: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-black text-emerald-700">{data?.stats?.available || 0}</div>
-            <div className="text-xs text-[#6B7280]">Available for New Users</div>
+            <div className="text-xs text-[#6B7280]">Available 6-Letter Codes (Auto-Replenished)</div>
           </div>
         </div>
 
@@ -201,7 +180,7 @@ export const AdminReferralCodesPage: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-black text-slate-800">{data?.stats?.used || 0}</div>
-            <div className="text-xs text-[#6B7280]">Redeemed & Registered</div>
+            <div className="text-xs text-[#6B7280]">Used & Redeemed Codes</div>
           </div>
         </div>
       </div>
@@ -251,7 +230,7 @@ export const AdminReferralCodesPage: React.FC = () => {
             <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder={activeTab === 'available' ? 'Search available codes...' : 'Search code, name or phone...'}
+              placeholder={activeTab === 'available' ? 'Search available 6-letter codes...' : 'Search code, name or phone...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg text-xs text-[#111827] focus:outline-none"
@@ -273,15 +252,18 @@ export const AdminReferralCodesPage: React.FC = () => {
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <strong className="font-mono text-sm text-[#111827] tracking-wider">
+                          <strong className="font-mono text-base text-[#111827] tracking-widest">
                             {item.code}
                           </strong>
+                          <span className="text-[10px] font-mono text-[#6B7280] bg-white px-1.5 py-0.5 rounded border border-[#E2E8F0]">
+                            {String(item.code).toUpperCase()}
+                          </span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span className="text-emerald-700 font-semibold uppercase">Available</span>
+                          <span className="text-emerald-700 font-semibold uppercase">Single-Use</span>
                           <span>•</span>
-                          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                          <span>Case-Insensitive</span>
                         </div>
                       </div>
 
@@ -337,7 +319,7 @@ export const AdminReferralCodesPage: React.FC = () => {
                   {usedList.map((item: any) => (
                     <tr key={item.id} className="hover:bg-slate-50/70">
                       <td>
-                        <strong className="font-mono text-xs text-[#111827] bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                        <strong className="font-mono text-xs text-[#111827] bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 tracking-wider">
                           {item.code}
                         </strong>
                       </td>

@@ -453,7 +453,7 @@ export const AdminUsersPage: React.FC = () => {
             <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search by Name, Phone, or Referral Code..."
+              placeholder="Search by Name or Phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-white border border-[#D9E4F2] focus:border-[#2563EB] rounded-lg pl-9 pr-3 py-1.5 text-xs text-[#111827] focus:outline-none h-9"
@@ -662,10 +662,6 @@ export const AdminUsersPage: React.FC = () => {
                       </Link>
                       <div className="flex items-center gap-1.5 text-[9px] font-mono truncate mt-0.5">
                         <span className="text-[#6B7280]">ID: {u.id.slice(-6)}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-[#2563EB] font-bold" title={`Referral Code: ${u.referralCode}`}>
-                          Ref: {u.referralCode}
-                        </span>
                       </div>
                     </td>
                     <td

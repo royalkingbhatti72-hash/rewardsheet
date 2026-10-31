@@ -22,7 +22,6 @@ import { SpinPage } from './pages/user/SpinPage';
 import { WalletPage } from './pages/user/WalletPage';
 import { DepositsPage } from './pages/user/DepositsPage';
 import { WithdrawalsPage } from './pages/user/WithdrawalsPage';
-import { ReferralsPage } from './pages/user/ReferralsPage';
 import { NotificationsPage } from './pages/user/NotificationsPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 
