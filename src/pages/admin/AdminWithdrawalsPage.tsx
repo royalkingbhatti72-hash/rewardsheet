@@ -76,7 +76,9 @@ export const AdminWithdrawalsPage: React.FC = () => {
       const newStatus = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
       setWithdrawals((prev) =>
         prev.map((w) =>
-          w.id === reviewingReq.id ? { ...w, approvalStatus: newStatus } : w
+          w.id === reviewingReq.id
+            ? { ...w, ...(res.withdrawal || {}), approvalStatus: newStatus }
+            : w
         )
       );
       setMessage({ type: 'success', text: res.message });
@@ -217,7 +219,22 @@ export const AdminWithdrawalsPage: React.FC = () => {
                       {w.user?.name}
                       <span className="block text-[10px] text-[#6B7280] font-mono">{w.user?.phone}</span>
                     </td>
-                    <td className="font-semibold text-[#2563EB]">{w.paymentMethod}</td>
+                    <td className="font-semibold text-[#2563EB]">
+                      {w.paymentMethod}
+                      {w.notes?.includes('[LEVEL_2_WITHDRAWAL]') ? (
+                        <span className="block mt-0.5 text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-1 rounded w-fit">
+                          Level 2 (10% Payout)
+                        </span>
+                      ) : w.notes?.includes('[LEVEL_1_WITHDRAWAL]') ? (
+                        <span className="block mt-0.5 text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1 rounded w-fit">
+                          Level 1
+                        </span>
+                      ) : w.notes?.includes('[UNRESTRICTED_WITHDRAWAL]') ? (
+                        <span className="block mt-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 rounded w-fit">
+                          Unrestricted
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="text-[#111827]">
                       <span className="font-bold block">{w.recipientName}</span>
                       <span className="font-mono text-[11px] text-[#4B5563]">{w.recipientAccount}</span>
@@ -343,6 +360,18 @@ export const AdminWithdrawalsPage: React.FC = () => {
               <p><strong className="text-[#111827]">Channel:</strong> {reviewingReq.paymentMethod}</p>
               <p><strong className="text-[#111827]">Recipient:</strong> {reviewingReq.recipientName} ({reviewingReq.recipientAccount})</p>
             </div>
+
+            {reviewingReq.notes?.includes('[LEVEL_2_WITHDRAWAL]') && (
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-xs space-y-1">
+                <p className="font-bold text-purple-900">⚡ Level 2 Withdrawal Rule Active</p>
+                <p className="text-purple-800 leading-relaxed">
+                  Total requested: <strong>PKR {reviewingReq.amount.toLocaleString()}</strong><br />
+                  • Payout disbursement (10%): <strong>PKR {Math.round(reviewingReq.amount * 0.10).toLocaleString()}</strong><br />
+                  • Wallet balance restored (90%): <strong>PKR {Math.round(reviewingReq.amount * 0.90).toLocaleString()}</strong><br />
+                  • Withdrawal panel will be locked again until Level 3 is completed.
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleExecuteReview} className="space-y-3 text-xs">
               <div>
