@@ -291,10 +291,20 @@ export const TaskDetailPage: React.FC = () => {
 
         {/* Simple Inline Rewards Strip (No boxes) */}
         <div className="flex items-center gap-5 sm:gap-8 flex-wrap pt-1 pb-1">
+          {task?.isPaid && (
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Prepaid Price</span>
+              <span className="text-sm sm:text-base font-black text-[#FFD45A]">
+                PKR {unlockFee.toLocaleString()}
+              </span>
+            </div>
+          )}
           <div>
-            <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">Commission</span>
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block tracking-wider">
+              {task?.isPaid ? 'Commission (40%)' : 'Reward'}
+            </span>
             <span className="text-sm sm:text-base font-black text-[#10D6A0]">
-              PKR {task?.rewardAmount?.toLocaleString()}
+              {task?.rewardAmount > 0 ? `PKR ${task?.rewardAmount?.toLocaleString()}` : 'TBD'}
             </span>
           </div>
           {level?.completionReward > 0 && (
@@ -310,7 +320,7 @@ export const TaskDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Locked Notice (if task is locked) */}
+        {/* Locked Notice (if task is locked - Preview Mode) */}
         {isLocked && (
           <div className="pt-4 border-t border-white/10 space-y-3">
             <div className="p-6 rounded-2xl border border-amber-500/30 bg-[#071B3A]/90 text-center space-y-3 shadow-md">
@@ -318,9 +328,12 @@ export const TaskDetailPage: React.FC = () => {
                 <Lock className="w-6 h-6 text-[#FFD45A]" />
               </div>
               <div className="space-y-1 max-w-md mx-auto">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold mb-1">
+                  <span>Preview Mode</span>
+                </div>
                 <h3 className="text-base font-bold text-white">This Task is Locked</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. Complete the previous task first in proper sequence.`}
+                  {task?.lockMessage || `Task #${task?.taskNumber || ''} is locked. Complete the current task first to start this task.`}
                 </p>
               </div>
               <div className="pt-1">

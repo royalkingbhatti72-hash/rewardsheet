@@ -314,32 +314,40 @@ export const TasksPage: React.FC = () => {
     selectedLevelSummary?.requiredTaskCount ||
     level?.requiredTaskCount ||
     (tasks && tasks.length > 0 ? tasks.length : 0) ||
-    (activeLevelNumber === 8 ? 15 : activeLevelNumber >= 9 ? 20 : 10);
+    10;
 
   const summaryApprovedCount = selectedLevelSummary?.approvedTaskCount ?? 0;
   const approvedTaskCount = Math.max(summaryApprovedCount, liveApprovedTasksCount);
-  const progressPercent = Math.min(100, Math.round((approvedTaskCount / totalTasksCount) * 100));
+  const progressPercent =
+    activeLevelNumber === 4
+      ? approvedTaskCount >= 1
+        ? 100
+        : 0
+      : Math.min(100, Math.round((approvedTaskCount / totalTasksCount) * 100));
 
-  const isSelectedLevelCompleted = Boolean(
-    (approvedTaskCount >= totalTasksCount && totalTasksCount > 0) ||
-    (tasks.length >= totalTasksCount &&
-      totalTasksCount > 0 &&
-      tasks.every((t: any) => {
-        const uStatus = String(t.userStatus || '').toUpperCase();
-        const status = String(t.status || '').toUpperCase();
-        const subStatus = String(t.submission?.status || '').toUpperCase();
-        return (
-          uStatus === 'APPROVED' ||
-          uStatus === 'COMPLETED' ||
-          uStatus === 'DONE' ||
-          status === 'APPROVED' ||
-          status === 'COMPLETED' ||
-          subStatus === 'APPROVED' ||
-          t.isCompleted === true ||
-          t.completed === true
+  const isSelectedLevelCompleted =
+    activeLevelNumber === 4
+      ? approvedTaskCount >= 1
+      : Boolean(
+          (approvedTaskCount >= totalTasksCount && totalTasksCount > 0) ||
+          (tasks.length >= totalTasksCount &&
+            totalTasksCount > 0 &&
+            tasks.every((t: any) => {
+              const uStatus = String(t.userStatus || '').toUpperCase();
+              const status = String(t.status || '').toUpperCase();
+              const subStatus = String(t.submission?.status || '').toUpperCase();
+              return (
+                uStatus === 'APPROVED' ||
+                uStatus === 'COMPLETED' ||
+                uStatus === 'DONE' ||
+                status === 'APPROVED' ||
+                status === 'COMPLETED' ||
+                subStatus === 'APPROVED' ||
+                t.isCompleted === true ||
+                t.completed === true
+              );
+            }))
         );
-      }))
-  );
 
   const meta = TIER_METADATA[activeLevelNumber] || TIER_METADATA[1];
   const LevelIcon = LEVEL_ICONS[activeLevelNumber] || Crown;
@@ -398,7 +406,8 @@ export const TasksPage: React.FC = () => {
             const isSelected = lvl.levelNumber === activeLevelNumber;
             const lvlTotal = lvl.requiredTaskCount || 10;
             const lvlApproved = lvl.approvedTaskCount || 0;
-            const isCompleted = lvlApproved >= lvlTotal;
+            const isCompleted =
+              lvl.levelNumber === 4 ? lvlApproved >= 1 : lvlApproved >= lvlTotal;
             const isLocked = !lvl.isUnlocked && !isCompleted;
 
             return (
@@ -496,10 +505,11 @@ export const TasksPage: React.FC = () => {
               <div className="text-left leading-tight">
                 <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Bonus</span>
                 <span className="text-xs sm:text-sm font-black text-emerald-400">
-                  PKR{' '}
                   {activeLevelNumber === 1
-                    ? '500'
-                    : level?.completionReward?.toLocaleString() || meta.bonus.toLocaleString()}
+                    ? 'PKR 150'
+                    : level?.completionReward > 0
+                    ? `PKR ${level.completionReward.toLocaleString()}`
+                    : 'TBD'}
                 </span>
               </div>
             </div>
@@ -514,7 +524,9 @@ export const TasksPage: React.FC = () => {
               Progress
             </span>
             <span className="font-bold text-white text-xs">
-              {approvedTaskCount} / {totalTasksCount} Tasks Done ({progressPercent}%)
+              {activeLevelNumber === 4
+                ? `${approvedTaskCount >= 1 ? '1 / 1' : '0 / 1'} Required Task Done`
+                : `${approvedTaskCount} / ${totalTasksCount} Tasks Done`} ({progressPercent}%)
             </span>
           </div>
 
@@ -546,7 +558,7 @@ export const TasksPage: React.FC = () => {
           <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#071F42] to-amber-500/15 border border-amber-400/40 flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 text-amber-300">
               <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              <span>{tasks[0]?.lockMessage || 'Complete Task 1 in Level 4 first to be able to complete Level 5 tasks.'}</span>
+              <span>{tasks[0]?.lockMessage || 'Complete at least one Level 4 prepaid task to unlock Level 5 task participation.'}</span>
             </div>
             <button
               onClick={() => handleSelectLevel(4)}
@@ -692,7 +704,7 @@ export const TasksPage: React.FC = () => {
                   <div className="flex items-center gap-2.5 sm:gap-5 flex-shrink-0">
                     {/* PKR Reward */}
                     <span className="text-xs sm:text-sm font-black text-[#FFD45A] whitespace-nowrap min-w-[65px] sm:min-w-[75px] text-right">
-                      PKR {task.rewardAmount?.toLocaleString()}
+                      {task.rewardAmount > 0 ? `PKR ${task.rewardAmount?.toLocaleString()}` : 'TBD'}
                     </span>
 
                     {/* Option to Open / View */}
@@ -704,10 +716,10 @@ export const TasksPage: React.FC = () => {
                             e.stopPropagation();
                             navigate(`/app/tasks/${task.id}`);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-400 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
                         >
                           <Lock className="w-3 h-3 text-amber-400" />
-                          <span className="hidden sm:inline">Locked</span>
+                          <span className="hidden sm:inline">Preview</span>
                         </button>
                       ) : (
                         <button
