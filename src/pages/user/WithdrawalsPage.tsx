@@ -209,18 +209,7 @@ export const WithdrawalsPage: React.FC = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Optional Note
-            </label>
-            <input
-              type="text"
-              placeholder="Optional notes for administration"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-[#020B20] border border-[#214B91] focus:border-[#2478FF] rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none"
-            />
-          </div>
+
 
           <button
             type="submit"
