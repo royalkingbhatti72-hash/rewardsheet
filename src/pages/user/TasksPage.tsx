@@ -495,21 +495,16 @@ export const TasksPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Bonus Reward Capsule */}
+          {/* Right: Total Tasks Capsule */}
           <div className="flex items-center gap-2 self-start sm:self-auto">
-            {/* Bonus Reward Pill */}
-            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md hover:border-emerald-500/40 transition-all">
-              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                <Award className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#030E24]/90 border border-[#214B91]/50 shadow-sm backdrop-blur-md">
+              <div className="w-6 h-6 rounded-lg bg-[#1459E8]/20 border border-[#1459E8]/40 flex items-center justify-center flex-shrink-0">
+                <Layers className="w-3.5 h-3.5 text-[#22D3EE]" />
               </div>
               <div className="text-left leading-tight">
-                <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Bonus</span>
-                <span className="text-xs sm:text-sm font-black text-emerald-400">
-                  {activeLevelNumber === 1
-                    ? 'PKR 150'
-                    : level?.completionReward > 0
-                    ? `PKR ${level.completionReward.toLocaleString()}`
-                    : 'TBD'}
+                <span className="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Level Tasks</span>
+                <span className="text-xs sm:text-sm font-black text-white">
+                  {totalTasksCount} Tasks
                 </span>
               </div>
             </div>
@@ -768,7 +763,7 @@ export const TasksPage: React.FC = () => {
               Level {activeLevelNumber} Completed! 🎉
             </h4>
             <p className="text-[11px] text-slate-300">
-              Bonus credited! Ready for Level {activeLevelNumber + 1}?
+              All required tasks completed! Ready for Level {activeLevelNumber + 1}?
             </p>
           </div>
 
@@ -808,7 +803,7 @@ export const TasksPage: React.FC = () => {
                 Level {congratsModalLevel.levelNumber} Unlocked!
               </h3>
               <p className="text-xs text-[#B7C6E4]">
-                {congratsModalLevel.requiredTaskCount || (congratsModalLevel.levelNumber === 8 ? 15 : congratsModalLevel.levelNumber >= 9 ? 20 : 10)} new assignments are now available. Complete them to earn bonus rewards.
+                {congratsModalLevel.requiredTaskCount || 10} new assignments are now available. Complete tasks to earn task rewards.
               </p>
             </div>
 

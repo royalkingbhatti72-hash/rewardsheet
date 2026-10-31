@@ -32,7 +32,7 @@ export const AdminLevelsPage: React.FC = () => {
       const res = await api.updateAdminLevel(editingLevel.id, {
         title: editingLevel.title,
         description: editingLevel.description,
-        completionReward: parseFloat(editingLevel.completionReward),
+        completionReward: 0,
         status: editingLevel.status,
       });
       // Update only this level directly without reloading the whole table!
@@ -43,7 +43,7 @@ export const AdminLevelsPage: React.FC = () => {
                 ...l,
                 title: editingLevel.title,
                 description: editingLevel.description,
-                completionReward: parseFloat(editingLevel.completionReward),
+                completionReward: 0,
                 status: editingLevel.status,
               }
             : l
@@ -71,7 +71,7 @@ export const AdminLevelsPage: React.FC = () => {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">Level Management</h1>
         <p className="text-xs text-[#6B7280] mt-0.5">
-          Configure the 10 standard levels, completion rewards, and descriptions. Level 10 is the final standard level.
+          Configure the 10 standard levels and descriptions. Rewards are assigned per task rather than per level.
         </p>
       </div>
 
@@ -103,8 +103,8 @@ export const AdminLevelsPage: React.FC = () => {
                   <span className="text-[10px] text-[#6B7280]">10 Standard Task Slots</span>
                 </div>
               </div>
-              <span className="bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-full text-xs">
-                Bonus: PKR {lvl.completionReward.toLocaleString()}
+              <span className="bg-blue-50 text-[#2563EB] font-bold px-2.5 py-1 rounded-full text-xs">
+                {lvl.requiredTaskCount || 10} Tasks
               </span>
             </div>
 
@@ -161,18 +161,6 @@ export const AdminLevelsPage: React.FC = () => {
                   value={editingLevel.description}
                   onChange={(e) => setEditingLevel({ ...editingLevel, description: e.target.value })}
                   className="w-full border border-[#D9E4F2] rounded-lg p-2 text-xs focus:outline-none focus:border-[#2563EB]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#374151] mb-1">Completion Reward in PKR *</label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={editingLevel.completionReward}
-                  onChange={(e) => setEditingLevel({ ...editingLevel, completionReward: e.target.value })}
-                  className="w-full border border-[#D9E4F2] rounded-lg p-2 text-xs font-bold focus:outline-none focus:border-[#2563EB]"
                 />
               </div>
 

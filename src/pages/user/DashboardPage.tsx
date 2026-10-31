@@ -545,8 +545,8 @@ export const DashboardPage: React.FC = () => {
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-t border-[#173C73]/40">
               <p className="text-[#B7C6E4]">
                 {completedLevelsCount === 0
-                  ? `Complete Level ${currentLevelNumber} tasks to unlock 10% account balance withdrawal and claim the PKR Level Reward!`
-                  : `Level ${currentLevelNumber} In Progress • Complete this level to claim the PKR Level Reward and withdraw 10% of your account balance!`}
+                  ? `Complete Level ${currentLevelNumber} tasks to earn task rewards and unlock 10% account balance withdrawal!`
+                  : `Level ${currentLevelNumber} In Progress • Complete tasks to earn task rewards and advance to the next level!`}
               </p>
               <Link
                 to="/app/tasks"

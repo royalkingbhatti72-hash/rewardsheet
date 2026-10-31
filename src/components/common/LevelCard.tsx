@@ -344,16 +344,6 @@ export const LevelCard: React.FC<LevelCardProps> = ({
               {approvedTasksCount} / {totalTasks}
             </span>
           </div>
-          {Number(level?.reward_amount || 0) > 0 && (
-            <div className="bg-[#020B20]/80 border border-[#214B91]/70 px-3 py-1.5 rounded-xl text-right">
-              <span className="text-[9px] uppercase tracking-tight text-slate-400 block font-medium">
-                Level Reward
-              </span>
-              <span className="text-xs sm:text-sm font-bold text-[#FFD45A] block">
-                PKR {level?.reward_amount?.toLocaleString()}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
