@@ -190,10 +190,6 @@ export const TaskDetailPage: React.FC = () => {
   const isPrepaid = Boolean(
     task?.isPaid ||
     (task?.unlockFee && task.unlockFee > 0) ||
-    task?.taskNumber === 5 ||
-    task?.taskNumber === 10 ||
-    task?.taskNumber === 15 ||
-    task?.taskNumber === 20 ||
     task?.taskType?.toLowerCase().includes('prepaid')
   );
 

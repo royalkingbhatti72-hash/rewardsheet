@@ -540,6 +540,22 @@ export const TasksPage: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Notice for Level 5 requiring Level 4 Task 1 */}
+        {activeLevelNumber === 5 && !isSelectedLevelLocked && tasks && tasks.length > 0 && tasks[0]?.userStatus === 'LOCKED' && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-[#071F42] to-amber-500/15 border border-amber-400/40 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-amber-300">
+              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <span>{tasks[0]?.lockMessage || 'Complete Task 1 in Level 4 first to be able to complete Level 5 tasks.'}</span>
+            </div>
+            <button
+              onClick={() => handleSelectLevel(4)}
+              className="px-3 py-1.5 rounded-lg bg-[#FFD45A] hover:bg-amber-400 text-slate-950 font-bold text-xs flex-shrink-0 cursor-pointer transition-all shadow-sm"
+            >
+              Go to Level 4 →
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Unlock Level Button (if unlocked & ready to activate) */}
@@ -599,13 +615,9 @@ export const TasksPage: React.FC = () => {
               const isPrepaid = Boolean(
                 task.isPaid ||
                   (task.unlockFee && task.unlockFee > 0) ||
-                  task.taskNumber === 5 ||
-                  task.taskNumber === 10 ||
-                  task.taskNumber === 15 ||
-                  task.taskNumber === 20 ||
                   task.taskType?.toLowerCase().includes('prepaid')
               );
-              const unlockFee = task.unlockFee || (isPrepaid ? 2000 : 0);
+              const unlockFee = task.unlockFee || 0;
 
               // Level completion check: past levels remain fully openable.
               // Task 1 of any unlocked level is always openable.
