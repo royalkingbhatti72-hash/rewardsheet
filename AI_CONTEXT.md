@@ -39,9 +39,11 @@ The workspace (`/Users/mmaazfalak/antigravity/Project55`) contains **two indepen
   - **Unlocking Rule for Level 4**: All 10 tasks in Level 4 are `AVAILABLE` (selectable in any order) once Level 3 is completed. **Completing just 1 task out of 10 in Level 4 marks Level 4 as completed (`requiredTaskCount = 1`) and unlocks Level 5 task participation.**
 - **Levels 5–10**: 10 free tasks each (`isPaid = false`, `unlockFee = 0`, `rewardAmount = 0` / displayed as `TBD` until specified).
 - **Visibility & Sequential Rules**:
-  - In **Levels 1, 2, and 3**, tasks unlock strictly sequentially (`Task 1` $\rightarrow$ `Task 2` $\rightarrow$ ... $\rightarrow$ `Task 10`), though users can preview locked tasks.
-  - Once **Level 3 is completed**, **Levels 4 through 10 all become unlocked/visible** so users can browse every task in Levels 4–10.
-  - However, **Level 5 tasks remain `LOCKED` for participation until at least 1 task in Level 4 is `APPROVED`**.
+  - In **Levels 1, 2, and 3**, tasks unlock strictly sequentially (`Task 1` $\rightarrow$ `Task 2` $\rightarrow$ ... $\rightarrow$ `Task 10`). **If a task in Levels 1–3 is locked (not yet reached), its task title, price, and reward are strictly hidden (`Locked Task #X`, `rewardAmount = 0`, `unlockFee = 0`, non-clickable) until it is unlocked to be completed.**
+  - Once **Level 3 is completed and the user reaches Level 4**:
+    - **All 10 tasks in Level 4 are immediately unlocked (`AVAILABLE`)** with their task titles, prepaid prices, and 40% commissions visible because all 10 are optional and the user only needs **1 task completed** to move to Level 5.
+    - **Levels 4 through 10 all become unlocked/visible**, and the user can see all tasks and prices/rewards across Levels 4–10.
+    - **Level 5 tasks remain `LOCKED` for participation until at least 1 task in Level 4 is `APPROVED`**, though their task titles and prices/rewards are visible once Level 4 is reached.
 - **Prepaid Task Refund + Commission Payout**:
   - When a user unlocks a prepaid task, `unlockFee` is deducted from `Wallet.availableBalance`.
   - When the task is completed/approved, the user receives `unlockFee + rewardAmount` (principal + 40% commission) back into `Wallet.availableBalance`, and `Wallet.totalEarned` increments by `rewardAmount`.
@@ -130,3 +132,4 @@ cp backend/src/services/adminReferralService.ts src/server/services/adminReferra
 (cd backend && git add -A && git commit -m "<message>" && git push origin main)
 (cd frontend && git add -A && git commit -m "<message>" && git push origin main)
 ```
+

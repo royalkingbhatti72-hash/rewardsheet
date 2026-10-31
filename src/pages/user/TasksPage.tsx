@@ -629,32 +629,39 @@ export const TasksPage: React.FC = () => {
               // Level completion check: past levels remain fully openable.
               // Task 1 of any unlocked level is always openable.
               const isPastCompletedLevel =
-                (selectedLevelSummary?.approvedTaskCount ?? 0) >= totalTasksCount;
+                activeLevelNumber === 4
+                  ? (selectedLevelSummary?.approvedTaskCount ?? 0) >= 1
+                  : (selectedLevelSummary?.approvedTaskCount ?? 0) >= totalTasksCount;
               const isTaskLocked =
                 isSelectedLevelLocked ||
-                (task.userStatus === 'LOCKED' && !isPastCompletedLevel);
+                (task.userStatus === 'LOCKED' && !(activeLevelNumber <= 3 && isPastCompletedLevel));
               const isApproved =
                 !isSelectedLevelLocked &&
-                (task.userStatus === 'APPROVED' || isPastCompletedLevel);
+                (task.userStatus === 'APPROVED' || (activeLevelNumber <= 3 && isPastCompletedLevel));
               const isPending =
                 !isSelectedLevelLocked &&
-                !isPastCompletedLevel &&
                 task.userStatus === 'PENDING_VERIFICATION';
               const isRejected =
                 !isSelectedLevelLocked &&
-                !isPastCompletedLevel &&
                 task.userStatus === 'REJECTED';
+
+              // In Levels 1 to 3 (or before Level 4 is reached): if a task is locked, do not show its task name, prize, or allow opening it!
+              const isHiddenLockedTask =
+                isTaskLocked && (activeLevelNumber <= 3 || isSelectedLevelLocked);
 
               return (
                 <div
                   id={`task-row-${task.taskNumber}`}
                   key={task.id}
                   onClick={() => {
+                    if (isHiddenLockedTask) return;
                     navigate(`/app/tasks/${task.id}`);
                   }}
                   className={`flex items-center justify-between gap-3 p-2.5 sm:px-4 sm:py-3 rounded-xl border transition-all duration-150 ${
-                    isTaskLocked
-                      ? 'bg-[#040E24]/60 border-[#142C56]/40 opacity-75 hover:border-amber-500/40 cursor-pointer'
+                    isHiddenLockedTask
+                      ? 'bg-[#040E24]/50 border-[#142C56]/40 opacity-60 cursor-not-allowed'
+                      : isTaskLocked
+                      ? 'bg-[#040E24]/60 border-[#142C56]/40 opacity-85 hover:border-amber-500/40 cursor-pointer'
                       : isApproved
                       ? 'bg-[#06242B]/75 border-emerald-500/35 hover:border-emerald-400 cursor-pointer'
                       : isPending
@@ -664,7 +671,7 @@ export const TasksPage: React.FC = () => {
                       : 'bg-[#071E44]/80 border-[#1A4580]/70 hover:border-[#22D3EE] cursor-pointer'
                   }`}
                 >
-                  {/* Left: Task Number & Task Name (Always appearable!) */}
+                  {/* Left: Task Number & Task Name */}
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <span
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-black text-xs flex-shrink-0 ${
@@ -683,28 +690,49 @@ export const TasksPage: React.FC = () => {
                     </span>
 
                     <div className="min-w-0 flex items-center gap-2 flex-wrap">
-                      <h4 className="text-xs sm:text-sm font-bold text-white truncate">
-                        {cleanTaskTitle(task.title)}
-                      </h4>
+                      {isHiddenLockedTask ? (
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-400 flex items-center gap-1.5 truncate">
+                          <Lock className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                          <span>Locked Task #{task.taskNumber}</span>
+                        </h4>
+                      ) : (
+                        <>
+                          <h4 className="text-xs sm:text-sm font-bold text-white truncate">
+                            {cleanTaskTitle(task.title)}
+                          </h4>
 
-                      {isPrepaid && (
-                        <span className="hidden sm:inline-flex text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 rounded flex-shrink-0">
-                          Prepaid (PKR {unlockFee.toLocaleString()})
-                        </span>
+                          {isPrepaid && (
+                            <span className="inline-flex text-[9px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 rounded flex-shrink-0">
+                              Price: PKR {unlockFee.toLocaleString()}
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
 
-                  {/* Right: PKR Reward, Option to Open */}
+                  {/* Right: PKR Reward & Action */}
                   <div className="flex items-center gap-2.5 sm:gap-5 flex-shrink-0">
-                    {/* PKR Reward */}
-                    <span className="text-xs sm:text-sm font-black text-[#FFD45A] whitespace-nowrap min-w-[65px] sm:min-w-[75px] text-right">
-                      {task.rewardAmount > 0 ? `PKR ${task.rewardAmount?.toLocaleString()}` : 'TBD'}
-                    </span>
+                    {/* PKR Reward (Hidden for locked tasks in Levels 1-3) */}
+                    {isHiddenLockedTask ? (
+                      <span className="text-xs font-bold text-slate-500 whitespace-nowrap min-w-[65px] sm:min-w-[75px] text-right flex items-center justify-end gap-1">
+                        <Lock className="w-3 h-3" />
+                        <span>Locked</span>
+                      </span>
+                    ) : (
+                      <span className="text-xs sm:text-sm font-black text-[#FFD45A] whitespace-nowrap min-w-[65px] sm:min-w-[75px] text-right">
+                        {task.rewardAmount > 0 ? `PKR ${task.rewardAmount?.toLocaleString()}` : 'Free Task'}
+                      </span>
+                    )}
 
                     {/* Option to Open / View */}
                     <div className="flex-shrink-0">
-                      {isTaskLocked ? (
+                      {isHiddenLockedTask ? (
+                        <span className="px-2.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-slate-500 text-xs font-semibold flex items-center gap-1 select-none">
+                          <Lock className="w-3 h-3 text-slate-500" />
+                          <span className="hidden sm:inline">Locked</span>
+                        </span>
+                      ) : isTaskLocked ? (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -714,7 +742,7 @@ export const TasksPage: React.FC = () => {
                           className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-slate-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
                         >
                           <Lock className="w-3 h-3 text-amber-400" />
-                          <span className="hidden sm:inline">Preview</span>
+                          <span className="hidden sm:inline">View</span>
                         </button>
                       ) : (
                         <button
