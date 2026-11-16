@@ -1,156 +1,60 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { UserLayout } from './components/user/UserLayout';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { MaintenancePage } from './components/common/MaintenancePage';
-import { api } from './api/client';
+import { Crown, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
-// Public pages
-import { LandingPage } from './pages/public/LandingPage';
-import { RegisterPage } from './pages/public/RegisterPage';
-import { LoginPage } from './pages/public/LoginPage';
-import { ForgotPasswordPage } from './pages/public/ForgotPasswordPage';
-import { TermsPage } from './pages/public/TermsPage';
-import { PrivacyPage } from './pages/public/PrivacyPage';
-
-// User pages
-import { DashboardPage } from './pages/user/DashboardPage';
-import { TasksPage } from './pages/user/TasksPage';
-import { TaskDetailPage } from './pages/user/TaskDetailPage';
-import { SpinPage } from './pages/user/SpinPage';
-import { WalletPage } from './pages/user/WalletPage';
-import { DepositsPage } from './pages/user/DepositsPage';
-import { WithdrawalsPage } from './pages/user/WithdrawalsPage';
-import { NotificationsPage } from './pages/user/NotificationsPage';
-import { ProfilePage } from './pages/user/ProfilePage';
-
-// Admin Panel App
-import { AdminApp } from './AdminApp';
-
-// User Protected Route Guard
-const ProtectedUserRoute: React.FC = () => {
-  const { user, loading } = useAuth();
-
-  if (loading && !user) {
-    return (
-      <div className="min-h-screen bg-[#04132F] flex flex-col items-center justify-center text-slate-300">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs font-semibold text-slate-400">Loading Session...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <UserLayout />;
-};
-
-
-export const App: React.FC = () => {
-  const [publicSettings, setPublicSettings] = React.useState<any>(null);
-  const [maintenanceTriggered, setMaintenanceTriggered] = React.useState(false);
-  const [maintenanceDetails, setMaintenanceDetails] = React.useState<any>(null);
-
-  const checkMaintenance = React.useCallback(() => {
-    if (window.location.pathname.startsWith('/adminpanal')) return;
-
-    api
-      .getPublicSettings({ bypassCache: true })
-      .then((settings) => {
-        setPublicSettings(settings);
-        if (settings?.maintenanceMode) {
-          setMaintenanceTriggered(true);
-        } else {
-          setMaintenanceTriggered(false);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  React.useEffect(() => {
-    checkMaintenance();
-
-    const interval = setInterval(checkMaintenance, 20000);
-
-    const handleMaintenanceEvent = (e: any) => {
-      setMaintenanceTriggered(true);
-      if (e?.detail) {
-        setMaintenanceDetails(e.detail);
-      }
-      checkMaintenance();
-    };
-
-    window.addEventListener('royal_maintenance_triggered', handleMaintenanceEvent);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('royal_maintenance_triggered', handleMaintenanceEvent);
-    };
-  }, [checkMaintenance]);
-
-  const isBackendHost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname.includes('backend') ||
-     window.location.hostname.includes('admin'));
-
-  const isAdminRoute = window.location.pathname.startsWith('/adminpanal');
-
-  if ((maintenanceTriggered || publicSettings?.maintenanceMode) && !isAdminRoute) {
-    const mergedSettings = {
-      ...publicSettings,
-      maintenanceTitle: maintenanceDetails?.title || publicSettings?.maintenanceTitle,
-      maintenanceMessage: maintenanceDetails?.message || publicSettings?.maintenanceMessage,
-      maintenanceExpectedEnd: maintenanceDetails?.expectedEnd || publicSettings?.maintenanceExpectedEnd,
-    };
-    return <MaintenancePage settings={mergedSettings} onRefresh={checkMaintenance} />;
-  }
-
+export function App() {
   return (
-    <ErrorBoundary>
-      <Routes>
-        {/* On backend host, root and /login route straight to AdminApp */}
-        {isBackendHost ? (
-          <>
-            <Route path="/" element={<Navigate to="/adminpanal/login" replace />} />
-            <Route path="/login" element={<Navigate to="/adminpanal/login" replace />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-          </>
-        )}
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
+    <div className="min-h-screen bg-[#07070A] text-white flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient Glow */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* User Protected Routes */}
-        <Route path="/app" element={<ProtectedUserRoute />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="tasks" element={<TasksPage />} />
-          <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-          <Route path="spin" element={<SpinPage />} />
-          <Route path="wallet" element={<WalletPage />} />
-          <Route path="deposits" element={<DepositsPage />} />
-          <Route path="withdrawals" element={<WithdrawalsPage />} />
-          <Route path="referrals" element={<Navigate to="/app" replace />} />
-          <Route path="activity" element={<Navigate to="/app/wallet" replace />} />
-          <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="terms" element={<TermsPage />} />
-        </Route>
+      <div className="relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-[#170B10] via-[#0E0A0D] to-[#09090C] border border-red-900/50 p-7 sm:p-8 shadow-2xl text-center space-y-6">
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-t-3xl" />
 
-        {/* Admin Panel Native Routes */}
-        <Route path="/adminpanal/*" element={<AdminApp />} />
-        <Route path="/adminpanal" element={<AdminApp />} />
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-400 p-0.5 shadow-lg shadow-red-600/30">
+          <div className="w-full h-full bg-[#09090C] rounded-[14px] flex items-center justify-center">
+            <Crown className="w-8 h-8 text-red-500" />
+          </div>
+        </div>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to={isBackendHost ? "/adminpanal/login" : "/"} replace />} />
-      </Routes>
-    </ErrorBoundary>
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-bold uppercase tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>Official Platform Upgrade</span>
+        </div>
+
+        <div className="space-y-2.5">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Earn Street Pro
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+            Earn Street has been upgraded to the new <strong className="text-white">Pro &amp; Updated Version</strong>. Please continue to the official Pro portal to log in and access your account, tasks, and rewards.
+          </p>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-black/50 border border-red-900/35 flex items-center justify-center gap-2 text-xs text-zinc-300">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>All your existing account data &amp; wallet balance are 100% secure.</span>
+        </div>
+
+        <div className="pt-1 space-y-3">
+          <a
+            href="https://www.streetearnpro.site/login"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm sm:text-base shadow-xl shadow-red-600/30 flex items-center justify-center gap-2.5 transition-all transform hover:scale-[1.01] active:scale-[0.99]"
+          >
+            <span>Login on Pro &amp; Updated Version</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
+
+          <a
+            href="https://www.streetearnpro.site"
+            className="block text-xs font-semibold text-zinc-400 hover:text-red-400 transition-colors"
+          >
+            www.streetearnpro.site
+          </a>
+        </div>
+      </div>
+    </div>
   );
-};
+}
+
+export default App;
